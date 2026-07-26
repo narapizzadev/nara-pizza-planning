@@ -175,7 +175,49 @@
   max-width: 70%;
   height: auto;
   margin: 0 auto 20px;
-}</style>
+.profile-meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.manager-actions {
+  display: grid;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.dashboard-button {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: left;
+  background: var(--white);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 17px;
+}
+
+.dashboard-button:hover {
+  border-color: var(--nara-orange);
+  background: #fff8f2;
+}
+
+.dashboard-button strong,
+.dashboard-button small {
+  display: block;
+}
+
+.dashboard-button small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: normal;
+  line-height: 1.35;
+}
+
+.dashboard-icon {
+  font-size: 28px;
+  flex: 0 0 auto;
+}}</style>
 </head>
 
 <body>
@@ -233,11 +275,41 @@
       </div>
 
       <div class="user-box">
-        <p><strong>Nom :</strong> <span id="profileName">—</span></p>
-        <p><strong>E-mail :</strong> <span id="profileEmail">—</span></p>
-        <p><strong>Rôle :</strong> <span id="profileRole">—</span></p>
-      </div>
+  <p>
+    Bonjour <strong><span id="profileName">—</span></strong>
+  </p>
+  <p class="profile-meta">
+    <span id="profileEmail">—</span>
+    ·
+    <span id="profileRole">—</span>
+  </p>
+</div>
 
+<div class="manager-actions">
+  <button class="dashboard-button" type="button">
+    <span class="dashboard-icon">📅</span>
+    <span>
+      <strong>Créer une semaine</strong>
+      <small>Ouvrir les disponibilités des livreurs</small>
+    </span>
+  </button>
+
+  <button class="dashboard-button" type="button">
+    <span class="dashboard-icon">👥</span>
+    <span>
+      <strong>Gérer les livreurs</strong>
+      <small>Ajouter ou modifier les comptes</small>
+    </span>
+  </button>
+
+  <button class="dashboard-button" type="button">
+    <span class="dashboard-icon">🕒</span>
+    <span>
+      <strong>Définir les besoins</strong>
+      <small>Indiquer les heures et le nombre de livreurs</small>
+    </span>
+  </button>
+</div>
       <button id="logoutButton" class="secondary" type="button">
         Se déconnecter
       </button>
