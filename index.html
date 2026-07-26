@@ -340,10 +340,10 @@
         console.error(error);
 
         showMessage(
-          loginMessage,
-          "Adresse e-mail ou mot de passe incorrect.",
-          "error"
-        );
+  loginMessage,
+  `Erreur Firebase : ${error.code} — ${error.message}`,
+  "error"
+);
       } finally {
         loginButton.disabled = false;
         loginButton.textContent = "Se connecter";
