@@ -1,1 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Nara Pizza Planning</title>
+
+  <style>
+    :root {
+      --nara-orange: #f28c45;
+      --nara-orange-dark: #d96f25;
+      --text: #252525;
+      --muted: #6f6f6f;
+      --background: #f6f6f6;
+      --white: #ffffff;
+      --border: #dddddd;
+      --error: #b42318;
+      --success: #18794e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 430px;
+      background: var(--white);
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .brand-mark {
+      width: 78px;
+      height: 78px;
+      margin: 0 auto 15px;
+      border-radius: 50%;
+      background: var(--nara-orange);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 34px;
+      font-weight: bold;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      outline: 3px solid rgba(242, 140, 69, 0.2);
+      border-color: var(--nara-orange);
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: var(--nara-orange);
+      color: white;
+    }
+
+    .primary:hover {
+      background: var(--nara-orange-dark);
+    }
+
+    .primary:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .secondary {
+      margin-top: 14px;
+      background: transparent;
+      color: var(--nara-orange-dark);
+      border: 1px solid var(--nara-orange);
+    }
+
+    .message {
+      display: none;
+      margin: 18px 0 0;
+      padding: 12px;
+      border-radius: 10px;
+      line-height: 1.4;
+    }
+
+    .message.error {
+      display: block;
+      background: #fff1f0;
+      color: var(--error);
+    }
+
+    .message.success {
+      display: block;
+      background: #ecfdf3;
+      color: var(--success);
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .user-box {
+      background: #fff7f0;
+      border-radius: 12px;
+      padding: 18px;
+      margin: 22px 0;
+    }
+
+    .user-box p {
+      margin: 6px 0;
+    }
+
+    .footer {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <section id="loginView">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <h1>Nara Pizza</h1>
+        <div class="subtitle">
+          Gestion des disponibilités et du planning des livreurs
+        </div>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Adresse e-mail</label>
+          <input
+            id="email"
+            type="email"
+            autocomplete="email"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button id="loginButton" class="primary" type="submit">
+          Se connecter
+        </button>
+      </form>
+
+      <div id="loginMessage" class="message"></div>
+    </section>
+
+    <section id="dashboardView" class="dashboard">
+      <div class="brand">
+        <div class="brand-mark">N</div>
+        <h1>Bienvenue</h1>
+        <div class="subtitle">Connexion réussie</div>
+      </div>
+
+      <div class="user-box">
+        <p><strong>Nom :</strong> <span id="profileName">—</span></p>
+        <p><strong>E-mail :</strong> <span id="profileEmail">—</span></p>
+        <p><strong>Rôle :</strong> <span id="profileRole">—</span></p>
+      </div>
+
+      <button id="logoutButton" class="secondary" type="button">
+        Se déconnecter
+      </button>
+
+      <div id="dashboardMessage" class="message"></div>
+    </section>
+
+    <div class="footer">
+      Nara Pizza Planning — version pilote
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from
+      "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from
+      "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB337EL2PUs100uRTBK30H55-5oSCwCmzg",
+      authDomain: "nara-pizza-planning.firebaseapp.com",
+      projectId: "nara-pizza-planning",
+      storageBucket: "nara-pizza-planning.firebasestorage.app",
+      messagingSenderId: "446901439990",
+      appId: "1:446901439990:web:7688317ee81a0d1a3e8bd7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loginView = document.getElementById("loginView");
+    const dashboardView = document.getElementById("dashboardView");
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+
+    const loginMessage = document.getElementById("loginMessage");
+    const dashboardMessage = document.getElementById("dashboardMessage");
+
+    function showMessage(element, text, type) {
+      element.textContent = text;
+      element.className = `message ${type}`;
+    }
+
+    function clearMessage(element) {
+      element.textContent = "";
+      element.className = "message";
+    }
+
+    function showLogin() {
+      loginView.style.display = "block";
+      dashboardView.style.display = "none";
+    }
+
+    function showDashboard(profile) {
+      document.getElementById("profileName").textContent =
+        profile.name || "Utilisateur";
+
+      document.getElementById("profileEmail").textContent =
+        profile.email || "";
+
+      document.getElementById("profileRole").textContent =
+        profile.role || "livreur";
+
+      loginView.style.display = "none";
+      dashboardView.style.display = "block";
+    }
+
+    async function loadUserProfile(user) {
+      const profileReference = doc(db, "users", user.uid);
+      const profileSnapshot = await getDoc(profileReference);
+
+      if (!profileSnapshot.exists()) {
+        throw new Error("Profil utilisateur introuvable.");
+      }
+
+      const profile = profileSnapshot.data();
+
+      if (profile.active !== true) {
+        throw new Error("Ce compte est désactivé.");
+      }
+
+      return profile;
+    }
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessage(loginMessage);
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Connexion…";
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        console.error(error);
+
+        showMessage(
+          loginMessage,
+          "Adresse e-mail ou mot de passe incorrect.",
+          "error"
+        );
+      } finally {
+        loginButton.disabled = false;
+        loginButton.textContent = "Se connecter";
+      }
+    });
+
+    logoutButton.addEventListener("click", async () => {
+      clearMessage(dashboardMessage);
+
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+
+        showMessage(
+          dashboardMessage,
+          "Impossible de vous déconnecter.",
+          "error"
+        );
+      }
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      clearMessage(loginMessage);
+      clearMessage(dashboardMessage);
+
+      if (!user) {
+        showLogin();
+        return;
+      }
+
+      try {
+        const profile = await loadUserProfile(user);
+        showDashboard(profile);
+      } catch (error) {
+        console.error(error);
+        await signOut(auth);
+        showLogin();
+
+        showMessage(
+          loginMessage,
+          error.message || "Accès refusé.",
+          "error"
+        );
+      }
+    });
+  </script>
+</body>
+</html>
