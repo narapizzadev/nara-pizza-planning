@@ -105,7 +105,10 @@
     @media(max-width:820px){.plan-columns{grid-template-columns:1fr}}
 
   
-    .assignment-list{display:grid;gap:14px;margin:18px 0 24px}
+    .assignment-list{display:grid;gap:16px;margin:18px 0 24px}
+    .assignment-day-group{display:grid;gap:10px}
+    .assignment-day-title{margin:0;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:18px}
+    .driver-availability-zone{margin-top:16px}
     .assignment-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
     .assignment-card h3{margin-bottom:5px}
     .assignment-meta{color:var(--muted);line-height:1.45;margin-bottom:12px}
@@ -425,8 +428,8 @@
     <main class="driver-main">
       <div class="driver-hero">
         <div>
-          <h2>Mes disponibilités</h2>
-          <p class="muted">Indiquez les jours et les heures où vous pouvez commencer.</p>
+          <h2 id="driverPageTitle">Mon planning</h2>
+          <p id="driverPageSubtitle" class="muted">Consultez vos affectations et vos prochaines demandes de disponibilités.</p>
         </div>
         <div class="profile-card">
           <p>Bonjour <strong id="driverProfileName">—</strong></p>
@@ -437,8 +440,8 @@
       <section class="driver-week-card">
         <div class="panel-header">
           <div>
-            <h3>Mes affectations</h3>
-            <p class="muted">Confirmez ou refusez les créneaux qui vous ont été attribués.</p>
+            <h3 id="driverAssignmentsTitle">Mes affectations</h3>
+            <p id="driverAssignmentsSubtitle" class="muted">Confirmez ou refusez les créneaux qui vous ont été attribués.</p>
           </div>
         </div>
         <div id="driverAssignmentsContainer" class="assignment-list">
@@ -446,9 +449,17 @@
         </div>
       </section>
 
-      <div id="driverWeeksContainer">
-        <div class="empty-state">Chargement des semaines ouvertes…</div>
-      </div>
+      <section id="driverAvailabilityZone" class="driver-availability-zone">
+        <div class="panel-header">
+          <div>
+            <h3>Mes nouvelles disponibilités</h3>
+            <p class="muted">Cette zone apparaît lorsqu’une nouvelle semaine est ouverte.</p>
+          </div>
+        </div>
+        <div id="driverWeeksContainer">
+          <div class="empty-state">Chargement des semaines ouvertes…</div>
+        </div>
+      </section>
 
       <div id="driverMessage" class="message"></div>
 
@@ -526,6 +537,11 @@
     const driverLogoutButton = document.getElementById("driverLogoutButton");
     const driverWeeksContainer = document.getElementById("driverWeeksContainer");
     const driverAssignmentsContainer = document.getElementById("driverAssignmentsContainer");
+    const driverPageTitle = document.getElementById("driverPageTitle");
+    const driverPageSubtitle = document.getElementById("driverPageSubtitle");
+    const driverAssignmentsTitle = document.getElementById("driverAssignmentsTitle");
+    const driverAssignmentsSubtitle = document.getElementById("driverAssignmentsSubtitle");
+    const driverAvailabilityZone = document.getElementById("driverAvailabilityZone");
     const driverMessage = document.getElementById("driverMessage");
 
     const planningWeekSelect = document.getElementById("planningWeekSelect");
@@ -544,6 +560,8 @@
     let unsubscribeDriverWeeks = null;
     let currentDriverUser = null;
     let unsubscribeDriverAssignments = null;
+    let currentDriverAssignments = [];
+    let currentDriverOpenWeeksCount = 0;
     let currentPlan = null;
     let currentAssignmentStatuses = new Map();
 
@@ -1041,6 +1059,9 @@
             if(week.status==="open")openWeeks.push(week)
           });
 
+          currentDriverOpenWeeksCount=openWeeks.length;
+          updateDriverPresentation();
+
           if(openWeeks.length===0){
             driverWeeksContainer.innerHTML='<div class="empty-state">Aucune semaine ouverte pour le moment.</div>';
             return
@@ -1106,6 +1127,29 @@
       return "assignment-pending"
     }
 
+    function updateDriverPresentation(){
+      const confirmedAssignments=currentDriverAssignments.filter(
+        assignment=>assignment.status==="confirmed" && assignment.active!==false
+      );
+      const pendingAssignments=currentDriverAssignments.filter(
+        assignment=>(assignment.status||"pending")==="pending" && assignment.active!==false
+      );
+
+      if(currentDriverOpenWeeksCount===0 && confirmedAssignments.length>0 && pendingAssignments.length===0){
+        driverPageTitle.textContent="Mon planning final";
+        driverPageSubtitle.textContent="Voici vos horaires confirmés et publiés.";
+        driverAssignmentsTitle.textContent="Mes horaires confirmés";
+        driverAssignmentsSubtitle.textContent="Votre planning final est présenté par jour.";
+        driverAvailabilityZone.classList.add("hidden")
+      }else{
+        driverPageTitle.textContent="Mon planning";
+        driverPageSubtitle.textContent="Consultez vos affectations et indiquez vos disponibilités lorsqu’une nouvelle semaine est ouverte.";
+        driverAssignmentsTitle.textContent="Mes affectations";
+        driverAssignmentsSubtitle.textContent="Confirmez ou refusez les créneaux qui vous ont été attribués.";
+        driverAvailabilityZone.classList.remove("hidden")
+      }
+    }
+
     function renderDriverAssignments(snapshot,user){
       const assignments=[];
       snapshot.forEach(docSnap=>{
@@ -1120,14 +1164,27 @@
         return dateCompare!==0?dateCompare:(a.time||"").localeCompare(b.time||"")
       });
 
+      currentDriverAssignments=assignments;
+      updateDriverPresentation();
+
       if(assignments.length===0){
         driverAssignmentsContainer.innerHTML='<div class="empty-state">Aucune affectation pour le moment.</div>';
         return
       }
 
       driverAssignmentsContainer.innerHTML="";
+      let currentDate="";
+      let dayGroup=null;
 
       assignments.forEach(assignment=>{
+        if(assignment.date!==currentDate){
+          currentDate=assignment.date;
+          dayGroup=document.createElement("section");
+          dayGroup.className="assignment-day-group";
+          dayGroup.innerHTML=`<h3 class="assignment-day-title">${formatDay(assignment.date)}</h3>`;
+          driverAssignmentsContainer.appendChild(dayGroup)
+        }
+
         const card=document.createElement("article");
         card.className="assignment-card";
         const status=assignment.status||"pending";
@@ -1185,7 +1242,7 @@
           }
         });
 
-        driverAssignmentsContainer.appendChild(card)
+        dayGroup.appendChild(card)
       })
     }
 
@@ -2056,6 +2113,8 @@
       if(!user){
         currentProfile=null;
         currentDriverUser=null;
+        currentDriverAssignments=[];
+        currentDriverOpenWeeksCount=0;
         if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
         if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
