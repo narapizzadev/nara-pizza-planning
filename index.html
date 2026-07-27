@@ -55,6 +55,17 @@
     .section-view{display:none}.section-view.active{display:block}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.form-grid .field{margin-bottom:0}
     .form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.week-list{display:grid;gap:12px}
     .week-card{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .week-card-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .template-panel{margin-bottom:18px;padding:18px;border:1px solid var(--border);border-radius:14px;background:#fffaf6}
+    .template-controls{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end}
+    .template-list{display:grid;gap:10px;margin-top:14px}
+    .template-item{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff}
+    .template-item-actions{display:flex;gap:8px;flex-wrap:wrap}
+    @media(max-width:760px){
+      .template-controls{grid-template-columns:1fr}
+      .template-controls .button{width:100%}
+      .template-item{align-items:flex-start;flex-direction:column}
+    }
     .week-card p{margin-bottom:4px}.week-meta{color:var(--muted);font-size:14px;line-height:1.4}.status-badge{display:inline-flex;padding:7px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#f1f1f1}
     .status-open{background:#ecfdf3;color:var(--success)}.status-draft{background:#fff8e1;color:#9a6700}.empty-state{padding:22px;border:1px dashed var(--border);border-radius:12px;text-align:center;color:var(--muted);background:#fafafa}
     .placeholder{padding:28px;border-radius:14px;background:var(--soft);text-align:center}.back-row{margin-bottom:16px}.footer{margin-top:28px;text-align:center;color:var(--muted);font-size:13px}
@@ -378,6 +389,36 @@
               <option value="">Choisir une semaine</option>
             </select>
           </div>
+
+          <section class="template-panel">
+            <div class="panel-header">
+              <div>
+                <h3>Modèles de besoins</h3>
+                <p class="muted">Enregistrez par exemple un modèle « Semaine normale » et un modèle « Fin de mois ».</p>
+              </div>
+            </div>
+
+            <div class="template-controls">
+              <div class="field" style="margin-bottom:0">
+                <label for="needTemplateName">Nom du nouveau modèle</label>
+                <input id="needTemplateName" type="text" placeholder="Exemple : Fin de mois">
+              </div>
+
+              <button id="saveNeedTemplateButton" class="button button-secondary" type="button">
+                Mémoriser les besoins actuels
+              </button>
+
+              <button id="applyNeedTemplateButton" class="button button-primary" type="button">
+                Appliquer le modèle sélectionné
+              </button>
+            </div>
+
+            <div id="needTemplateMessage" class="message"></div>
+
+            <div id="needTemplateList" class="template-list">
+              <div class="empty-state">Aucun modèle enregistré.</div>
+            </div>
+          </section>
 
           <div class="needs-layout">
             <div>
@@ -709,6 +750,11 @@
     const needQuantity = document.getElementById("needQuantity");
     const needNotes = document.getElementById("needNotes");
     const needList = document.getElementById("needList");
+    const needTemplateName = document.getElementById("needTemplateName");
+    const saveNeedTemplateButton = document.getElementById("saveNeedTemplateButton");
+    const applyNeedTemplateButton = document.getElementById("applyNeedTemplateButton");
+    const needTemplateList = document.getElementById("needTemplateList");
+    const needTemplateMessage = document.getElementById("needTemplateMessage");
     const needFormMessage = document.getElementById("needFormMessage");
     const saveNeedButton = document.getElementById("saveNeedButton");
 
@@ -740,8 +786,11 @@
     let unsubscribeWeeks = null;
     let unsubscribeDrivers = null;
     let unsubscribeNeeds = null;
+    let unsubscribeNeedTemplates = null;
     let currentWeeks = [];
     let currentNeeds = [];
+    let currentNeedTemplates = [];
+    let selectedNeedTemplateId = "";
     let unsubscribeDriverWeeks = null;
     let currentDriverUser = null;
     let unsubscribeDriverAssignments = null;
@@ -763,7 +812,7 @@
       document.getElementById("profileEmail").textContent=profile.email||"";
       document.getElementById("profileRole").textContent=profile.role||"";
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
-      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers();subscribeToNeeds()
+      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();subscribeToNeedTemplates()
     }
 
     async function loadUserProfile(user){
@@ -793,20 +842,72 @@
     function prepareWeekForm(){clearMessage(weekFormMessage);if(!weekStart.value)weekStart.value=getNextMonday();weekEnd.value=addDays(weekStart.value,6);if(!deadlineDate.value)deadlineDate.value=weekStart.value}
     function escapeHtml(value){const div=document.createElement("div");div.textContent=value;return div.innerHTML}
 
+    async function deleteWeekCompletely(week){
+      const label=`${formatDate(week.startDate)} → ${formatDate(week.endDate)}`;
+      const warning=week.status==="closed"
+        ? `Le planning de ${label} est clôturé. Supprimer définitivement cette semaine et toutes ses données ?`
+        : `Supprimer la semaine ${label} et toutes les données associées ?`;
+
+      if(!window.confirm(warning))return;
+
+      try{
+        const needsSnapshot=await getDocs(query(collection(db,"needs"),where("weekId","==",week.id)));
+        for(const needDoc of needsSnapshot.docs){
+          await deleteDoc(needDoc.ref)
+        }
+
+        const availabilitySnapshot=await getDocs(collection(db,"weeks",week.id,"availabilities"));
+        for(const availabilityDoc of availabilitySnapshot.docs){
+          await deleteDoc(availabilityDoc.ref)
+        }
+
+        const assignmentsSnapshot=await getDocs(query(collection(db,"driverAssignments"),where("weekId","==",week.id)));
+        for(const assignmentDoc of assignmentsSnapshot.docs){
+          await deleteDoc(assignmentDoc.ref)
+        }
+
+        const planRef=doc(db,"plans",week.id);
+        const planSnapshot=await getDoc(planRef);
+        if(planSnapshot.exists())await deleteDoc(planRef);
+
+        await deleteDoc(doc(db,"weeks",week.id));
+        showMessage(appMessage,"La semaine et ses données associées ont été supprimées.","success")
+      }catch(error){
+        console.error(error);
+        showMessage(appMessage,`Impossible de supprimer la semaine : ${error.code||error.message}`,"error")
+      }
+    }
+
     function renderWeeks(snapshot){
       currentWeeks=[];
       snapshot.forEach(docSnap=>currentWeeks.push({id:docSnap.id,...docSnap.data()}));
       populateNeedsWeekSelect();
 
-      if(snapshot.empty){weekList.innerHTML='<div class="empty-state">Aucune semaine n’a encore été créée.</div>';return}
+      if(currentWeeks.length===0){
+        weekList.innerHTML='<div class="empty-state">Aucune semaine créée pour le moment.</div>';
+        return
+      }
+
       weekList.innerHTML="";
-      snapshot.forEach(docSnap=>{
-        const w=docSnap.data();
+      currentWeeks.forEach(w=>{
         const card=document.createElement("article");
         card.className="week-card";
         const weekStatusText=w.status==="open"?"Ouverte":w.status==="closed"?"Clôturée":"Brouillon";
         const weekStatusClass=w.status==="open"?"status-open":w.status==="closed"?"confirmation-confirmed":"status-draft";
-        card.innerHTML=`<div><h3>${formatDate(w.startDate)} → ${formatDate(w.endDate)}</h3><p class="week-meta">Réponse avant le ${formatDate(w.deadlineDate)} à ${w.deadlineTime||"—"}</p>${w.message?`<p class="week-meta">${escapeHtml(w.message)}</p>`:""}</div><span class="status-badge ${weekStatusClass}">${weekStatusText}</span>`;
+
+        card.innerHTML=`
+          <div>
+            <h3>${formatDate(w.startDate)} → ${formatDate(w.endDate)}</h3>
+            <p class="week-meta">Réponse avant le ${formatDate(w.deadlineDate)} à ${w.deadlineTime||"—"}</p>
+            ${w.message?`<p class="week-meta">${escapeHtml(w.message)}</p>`:""}
+          </div>
+          <div class="week-card-actions">
+            <span class="status-badge ${weekStatusClass}">${weekStatusText}</span>
+            <button class="button button-ghost delete-week" type="button">Supprimer</button>
+          </div>
+        `;
+
+        card.querySelector(".delete-week").addEventListener("click",()=>deleteWeekCompletely(w));
         weekList.appendChild(card)
       })
     }
@@ -1204,6 +1305,206 @@
 
         needList.appendChild(card)
       })
+    }
+
+    function relativeDayIndex(weekStartDate,date){
+      const start=new Date(`${weekStartDate}T12:00:00`);
+      const current=new Date(`${date}T12:00:00`);
+      return Math.round((current-start)/86400000)
+    }
+
+    function renderNeedTemplates(){
+      if(currentNeedTemplates.length===0){
+        needTemplateList.innerHTML='<div class="empty-state">Aucun modèle enregistré.</div>';
+        return
+      }
+
+      needTemplateList.innerHTML="";
+
+      currentNeedTemplates
+        .slice()
+        .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"))
+        .forEach(template=>{
+          const item=document.createElement("article");
+          item.className="template-item";
+          item.innerHTML=`
+            <div>
+              <label style="margin:0">
+                <input class="template-choice" type="radio" name="needTemplateChoice" value="${template.id}" ${selectedNeedTemplateId===template.id?"checked":""}>
+                <strong>${escapeHtml(template.name||"Modèle")}</strong>
+              </label>
+              <small class="muted">${template.items?.length||0} besoin${template.items?.length===1?"":"s"} mémorisé${template.items?.length===1?"":"s"}</small>
+            </div>
+            <div class="template-item-actions">
+              <button class="button button-ghost delete-template" type="button">Supprimer</button>
+            </div>
+          `;
+
+          item.querySelector(".template-choice").addEventListener("change",()=>{
+            selectedNeedTemplateId=template.id
+          });
+
+          item.querySelector(".delete-template").addEventListener("click",async()=>{
+            if(!window.confirm(`Supprimer le modèle « ${template.name||"Modèle"} » ?`))return;
+
+            try{
+              await deleteDoc(doc(db,"needTemplates",template.id));
+              if(selectedNeedTemplateId===template.id)selectedNeedTemplateId="";
+              showMessage(needTemplateMessage,"Le modèle a été supprimé.","success")
+            }catch(error){
+              console.error(error);
+              showMessage(needTemplateMessage,`Impossible de supprimer le modèle : ${error.code||error.message}`,"error")
+            }
+          });
+
+          needTemplateList.appendChild(item)
+        })
+    }
+
+    function subscribeToNeedTemplates(){
+      if(unsubscribeNeedTemplates)unsubscribeNeedTemplates();
+
+      unsubscribeNeedTemplates=onSnapshot(
+        query(collection(db,"needTemplates"),orderBy("name","asc")),
+        snapshot=>{
+          currentNeedTemplates=[];
+          snapshot.forEach(docSnap=>currentNeedTemplates.push({id:docSnap.id,...docSnap.data()}));
+
+          if(
+            selectedNeedTemplateId
+            && !currentNeedTemplates.some(template=>template.id===selectedNeedTemplateId)
+          ){
+            selectedNeedTemplateId=""
+          }
+
+          if(!selectedNeedTemplateId&&currentNeedTemplates.length===1){
+            selectedNeedTemplateId=currentNeedTemplates[0].id
+          }
+
+          renderNeedTemplates()
+        },
+        error=>{
+          console.error(error);
+          needTemplateList.innerHTML='<div class="empty-state">Impossible de charger les modèles.</div>';
+          showMessage(needTemplateMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+        }
+      )
+    }
+
+    async function saveCurrentNeedsAsTemplate(){
+      clearMessage(needTemplateMessage);
+      const week=getSelectedWeek();
+      const name=needTemplateName.value.trim();
+
+      if(!week){
+        showMessage(needTemplateMessage,"Choisissez d’abord une semaine contenant les besoins à mémoriser.","error");
+        return
+      }
+
+      if(!name){
+        showMessage(needTemplateMessage,"Indiquez un nom pour le modèle.","error");
+        return
+      }
+
+      const needs=currentNeeds
+        .filter(need=>need.weekId===week.id)
+        .map(need=>({
+          dayIndex:relativeDayIndex(week.startDate,need.date),
+          time:need.time||"",
+          quantity:Number(need.quantity||0),
+          notes:need.notes||""
+        }))
+        .filter(item=>item.dayIndex>=0&&item.dayIndex<=6);
+
+      if(needs.length===0){
+        showMessage(needTemplateMessage,"Cette semaine ne contient aucun besoin à mémoriser.","error");
+        return
+      }
+
+      if(currentNeedTemplates.some(template=>(template.name||"").toLowerCase()===name.toLowerCase())){
+        showMessage(needTemplateMessage,"Un modèle porte déjà ce nom.","error");
+        return
+      }
+
+      saveNeedTemplateButton.disabled=true;
+
+      try{
+        const ref=await addDoc(collection(db,"needTemplates"),{
+          name,
+          items:needs,
+          createdAt:serverTimestamp(),
+          createdBy:auth.currentUser.uid,
+          createdByName:currentProfile.name||""
+        });
+
+        selectedNeedTemplateId=ref.id;
+        needTemplateName.value="";
+        showMessage(needTemplateMessage,"Le modèle a été mémorisé.","success")
+      }catch(error){
+        console.error(error);
+        showMessage(needTemplateMessage,`Impossible d’enregistrer le modèle : ${error.code||error.message}`,"error")
+      }finally{
+        saveNeedTemplateButton.disabled=false
+      }
+    }
+
+    async function applySelectedNeedTemplate(){
+      clearMessage(needTemplateMessage);
+      const week=getSelectedWeek();
+      const template=currentNeedTemplates.find(item=>item.id===selectedNeedTemplateId);
+
+      if(!week){
+        showMessage(needTemplateMessage,"Choisissez la semaine qui doit recevoir le modèle.","error");
+        return
+      }
+
+      if(!template){
+        showMessage(needTemplateMessage,"Sélectionnez un modèle.","error");
+        return
+      }
+
+      const existing=currentNeeds.filter(need=>need.weekId===week.id);
+      if(existing.length>0){
+        const replace=window.confirm(
+          "Cette semaine contient déjà des besoins. Les supprimer et les remplacer par ce modèle ?"
+        );
+        if(!replace)return
+      }
+
+      applyNeedTemplateButton.disabled=true;
+
+      try{
+        for(const need of existing){
+          await deleteDoc(doc(db,"needs",need.id))
+        }
+
+        for(const item of template.items||[]){
+          await addDoc(collection(db,"needs"),{
+            weekId:week.id,
+            weekStartDate:week.startDate,
+            date:addDays(week.startDate,Number(item.dayIndex||0)),
+            time:item.time||"17:30",
+            quantity:Number(item.quantity||1),
+            notes:item.notes||"",
+            templateId:template.id,
+            templateName:template.name||"",
+            createdAt:serverTimestamp(),
+            createdBy:auth.currentUser.uid,
+            createdByName:currentProfile.name||""
+          })
+        }
+
+        showMessage(
+          needTemplateMessage,
+          `Le modèle « ${template.name} » a été appliqué à la semaine sélectionnée.`,
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(needTemplateMessage,`Impossible d’appliquer le modèle : ${error.code||error.message}`,"error")
+      }finally{
+        applyNeedTemplateButton.disabled=false
+      }
     }
 
     function subscribeToNeeds(){
@@ -2329,6 +2630,8 @@
     });
 
     needsWeekSelect.addEventListener("change",prepareNeedsSection);
+    saveNeedTemplateButton.addEventListener("click",saveCurrentNeedsAsTemplate);
+    applyNeedTemplateButton.addEventListener("click",applySelectedNeedTemplate);
 
 
     kitchenWeekSelect.addEventListener("change",()=>{
@@ -2527,6 +2830,18 @@
       if(!auth.currentUser||!currentProfile){showMessage(weekFormMessage,"Votre session n’est plus valide.","error");return}
       saveWeekButton.disabled=true;saveWeekButton.textContent="Enregistrement…";
       try{
+        const duplicate=currentWeeks.find(week=>
+          week.startDate===weekStart.value
+          || (
+            week.startDate===weekStart.value
+            && week.endDate===weekEnd.value
+          )
+        );
+
+        if(duplicate){
+          throw new Error("Cette semaine existe déjà. Supprimez ou utilisez la semaine déjà créée.")
+        }
+
         await addDoc(collection(db,"weeks"),{
           startDate:weekStart.value,endDate:weekEnd.value,deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
           message:weekMessage.value.trim(),status:openImmediately.checked?"open":"draft",
