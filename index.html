@@ -24,6 +24,27 @@
     .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)}
     .topbar-brand{display:flex;align-items:center;gap:12px;min-width:0}.topbar-brand img{width:74px;height:auto}.topbar-title strong,.topbar-title small{display:block}
     .topbar-title small{margin-top:2px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45vw}
+    .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .install-help-button{white-space:nowrap}
+    .install-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.48)}
+    .install-modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+    .install-modal-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+    .install-close{border:none;background:#f2f2f2;width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1}
+    .install-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .install-device{border:1px solid var(--border);border-radius:14px;padding:18px;background:#fafafa}
+    .install-device h3{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .install-steps{margin:0;padding-left:22px;line-height:1.55}
+    .install-steps li+li{margin-top:8px}
+    .install-tip{margin-top:16px;padding:13px 14px;border-radius:10px;background:var(--soft);line-height:1.45}
+    .install-native-wrap{margin-top:18px}
+    @media(max-width:700px){
+      .topbar{align-items:flex-start}
+      .topbar-actions{gap:8px}
+      .install-help-button{font-size:0;padding:11px 13px}
+      .install-help-button::after{content:"📲";font-size:20px}
+      .install-grid{grid-template-columns:1fr}
+      .install-modal{padding:18px}
+    }
     .layout{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 48px}.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}
     .profile-card{background:var(--soft);border-radius:14px;padding:14px 16px;min-width:230px}.profile-card p{margin-bottom:4px}.profile-card small{color:var(--muted)}
     .dashboard-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
@@ -182,7 +203,10 @@
         <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
         <div class="topbar-title"><strong>Nara Pizza Planning</strong><small id="topbarUser">—</small></div>
       </div>
-      <button id="logoutButton" class="button button-secondary" type="button">Se déconnecter</button>
+      <div class="topbar-actions">
+        <button class="button button-ghost install-help-button" type="button">📲 Ajouter l’app à l’écran</button>
+        <button id="logoutButton" class="button button-secondary" type="button">Se déconnecter</button>
+      </div>
     </header>
 
     <main class="layout">
@@ -494,9 +518,12 @@
           <small id="driverTopbarUser">—</small>
         </div>
       </div>
-      <button id="driverLogoutButton" class="button button-secondary" type="button">
-        Se déconnecter
-      </button>
+      <div class="topbar-actions">
+        <button class="button button-ghost install-help-button" type="button">📲 Ajouter l’app à l’écran</button>
+        <button id="driverLogoutButton" class="button button-secondary" type="button">
+          Se déconnecter
+        </button>
+      </div>
     </header>
 
     <main class="driver-main">
@@ -544,6 +571,50 @@
   </section>
 
 
+  <div id="installOverlay" class="install-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
+    <section class="install-modal">
+      <div class="install-modal-header">
+        <div>
+          <h2 id="installModalTitle">Ajouter Nara Pizza Planning à l’écran d’accueil</h2>
+          <p class="muted">L’application s’ouvrira ensuite comme une app, sans devoir rechercher le lien.</p>
+        </div>
+        <button id="closeInstallModal" class="install-close" type="button" aria-label="Fermer">×</button>
+      </div>
+
+      <div class="install-grid">
+        <article class="install-device">
+          <h3>🍎 iPhone / iPad</h3>
+          <ol class="install-steps">
+            <li>Ouvrez Nara Pizza Planning dans <strong>Safari</strong>.</li>
+            <li>Appuyez sur le bouton <strong>Partager</strong> : le carré avec une flèche vers le haut.</li>
+            <li>Faites défiler le menu et choisissez <strong>Sur l’écran d’accueil</strong>.</li>
+            <li>Conservez le nom proposé, puis appuyez sur <strong>Ajouter</strong>.</li>
+          </ol>
+        </article>
+
+        <article class="install-device">
+          <h3>🤖 Android</h3>
+          <ol class="install-steps">
+            <li>Ouvrez Nara Pizza Planning dans <strong>Google Chrome</strong>.</li>
+            <li>Appuyez sur le menu <strong>⋮</strong> en haut à droite.</li>
+            <li>Choisissez <strong>Ajouter à l’écran d’accueil</strong> ou <strong>Installer l’application</strong>.</li>
+            <li>Confirmez avec <strong>Ajouter</strong> ou <strong>Installer</strong>.</li>
+          </ol>
+        </article>
+      </div>
+
+      <div id="nativeInstallWrap" class="install-native-wrap hidden">
+        <button id="nativeInstallButton" class="button button-primary button-full" type="button">
+          Installer maintenant sur cet appareil
+        </button>
+      </div>
+
+      <p class="install-tip">
+        <strong>Conseil :</strong> restez connecté après l’installation. L’icône Nara Pizza apparaîtra avec les autres applications du téléphone.
+      </p>
+    </section>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -571,6 +642,11 @@
     const loginButton = document.getElementById("loginButton");
     const loginMessage = document.getElementById("loginMessage");
     const appMessage = document.getElementById("appMessage");
+    const installOverlay = document.getElementById("installOverlay");
+    const closeInstallModal = document.getElementById("closeInstallModal");
+    const nativeInstallWrap = document.getElementById("nativeInstallWrap");
+    const nativeInstallButton = document.getElementById("nativeInstallButton");
+    let deferredInstallPrompt = null;
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
@@ -2029,6 +2105,54 @@
           "error"
         )
       }
+    });
+
+    function openInstallModal(){
+      installOverlay.classList.remove("hidden");
+      document.body.style.overflow="hidden"
+    }
+
+    function hideInstallModal(){
+      installOverlay.classList.add("hidden");
+      document.body.style.overflow=""
+    }
+
+    document.querySelectorAll(".install-help-button").forEach(button=>{
+      button.addEventListener("click",openInstallModal)
+    });
+
+    closeInstallModal.addEventListener("click",hideInstallModal);
+
+    installOverlay.addEventListener("click",event=>{
+      if(event.target===installOverlay)hideInstallModal()
+    });
+
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&!installOverlay.classList.contains("hidden")){
+        hideInstallModal()
+      }
+    });
+
+    window.addEventListener("beforeinstallprompt",event=>{
+      event.preventDefault();
+      deferredInstallPrompt=event;
+      nativeInstallWrap.classList.remove("hidden")
+    });
+
+    nativeInstallButton.addEventListener("click",async()=>{
+      if(!deferredInstallPrompt)return;
+
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt=null;
+      nativeInstallWrap.classList.add("hidden");
+      hideInstallModal()
+    });
+
+    window.addEventListener("appinstalled",()=>{
+      deferredInstallPrompt=null;
+      nativeInstallWrap.classList.add("hidden");
+      hideInstallModal()
     });
 
     document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
