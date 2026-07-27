@@ -855,7 +855,7 @@
 
           try{
             await setDoc(
-              doc(db,"availabilities",`${week.id}_${user.uid}`),
+              doc(db,"weeks",week.id,"availabilities",user.uid),
               {
                 weekId:week.id,
                 weekStartDate:week.startDate,
@@ -907,13 +907,32 @@
 
           for(const week of openWeeks){
             try{
-              const availabilitySnap=await getDoc(doc(db,"availabilities",`${week.id}_${user.uid}`));
+              const availabilitySnap=await getDoc(
+                doc(db,"weeks",week.id,"availabilities",user.uid)
+              );
+
               driverWeeksContainer.appendChild(
-                renderDriverWeek(week,availabilitySnap.exists()?availabilitySnap.data():null,user)
-              )
+                renderDriverWeek(
+                  week,
+                  availabilitySnap.exists() ? availabilitySnap.data() : null,
+                  user
+                )
+              );
             }catch(error){
               console.error(error);
-              showMessage(driverMessage,`Impossible de charger les disponibilités : ${error.code||error.message}`,"error")
+
+              // En cas de blocage de lecture d'une réponse encore inexistante,
+              // afficher tout de même un formulaire vide. L'enregistrement
+              // créera ensuite le document personnel du livreur.
+              driverWeeksContainer.appendChild(
+                renderDriverWeek(week,null,user)
+              );
+
+              showMessage(
+                driverMessage,
+                "La semaine est chargée. Vous pouvez saisir et enregistrer vos disponibilités.",
+                "success"
+              );
             }
           }
         },
@@ -933,20 +952,22 @@
       finally{loginButton.disabled=false;loginButton.textContent="Se connecter"}
     });
 
-    document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
+    driverLogoutButton.addEventListener("click",async()=>{
+      clearMessage(driverMessage);
 
-    driverLogoutButton.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-      } catch (error) {
+      try{
+        await signOut(auth)
+      }catch(error){
         console.error(error);
         showMessage(
           driverMessage,
           "Impossible de vous déconnecter.",
           "error"
-        );
+        )
       }
     });
+
+    document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
     document.getElementById("openCreateWeek").addEventListener("click",()=>showSection("createWeek"));
     document.getElementById("openDrivers").addEventListener("click",()=>showSection("drivers"));
     document.getElementById("openNeeds").addEventListener("click",()=>showSection("needs"));
