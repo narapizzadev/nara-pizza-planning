@@ -355,7 +355,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, setDoc, updateDoc, deleteDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB337El2PUsl00uRTBK30H55-5oSCwCmzg",
@@ -886,7 +886,7 @@
     function subscribeToOpenDriverWeeks(user){
       if(unsubscribeDriverWeeks)unsubscribeDriverWeeks();
 
-      const weeksQuery=query(collection(db,"weeks"),orderBy("startDate","asc"));
+      const weeksQuery=query(collection(db,"weeks"),where("status","==","open"));
 
       unsubscribeDriverWeeks=onSnapshot(
         weeksQuery,
@@ -902,6 +902,7 @@
             return
           }
 
+          openWeeks.sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));
           driverWeeksContainer.innerHTML="";
 
           for(const week of openWeeks){
