@@ -160,9 +160,25 @@
     }
 
   
+    .driver-week-tabs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 14px;scrollbar-width:thin}
+    .driver-week-tab{flex:0 0 auto;border:2px solid #ffd4b5;background:#fff;color:var(--orange-dark);border-radius:12px;padding:11px 16px;font-weight:800}
+    .driver-week-tab.active{background:var(--orange);border-color:var(--orange);color:#fff}
+    .driver-week-tab .week-alert{display:inline-flex;min-width:21px;height:21px;align-items:center;justify-content:center;margin-left:7px;border-radius:999px;background:#fff;color:var(--error);font-size:12px}
+    .driver-week-tab.active .week-alert{background:#fff;color:var(--error)}
     .assignment-list{display:grid;gap:16px;margin:18px 0 24px}
-    .assignment-day-group{display:grid;gap:10px}
-    .assignment-day-title{margin:0;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:18px}
+    .assignment-day-group{display:grid;gap:10px;padding:16px;border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:0 5px 16px rgba(0,0,0,.05)}
+    .assignment-day-group.today{border:3px solid var(--orange)}
+    .assignment-day-title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0;padding-bottom:10px;border-bottom:1px solid var(--border);font-size:20px}
+    .assignment-day-title small{font-size:13px;color:var(--orange-dark)}
+    .assignment-card{box-shadow:none!important;border:none!important;border-radius:0!important;padding:12px 0!important}
+    .assignment-card+.assignment-card{border-top:1px solid var(--border)!important}
+    .assignment-card h3{font-size:24px;margin-bottom:7px}
+    .assignment-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}
+    .driver-week-card{overflow:hidden}
+    @media(max-width:600px){
+      .assignment-actions{grid-template-columns:1fr}
+      .driver-week-tab{padding:10px 14px}
+    }
     .driver-availability-zone{margin-top:16px}
     .assignment-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
     .assignment-card h3{margin-bottom:5px}
@@ -541,6 +557,17 @@
       <section class="driver-week-card">
         <div class="panel-header">
           <div>
+            <h3>Choisir la semaine</h3>
+            <p class="muted">Une seule semaine est affichée à la fois.</p>
+          </div>
+        </div>
+
+        <div id="driverWeekTabs" class="driver-week-tabs">
+          <div class="empty-state">Chargement des semaines…</div>
+        </div>
+
+        <div class="panel-header">
+          <div>
             <h3 id="driverAssignmentsTitle">Mes affectations</h3>
             <p id="driverAssignmentsSubtitle" class="muted">Confirmez ou refusez les créneaux qui vous ont été attribués.</p>
           </div>
@@ -688,6 +715,7 @@
     const driverLogoutButton = document.getElementById("driverLogoutButton");
     const driverWeeksContainer = document.getElementById("driverWeeksContainer");
     const driverAssignmentsContainer = document.getElementById("driverAssignmentsContainer");
+    const driverWeekTabs = document.getElementById("driverWeekTabs");
     const driverPageTitle = document.getElementById("driverPageTitle");
     const driverPageSubtitle = document.getElementById("driverPageSubtitle");
     const driverAssignmentsTitle = document.getElementById("driverAssignmentsTitle");
@@ -718,7 +746,9 @@
     let currentDriverUser = null;
     let unsubscribeDriverAssignments = null;
     let currentDriverAssignments = [];
+    let currentDriverOpenWeeks = [];
     let currentDriverOpenWeeksCount = 0;
+    let currentDriverWeekId = "";
     let currentPlan = null;
     let currentAssignmentStatuses = new Map();
 
@@ -1347,6 +1377,7 @@
         })
       }
 
+      wrapper.dataset.driverWeekId=week.id;
       return wrapper
     }
 
@@ -1364,11 +1395,12 @@
             if(week.status==="open")openWeeks.push(week)
           });
 
+          currentDriverOpenWeeks=openWeeks;
           currentDriverOpenWeeksCount=openWeeks.length;
-          updateDriverPresentation();
 
           if(openWeeks.length===0){
-            driverWeeksContainer.innerHTML='<div class="empty-state">Aucune semaine ouverte pour le moment.</div>';
+            driverWeeksContainer.innerHTML='<div class="empty-state">Aucune demande de disponibilités pour cette semaine.</div>';
+            refreshDriverScreen();
             return
           }
 
@@ -1405,6 +1437,8 @@
               );
             }
           }
+
+          refreshDriverScreen()
         },
         error=>{
           console.error(error);
@@ -1432,27 +1466,236 @@
       return "assignment-pending"
     }
 
+    function driverWeekLabel(week){
+      if(!week)return "Semaine";
+      const startDate=week.startDate||week.weekStartDate||"";
+      const endDate=week.endDate||week.weekEndDate||"";
+      const start=startDate?new Date(`${startDate}T12:00:00`):null;
+      const end=endDate?new Date(`${endDate}T12:00:00`):null;
+
+      if(!start)return "Semaine";
+      const startText=new Intl.DateTimeFormat("fr-CH",{day:"2-digit",month:"2-digit"}).format(start);
+      const endText=end?new Intl.DateTimeFormat("fr-CH",{day:"2-digit",month:"2-digit"}).format(end):"";
+      return endText?`${startText} → ${endText}`:startText
+    }
+
+    function getDriverWeeks(){
+      const weekMap=new Map();
+
+      currentDriverOpenWeeks.forEach(week=>{
+        weekMap.set(week.id,{...week,isOpen:true})
+      });
+
+      currentDriverAssignments.forEach(assignment=>{
+        const existing=weekMap.get(assignment.weekId)||{};
+        weekMap.set(assignment.weekId,{
+          ...existing,
+          id:assignment.weekId,
+          startDate:existing.startDate||assignment.weekStartDate||"",
+          endDate:existing.endDate||assignment.weekEndDate||"",
+          isOpen:existing.isOpen===true
+        })
+      });
+
+      return [...weekMap.values()].sort((a,b)=>
+        (a.startDate||"").localeCompare(b.startDate||"")
+      )
+    }
+
+    function chooseDefaultDriverWeek(weeks){
+      if(currentDriverWeekId&&weeks.some(week=>week.id===currentDriverWeekId))return;
+
+      const pendingWeek=currentDriverAssignments.find(
+        assignment=>(assignment.status||"pending")==="pending"
+      )?.weekId;
+
+      if(pendingWeek&&weeks.some(week=>week.id===pendingWeek)){
+        currentDriverWeekId=pendingWeek;
+        return
+      }
+
+      const openWeek=weeks.find(week=>week.isOpen);
+      currentDriverWeekId=openWeek?.id||weeks.at(-1)?.id||""
+    }
+
+    function renderDriverWeekTabs(){
+      const weeks=getDriverWeeks();
+      chooseDefaultDriverWeek(weeks);
+
+      if(weeks.length===0){
+        driverWeekTabs.innerHTML='<div class="empty-state">Aucune semaine disponible.</div>';
+        return
+      }
+
+      driverWeekTabs.innerHTML="";
+
+      weeks.forEach(week=>{
+        const pendingCount=currentDriverAssignments.filter(
+          assignment=>
+            assignment.weekId===week.id
+            && (assignment.status||"pending")==="pending"
+        ).length;
+
+        const button=document.createElement("button");
+        button.type="button";
+        button.className=`driver-week-tab${week.id===currentDriverWeekId?" active":""}`;
+        button.innerHTML=`
+          ${driverWeekLabel(week)}
+          ${pendingCount?`<span class="week-alert">${pendingCount}</span>`:""}
+        `;
+
+        button.addEventListener("click",()=>{
+          currentDriverWeekId=week.id;
+          refreshDriverScreen()
+        });
+
+        driverWeekTabs.appendChild(button)
+      })
+    }
+
     function updateDriverPresentation(){
-      const confirmedAssignments=currentDriverAssignments.filter(
+      const visibleAssignments=currentDriverAssignments.filter(
+        assignment=>assignment.weekId===currentDriverWeekId
+      );
+      const confirmedAssignments=visibleAssignments.filter(
         assignment=>assignment.status==="confirmed" && assignment.active!==false
       );
-      const pendingAssignments=currentDriverAssignments.filter(
+      const pendingAssignments=visibleAssignments.filter(
         assignment=>(assignment.status||"pending")==="pending" && assignment.active!==false
       );
+      const selectedWeekIsOpen=currentDriverOpenWeeks.some(
+        week=>week.id===currentDriverWeekId
+      );
 
-      if(currentDriverOpenWeeksCount===0 && confirmedAssignments.length>0 && pendingAssignments.length===0){
+      if(!selectedWeekIsOpen && confirmedAssignments.length>0 && pendingAssignments.length===0){
         driverPageTitle.textContent="Mon planning final";
-        driverPageSubtitle.textContent="Voici vos horaires confirmés et publiés.";
+        driverPageSubtitle.textContent="Voici vos horaires confirmés et publiés pour la semaine sélectionnée.";
         driverAssignmentsTitle.textContent="Mes horaires confirmés";
-        driverAssignmentsSubtitle.textContent="Votre planning final est présenté par jour.";
-        driverAvailabilityZone.classList.add("hidden")
+        driverAssignmentsSubtitle.textContent="Les horaires sont regroupés par jour.";
       }else{
         driverPageTitle.textContent="Mon planning";
-        driverPageSubtitle.textContent="Consultez vos affectations et indiquez vos disponibilités lorsqu’une nouvelle semaine est ouverte.";
-        driverAssignmentsTitle.textContent="Mes affectations";
-        driverAssignmentsSubtitle.textContent="Confirmez ou refusez les créneaux qui vous ont été attribués.";
-        driverAvailabilityZone.classList.remove("hidden")
+        driverPageSubtitle.textContent="Choisissez une semaine, puis confirmez uniquement les horaires affichés.";
+        driverAssignmentsTitle.textContent=pendingAssignments.length
+          ? `Horaires à confirmer (${pendingAssignments.length})`
+          : "Mes affectations";
+        driverAssignmentsSubtitle.textContent=pendingAssignments.length
+          ? "Confirmez ou refusez chaque horaire de cette semaine."
+          : "Aucun horaire n’attend votre réponse pour cette semaine."
       }
+
+      driverAvailabilityZone.classList.toggle("hidden",!selectedWeekIsOpen)
+    }
+
+    function renderCurrentDriverAssignments(){
+      const assignments=currentDriverAssignments
+        .filter(assignment=>assignment.weekId===currentDriverWeekId)
+        .sort((a,b)=>{
+          const dateCompare=(a.date||"").localeCompare(b.date||"");
+          return dateCompare!==0?dateCompare:(a.time||"").localeCompare(b.time||"")
+        });
+
+      updateDriverPresentation();
+
+      if(assignments.length===0){
+        driverAssignmentsContainer.innerHTML='<div class="empty-state">Aucune affectation pour cette semaine.</div>';
+        return
+      }
+
+      driverAssignmentsContainer.innerHTML="";
+      const byDate=new Map();
+
+      assignments.forEach(assignment=>{
+        if(!byDate.has(assignment.date))byDate.set(assignment.date,[]);
+        byDate.get(assignment.date).push(assignment)
+      });
+
+      [...byDate.entries()].forEach(([date,dayAssignments])=>{
+        const dayGroup=document.createElement("section");
+        const today=new Date().toISOString().slice(0,10);
+        dayGroup.className=`assignment-day-group${date===today?" today":""}`;
+        dayGroup.innerHTML=`
+          <h3 class="assignment-day-title">
+            <span>${formatDay(date)}</span>
+            ${date===today?'<small>Aujourd’hui</small>':""}
+          </h3>
+        `;
+
+        dayAssignments.forEach(assignment=>{
+          const card=document.createElement("article");
+          card.className="assignment-card";
+          const status=assignment.status||"pending";
+          const actions=status==="pending"
+            ? `<div class="assignment-actions">
+                 <button class="button button-primary confirm-assignment" type="button">Je confirme</button>
+                 <button class="button button-ghost refuse-assignment" type="button">Je refuse</button>
+               </div>`
+            : "";
+
+          card.innerHTML=`
+            <span class="assignment-status ${assignmentStatusClass(status)}">${assignmentStatusLabel(status)}</span>
+            <h3>${escapeHtml(assignment.time||"—")}</h3>
+            <p class="assignment-meta">
+              ${escapeHtml(assignment.vehicleRequirement||"Aucune exigence de véhicule")}
+            </p>
+            ${actions}
+            <div class="message assignment-message"></div>
+          `;
+
+          const messageEl=card.querySelector(".assignment-message");
+
+          card.querySelector(".confirm-assignment")?.addEventListener("click",async()=>{
+            try{
+              await updateDoc(doc(db,"driverAssignments",assignment.id),{
+                status:"confirmed",
+                respondedAt:serverTimestamp(),
+                updatedAt:serverTimestamp()
+              });
+              showMessage(messageEl,"Votre présence est confirmée.","success")
+            }catch(error){
+              console.error(error);
+              showMessage(messageEl,`Impossible de confirmer : ${error.code||error.message}`,"error")
+            }
+          });
+
+          card.querySelector(".refuse-assignment")?.addEventListener("click",async()=>{
+            const confirmed=window.confirm("Refuser cette affectation ?");
+            if(!confirmed)return;
+
+            try{
+              await updateDoc(doc(db,"driverAssignments",assignment.id),{
+                status:"refused",
+                respondedAt:serverTimestamp(),
+                updatedAt:serverTimestamp()
+              });
+              showMessage(
+                messageEl,
+                "Votre refus est enregistré. Le manager pourra proposer un remplacement.",
+                "success"
+              )
+            }catch(error){
+              console.error(error);
+              showMessage(messageEl,`Impossible d’enregistrer le refus : ${error.code||error.message}`,"error")
+            }
+          });
+
+          dayGroup.appendChild(card)
+        });
+
+        driverAssignmentsContainer.appendChild(dayGroup)
+      })
+    }
+
+    function renderSelectedAvailabilityWeek(){
+      const cards=[...driverWeeksContainer.querySelectorAll("[data-driver-week-id]")];
+      cards.forEach(card=>{
+        card.classList.toggle("hidden",card.dataset.driverWeekId!==currentDriverWeekId)
+      })
+    }
+
+    function refreshDriverScreen(){
+      renderDriverWeekTabs();
+      renderCurrentDriverAssignments();
+      renderSelectedAvailabilityWeek()
     }
 
     function renderDriverAssignments(snapshot,user){
@@ -1464,91 +1707,8 @@
         }
       });
 
-      assignments.sort((a,b)=>{
-        const dateCompare=(a.date||"").localeCompare(b.date||"");
-        return dateCompare!==0?dateCompare:(a.time||"").localeCompare(b.time||"")
-      });
-
       currentDriverAssignments=assignments;
-      updateDriverPresentation();
-
-      if(assignments.length===0){
-        driverAssignmentsContainer.innerHTML='<div class="empty-state">Aucune affectation pour le moment.</div>';
-        return
-      }
-
-      driverAssignmentsContainer.innerHTML="";
-      let currentDate="";
-      let dayGroup=null;
-
-      assignments.forEach(assignment=>{
-        if(assignment.date!==currentDate){
-          currentDate=assignment.date;
-          dayGroup=document.createElement("section");
-          dayGroup.className="assignment-day-group";
-          dayGroup.innerHTML=`<h3 class="assignment-day-title">${formatDay(assignment.date)}</h3>`;
-          driverAssignmentsContainer.appendChild(dayGroup)
-        }
-
-        const card=document.createElement("article");
-        card.className="assignment-card";
-        const status=assignment.status||"pending";
-        const actions=status==="pending"
-          ? `<div class="assignment-actions">
-               <button class="button button-primary confirm-assignment" type="button">Je confirme</button>
-               <button class="button button-ghost refuse-assignment" type="button">Je refuse</button>
-             </div>`
-          : "";
-
-        card.innerHTML=`
-          <span class="assignment-status ${assignmentStatusClass(status)}">${assignmentStatusLabel(status)}</span>
-          <h3>${formatDay(assignment.date)} à ${escapeHtml(assignment.time||"—")}</h3>
-          <p class="assignment-meta">
-            ${escapeHtml(assignment.vehicleRequirement||"Aucune exigence de véhicule")}
-          </p>
-          ${actions}
-          <div class="message assignment-message"></div>
-        `;
-
-        const messageEl=card.querySelector(".assignment-message");
-
-        card.querySelector(".confirm-assignment")?.addEventListener("click",async()=>{
-          try{
-            await updateDoc(doc(db,"driverAssignments",assignment.id),{
-              status:"confirmed",
-              respondedAt:serverTimestamp(),
-              updatedAt:serverTimestamp()
-            });
-            showMessage(messageEl,"Votre présence est confirmée.","success")
-          }catch(error){
-            console.error(error);
-            showMessage(messageEl,`Impossible de confirmer : ${error.code||error.message}`,"error")
-          }
-        });
-
-        card.querySelector(".refuse-assignment")?.addEventListener("click",async()=>{
-          const confirmed=window.confirm("Refuser cette affectation ?");
-          if(!confirmed)return;
-
-          try{
-            await updateDoc(doc(db,"driverAssignments",assignment.id),{
-              status:"refused",
-              respondedAt:serverTimestamp(),
-              updatedAt:serverTimestamp()
-            });
-            showMessage(
-              messageEl,
-              "Votre refus est enregistré. Le premier livreur de la liste d’attente sera proposé au manager.",
-              "success"
-            )
-          }catch(error){
-            console.error(error);
-            showMessage(messageEl,`Impossible d’enregistrer le refus : ${error.code||error.message}`,"error")
-          }
-        });
-
-        dayGroup.appendChild(card)
-      })
+      refreshDriverScreen()
     }
 
     function subscribeToDriverAssignments(user){
@@ -2517,7 +2677,9 @@
         currentProfile=null;
         currentDriverUser=null;
         currentDriverAssignments=[];
+        currentDriverOpenWeeks=[];
         currentDriverOpenWeeksCount=0;
+        currentDriverWeekId="";
         if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
         if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
