@@ -37,8 +37,17 @@
     .week-card p{margin-bottom:4px}.week-meta{color:var(--muted);font-size:14px;line-height:1.4}.status-badge{display:inline-flex;padding:7px 10px;border-radius:999px;font-size:13px;font-weight:700;background:#f1f1f1}
     .status-open{background:#ecfdf3;color:var(--success)}.status-draft{background:#fff8e1;color:#9a6700}.empty-state{padding:22px;border:1px dashed var(--border);border-radius:12px;text-align:center;color:var(--muted);background:#fafafa}
     .placeholder{padding:28px;border-radius:14px;background:var(--soft);text-align:center}.back-row{margin-bottom:16px}.footer{margin-top:28px;text-align:center;color:var(--muted);font-size:13px}
+    .driver-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:18px}
+    .driver-list{display:grid;gap:12px}
+    .driver-card{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .driver-card h3{margin-bottom:4px}.driver-card p{margin-bottom:3px}.driver-meta{color:var(--muted);font-size:14px;line-height:1.4}
+    .driver-actions{display:flex;align-items:center;gap:10px}.driver-score{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+    .score-chip{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f4f4f4;font-size:12px;font-weight:700}
+    .status-active{background:#ecfdf3;color:var(--success)}.status-inactive{background:#fff1f0;color:var(--error)}
+    .driver-form-wrap{margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+    .form-note{padding:12px 14px;border-radius:10px;background:#fff8e1;color:#7a5600;font-size:14px;line-height:1.4;margin-bottom:16px}
     @media(max-width:820px){.dashboard-grid,.form-grid{grid-template-columns:1fr}.page-header{flex-direction:column}.profile-card{width:100%}}
-    @media(max-width:560px){.auth-shell{padding:12px}.auth-card{padding:24px 20px}.layout{width:min(100% - 20px,1180px)}.topbar{padding:10px 12px}.topbar-brand img{width:60px}.week-card{grid-template-columns:1fr}}
+    @media(max-width:560px){.auth-shell{padding:12px}.auth-card{padding:24px 20px}.layout{width:min(100% - 20px,1180px)}.topbar{padding:10px 12px}.topbar-brand img{width:60px}.week-card,.driver-card{grid-template-columns:1fr}.driver-toolbar{align-items:stretch;flex-direction:column}.driver-actions{justify-content:flex-start}}
   </style>
 </head>
 <body>
@@ -108,7 +117,96 @@
 
       <section id="driversSection" class="section-view">
         <div class="back-row"><button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button></div>
-        <section class="panel"><h2>Gérer les livreurs</h2><div class="placeholder"><h3>Base du module prête</h3><p class="muted">La prochaine version permettra de lister les livreurs, leurs statuts et leurs informations opérationnelles.</p></div></section>
+
+        <section class="panel">
+          <div class="driver-toolbar">
+            <div>
+              <h2>Gérer les livreurs</h2>
+              <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
+            </div>
+            <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
+          </div>
+
+          <div id="driverList" class="driver-list">
+            <div class="empty-state">Chargement des livreurs…</div>
+          </div>
+
+          <div id="driverFormWrap" class="driver-form-wrap hidden">
+            <div class="panel-header">
+              <div>
+                <h3 id="driverFormTitle">Ajouter un livreur</h3>
+                <p class="muted">Le mot de passe provisoire est demandé uniquement lors de la création du compte.</p>
+              </div>
+            </div>
+
+            <div class="form-note">
+              Les notes, la priorité, la fiabilité et l’expérience sont confidentielles et visibles uniquement par les managers.
+            </div>
+
+            <form id="driverForm">
+              <input id="driverId" type="hidden">
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="driverName">Nom complet</label>
+                  <input id="driverName" type="text" required>
+                </div>
+
+                <div class="field">
+                  <label for="driverEmail">Adresse e-mail</label>
+                  <input id="driverEmail" type="email" required>
+                </div>
+
+                <div class="field">
+                  <label for="driverPhone">Téléphone</label>
+                  <input id="driverPhone" type="tel" placeholder="+41 ...">
+                </div>
+
+                <div class="field">
+                  <label for="driverVehicle">Véhicule</label>
+                  <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
+                </div>
+
+                <div id="driverPasswordField" class="field">
+                  <label for="driverPassword">Mot de passe provisoire</label>
+                  <input id="driverPassword" type="password" minlength="6" autocomplete="new-password">
+                </div>
+
+                <div class="field">
+                  <label for="driverPriority">Priorité interne (1 à 5)</label>
+                  <input id="driverPriority" type="number" min="1" max="5" value="3" required>
+                </div>
+
+                <div class="field">
+                  <label for="driverReliability">Fiabilité (1 à 5)</label>
+                  <input id="driverReliability" type="number" min="1" max="5" value="3" required>
+                </div>
+
+                <div class="field">
+                  <label for="driverExperience">Expérience (1 à 5)</label>
+                  <input id="driverExperience" type="number" min="1" max="5" value="3" required>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:16px">
+                <label for="driverNotes">Notes confidentielles</label>
+                <textarea id="driverNotes" placeholder="Informations internes visibles uniquement par le manager"></textarea>
+              </div>
+
+              <label class="checkbox-row">
+                <input id="driverActive" type="checkbox" checked>
+                <span>Compte actif et disponible dans l’application.</span>
+              </label>
+
+              <div class="form-actions">
+                <button id="cancelDriverForm" class="button button-ghost" type="button">Annuler</button>
+                <button id="saveDriverButton" class="button button-primary" type="submit">Créer le livreur</button>
+              </div>
+            </form>
+
+            <div id="driverFormMessage" class="message"></div>
+          </div>
+        </section>
       </section>
 
       <section id="needsSection" class="section-view">
@@ -123,8 +221,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, setDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB337El2PUsl00uRTBK30H55-5oSCwCmzg",
@@ -138,6 +236,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const driverCreatorApp = initializeApp(firebaseConfig, "driverCreator");
+    const driverCreatorAuth = getAuth(driverCreatorApp);
 
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
@@ -162,8 +262,18 @@
     const weekMessage = document.getElementById("weekMessage");
     const openImmediately = document.getElementById("openImmediately");
     const weekList = document.getElementById("weekList");
+
+    const driverList = document.getElementById("driverList");
+    const driverFormWrap = document.getElementById("driverFormWrap");
+    const driverForm = document.getElementById("driverForm");
+    const driverFormTitle = document.getElementById("driverFormTitle");
+    const driverFormMessage = document.getElementById("driverFormMessage");
+    const saveDriverButton = document.getElementById("saveDriverButton");
+    const driverPasswordField = document.getElementById("driverPasswordField");
+
     let currentProfile = null;
     let unsubscribeWeeks = null;
+    let unsubscribeDrivers = null;
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
@@ -175,7 +285,7 @@
       document.getElementById("profileEmail").textContent=profile.email||"";
       document.getElementById("profileRole").textContent=profile.role||"";
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
-      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks()
+      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers()
     }
 
     async function loadUserProfile(user){
@@ -215,6 +325,107 @@
       })
     }
 
+
+    function resetDriverForm(){
+      driverForm.reset();
+      document.getElementById("driverId").value="";
+      document.getElementById("driverPriority").value="3";
+      document.getElementById("driverReliability").value="3";
+      document.getElementById("driverExperience").value="3";
+      document.getElementById("driverActive").checked=true;
+      document.getElementById("driverEmail").readOnly=false;
+      document.getElementById("driverPassword").required=true;
+      driverPasswordField.classList.remove("hidden");
+      driverFormTitle.textContent="Ajouter un livreur";
+      saveDriverButton.textContent="Créer le livreur";
+      clearMessage(driverFormMessage)
+    }
+
+    function openNewDriverForm(){
+      resetDriverForm();
+      driverFormWrap.classList.remove("hidden");
+      driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
+    }
+
+    async function openEditDriverForm(userId,profile){
+      resetDriverForm();
+      document.getElementById("driverId").value=userId;
+      document.getElementById("driverName").value=profile.name||"";
+      document.getElementById("driverEmail").value=profile.email||"";
+      document.getElementById("driverEmail").readOnly=true;
+      document.getElementById("driverPhone").value=profile.phone||"";
+      document.getElementById("driverVehicle").value=profile.vehicle||"";
+      document.getElementById("driverActive").checked=profile.active===true;
+      driverPasswordField.classList.add("hidden");
+      document.getElementById("driverPassword").required=false;
+
+      try{
+        const privateSnap=await getDoc(doc(db,"driverPrivate",userId));
+        if(privateSnap.exists()){
+          const privateData=privateSnap.data();
+          document.getElementById("driverPriority").value=privateData.priority||3;
+          document.getElementById("driverReliability").value=privateData.reliability||3;
+          document.getElementById("driverExperience").value=privateData.experience||3;
+          document.getElementById("driverNotes").value=privateData.notes||""
+        }
+      }catch(error){
+        console.error(error);
+        showMessage(driverFormMessage,`Impossible de charger la fiche confidentielle : ${error.code||error.message}`,"error")
+      }
+
+      driverFormTitle.textContent="Modifier le livreur";
+      saveDriverButton.textContent="Enregistrer les modifications";
+      driverFormWrap.classList.remove("hidden");
+      driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
+    }
+
+    function renderDrivers(snapshot){
+      const drivers=[];
+      snapshot.forEach(docSnap=>{
+        const data=docSnap.data();
+        if(data.role==="driver")drivers.push({id:docSnap.id,...data})
+      });
+
+      drivers.sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+
+      if(drivers.length===0){
+        driverList.innerHTML='<div class="empty-state">Aucun livreur n’a encore été ajouté.</div>';
+        return
+      }
+
+      driverList.innerHTML="";
+      drivers.forEach(driver=>{
+        const card=document.createElement("article");
+        card.className="driver-card";
+        card.innerHTML=`
+          <div>
+            <h3>${escapeHtml(driver.name||"Livreur")}</h3>
+            <p class="driver-meta">${escapeHtml(driver.email||"")}</p>
+            <p class="driver-meta">${escapeHtml(driver.phone||"Téléphone non renseigné")} · ${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</p>
+          </div>
+          <div class="driver-actions">
+            <span class="status-badge ${driver.active===true?"status-active":"status-inactive"}">${driver.active===true?"Actif":"Désactivé"}</span>
+            <button class="button button-ghost edit-driver" type="button">Modifier</button>
+          </div>
+        `;
+        card.querySelector(".edit-driver").addEventListener("click",()=>openEditDriverForm(driver.id,driver));
+        driverList.appendChild(card)
+      })
+    }
+
+    function subscribeToDrivers(){
+      if(unsubscribeDrivers)unsubscribeDrivers();
+      unsubscribeDrivers=onSnapshot(
+        collection(db,"users"),
+        renderDrivers,
+        error=>{
+          console.error(error);
+          driverList.innerHTML='<div class="empty-state">Impossible de charger les livreurs.</div>';
+          showMessage(appMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+        }
+      )
+    }
+
     loginForm.addEventListener("submit",async event=>{
       event.preventDefault();clearMessage(loginMessage);
       loginButton.disabled=true;loginButton.textContent="Connexion…";
@@ -228,6 +439,12 @@
     document.getElementById("openDrivers").addEventListener("click",()=>showSection("drivers"));
     document.getElementById("openNeeds").addEventListener("click",()=>showSection("needs"));
     document.querySelectorAll(".backToDashboard").forEach(b=>b.addEventListener("click",()=>showSection("dashboard")));
+    document.getElementById("openDriverForm").addEventListener("click",openNewDriverForm);
+    document.getElementById("cancelDriverForm").addEventListener("click",()=>{
+      resetDriverForm();
+      driverFormWrap.classList.add("hidden")
+    });
+
     weekStart.addEventListener("change",()=>{if(weekStart.value)weekEnd.value=addDays(weekStart.value,6)});
 
     weekForm.addEventListener("submit",async event=>{
@@ -247,9 +464,89 @@
       finally{saveWeekButton.disabled=false;saveWeekButton.textContent="Enregistrer la semaine"}
     });
 
+
+    driverForm.addEventListener("submit",async event=>{
+      event.preventDefault();
+      clearMessage(driverFormMessage);
+
+      if(!auth.currentUser||!currentProfile){
+        showMessage(driverFormMessage,"Votre session n’est plus valide.","error");
+        return
+      }
+
+      const existingId=document.getElementById("driverId").value;
+      const name=document.getElementById("driverName").value.trim();
+      const email=document.getElementById("driverEmail").value.trim().toLowerCase();
+      const phone=document.getElementById("driverPhone").value.trim();
+      const vehicle=document.getElementById("driverVehicle").value.trim();
+      const active=document.getElementById("driverActive").checked;
+      const priority=Number(document.getElementById("driverPriority").value);
+      const reliability=Number(document.getElementById("driverReliability").value);
+      const experience=Number(document.getElementById("driverExperience").value);
+      const notes=document.getElementById("driverNotes").value.trim();
+
+      saveDriverButton.disabled=true;
+      saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
+
+      try{
+        let userId=existingId;
+
+        if(!existingId){
+          const password=document.getElementById("driverPassword").value;
+          const credential=await createUserWithEmailAndPassword(driverCreatorAuth,email,password);
+          userId=credential.user.uid;
+
+          await setDoc(doc(db,"users",userId),{
+            name,email,phone,vehicle,active,
+            role:"driver",
+            createdAt:serverTimestamp(),
+            createdBy:auth.currentUser.uid,
+            updatedAt:serverTimestamp()
+          });
+
+          await signOut(driverCreatorAuth)
+        }else{
+          await updateDoc(doc(db,"users",userId),{
+            name,phone,vehicle,active,
+            updatedAt:serverTimestamp(),
+            updatedBy:auth.currentUser.uid
+          })
+        }
+
+        await setDoc(doc(db,"driverPrivate",userId),{
+          priority,reliability,experience,notes,
+          updatedAt:serverTimestamp(),
+          updatedBy:auth.currentUser.uid
+        },{merge:true});
+
+        showMessage(
+          driverFormMessage,
+          existingId?"Le livreur a été modifié avec succès.":"Le livreur a été créé avec succès.",
+          "success"
+        );
+
+        setTimeout(()=>{
+          resetDriverForm();
+          driverFormWrap.classList.add("hidden")
+        },900)
+      }catch(error){
+        console.error(error);
+        let message=error.code||error.message;
+
+        if(error.code==="auth/email-already-in-use")message="Cette adresse e-mail est déjà utilisée.";
+        if(error.code==="auth/weak-password")message="Le mot de passe provisoire doit contenir au moins 6 caractères.";
+        if(error.code==="auth/invalid-email")message="L’adresse e-mail n’est pas valide.";
+
+        showMessage(driverFormMessage,`Impossible d’enregistrer le livreur : ${message}`,"error")
+      }finally{
+        saveDriverButton.disabled=false;
+        saveDriverButton.textContent=existingId?"Enregistrer les modifications":"Créer le livreur"
+      }
+    });
+
     onAuthStateChanged(auth,async user=>{
       clearMessage(loginMessage);clearMessage(appMessage);
-      if(!user){currentProfile=null;if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}showLogin();return}
+      if(!user){currentProfile=null;if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}showLogin();return}
       try{showApp(await loadUserProfile(user))}
       catch(error){console.error(error);await signOut(auth);showLogin();showMessage(loginMessage,error.message||"Accès refusé.","error")}
     });
