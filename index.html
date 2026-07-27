@@ -934,6 +934,19 @@
     });
 
     document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
+
+    driverLogoutButton.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          driverMessage,
+          "Impossible de vous déconnecter.",
+          "error"
+        );
+      }
+    });
     document.getElementById("openCreateWeek").addEventListener("click",()=>showSection("createWeek"));
     document.getElementById("openDrivers").addEventListener("click",()=>showSection("drivers"));
     document.getElementById("openNeeds").addEventListener("click",()=>showSection("needs"));
@@ -1130,4 +1143,3 @@
   </script>
 </body>
 </html>
-
