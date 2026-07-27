@@ -452,7 +452,8 @@
 
           <div class="form-note">
             Classement utilisé : priorité × 3, fiabilité × 2 et expérience × 1.
-            Un même livreur n’est proposé qu’une seule fois par jour.
+            Un livreur peut travailler une fois au service de midi et une fois au service du soir le même jour,
+            avec un maximum de 6 jours de travail par semaine.
           </div>
 
           <div class="planning-controls">
@@ -1686,24 +1687,41 @@
       return {week,needs,availabilities,drivers}
     }
 
+    function servicePeriod(time){
+      return time<"16:00"?"midi":"soir"
+    }
+
     function createProposal(data){
-      const assignedByDate=new Map();
+      // Un livreur peut être affecté une fois à midi et une fois le soir
+      // le même jour, mais sur un maximum de 6 jours distincts par semaine.
+      const assignedByDateAndService=new Map();
+      const workedDatesByDriver=new Map();
 
       const assignments=data.needs.map(need=>{
-        const used=assignedByDate.get(need.date)||new Set();
+        const service=servicePeriod(need.time);
+        const serviceKey=`${need.date}_${service}`;
+        const usedForService=assignedByDateAndService.get(serviceKey)||new Set();
 
         const candidates=data.drivers
           .map(driver=>{
             const availability=data.availabilities.find(item=>item.userId===driver.userId);
             const day=availability?.days?.find(item=>item.date===need.date);
+            const workedDates=workedDatesByDriver.get(driver.userId)||new Set();
+            const alreadyWorksThisDate=workedDates.has(need.date);
+            const respectsSixDayLimit=alreadyWorksThisDate||workedDates.size<6;
 
             return {
               ...driver,
               fits:timeFits(day,need.time),
+              respectsSixDayLimit,
               availabilityComment:day?.comment||""
             }
           })
-          .filter(candidate=>candidate.fits&&!used.has(candidate.userId))
+          .filter(candidate=>
+            candidate.fits
+            && candidate.respectsSixDayLimit
+            && !usedForService.has(candidate.userId)
+          )
           .sort((a,b)=>{
             if(b.score!==a.score)return b.score-a.score;
             return a.name.localeCompare(b.name,"fr")
@@ -1713,13 +1731,21 @@
         const selected=candidates.slice(0,quantity);
         const waitlist=candidates.slice(quantity);
 
-        selected.forEach(driver=>used.add(driver.userId));
-        assignedByDate.set(need.date,used);
+        selected.forEach(driver=>{
+          usedForService.add(driver.userId);
+
+          const workedDates=workedDatesByDriver.get(driver.userId)||new Set();
+          workedDates.add(need.date);
+          workedDatesByDriver.set(driver.userId,workedDates)
+        });
+
+        assignedByDateAndService.set(serviceKey,usedForService);
 
         return {
           needId:need.id,
           date:need.date,
           time:need.time,
+          service,
           quantity,
           notes:need.notes||"",
           selected,
