@@ -56,6 +56,25 @@
     .week-selector{margin-bottom:16px}
     @media(max-width:820px){.dashboard-grid,.form-grid{grid-template-columns:1fr}.page-header{flex-direction:column}.profile-card{width:100%}}
     @media(max-width:560px){.auth-shell{padding:12px}.auth-card{padding:24px 20px}.layout{width:min(100% - 20px,1180px)}.topbar{padding:10px 12px}.topbar-brand img{width:60px}.week-card,.driver-card,.need-card{grid-template-columns:1fr}.driver-toolbar{align-items:stretch;flex-direction:column}.driver-actions,.need-actions{justify-content:flex-start}.needs-layout{grid-template-columns:1fr}}
+  
+    .driver-app-shell{min-height:100vh}
+    .driver-main{width:min(900px,calc(100% - 24px));margin:0 auto;padding:24px 0 44px}
+    .driver-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:20px}
+    .driver-week-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,.04)}
+    .driver-week-card+.driver-week-card{margin-top:16px}
+    .availability-days{display:grid;gap:12px;margin-top:16px}
+    .availability-day{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
+    .availability-day-header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+    .availability-day-header h3{margin:0}
+    .availability-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .availability-day.is-unavailable .availability-details{opacity:.45;pointer-events:none}
+    .availability-state{display:flex;gap:8px;align-items:center}
+    .availability-state input{width:auto}
+    .driver-summary{padding:14px;border-radius:12px;background:var(--soft);margin-bottom:18px}
+    .driver-summary p{margin-bottom:4px}
+    .deadline-warning{padding:12px 14px;border-radius:10px;background:#fff8e1;color:#7a5600;margin-top:12px}
+    .availability-closed{padding:20px;border-radius:12px;background:#f4f4f4;color:var(--muted);text-align:center}
+
   </style>
 </head>
 <body>
@@ -293,6 +312,46 @@
     </main>
   </section>
 
+
+  <section id="driverView" class="driver-app-shell hidden">
+    <header class="topbar">
+      <div class="topbar-brand">
+        <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
+        <div class="topbar-title">
+          <strong>Nara Pizza Planning</strong>
+          <small id="driverTopbarUser">—</small>
+        </div>
+      </div>
+      <button id="driverLogoutButton" class="button button-secondary" type="button">
+        Se déconnecter
+      </button>
+    </header>
+
+    <main class="driver-main">
+      <div class="driver-hero">
+        <div>
+          <h2>Mes disponibilités</h2>
+          <p class="muted">Indiquez les jours et les heures où vous pouvez commencer.</p>
+        </div>
+        <div class="profile-card">
+          <p>Bonjour <strong id="driverProfileName">—</strong></p>
+          <small id="driverProfileEmail">—</small>
+        </div>
+      </div>
+
+      <div id="driverWeeksContainer">
+        <div class="empty-state">Chargement des semaines ouvertes…</div>
+      </div>
+
+      <div id="driverMessage" class="message"></div>
+
+      <div class="footer">
+        Nara Pizza Planning — espace livreur
+      </div>
+    </main>
+  </section>
+
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -315,6 +374,7 @@
 
     const loginView = document.getElementById("loginView");
     const appView = document.getElementById("appView");
+    const driverView = document.getElementById("driverView");
     const loginForm = document.getElementById("loginForm");
     const loginButton = document.getElementById("loginButton");
     const loginMessage = document.getElementById("loginMessage");
@@ -355,19 +415,26 @@
     const needFormMessage = document.getElementById("needFormMessage");
     const saveNeedButton = document.getElementById("saveNeedButton");
 
+    const driverLogoutButton = document.getElementById("driverLogoutButton");
+    const driverWeeksContainer = document.getElementById("driverWeeksContainer");
+    const driverMessage = document.getElementById("driverMessage");
+
     let currentProfile = null;
     let unsubscribeWeeks = null;
     let unsubscribeDrivers = null;
     let unsubscribeNeeds = null;
     let currentWeeks = [];
     let currentNeeds = [];
+    let unsubscribeDriverWeeks = null;
+    let currentDriverUser = null;
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
     function showSection(name){Object.values(sections).forEach(s=>s.classList.remove("active"));sections[name].classList.add("active");clearMessage(appMessage);if(name==="createWeek")prepareWeekForm();if(name==="needs")prepareNeedsSection();window.scrollTo({top:0,behavior:"smooth"})}
-    function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden")}
+    function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
     function showApp(profile){
       currentProfile=profile;
+      driverView.classList.add("hidden");
       document.getElementById("profileName").textContent=profile.name||"Utilisateur";
       document.getElementById("profileEmail").textContent=profile.email||"";
       document.getElementById("profileRole").textContent=profile.role||"";
@@ -380,8 +447,19 @@
       if(!snap.exists())throw new Error("Profil utilisateur introuvable.");
       const profile=snap.data();
       if(profile.active!==true)throw new Error("Ce compte est désactivé.");
-      if(!["admin","manager"].includes(profile.role))throw new Error("Cet espace est réservé aux managers.");
       return profile
+    }
+
+    function showDriverApp(profile,user){
+      currentProfile=profile;
+      currentDriverUser=user;
+      loginView.classList.add("hidden");
+      appView.classList.add("hidden");
+      driverView.classList.remove("hidden");
+      document.getElementById("driverProfileName").textContent=profile.name||"Livreur";
+      document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
+      document.getElementById("driverTopbarUser").textContent=`${profile.name||"Livreur"} · livreur`;
+      subscribeToOpenDriverWeeks(user)
     }
 
     function formatDate(value){if(!value)return"—";const d=new Date(`${value}T12:00:00`);return new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).format(d)}
@@ -651,6 +729,201 @@
       )
     }
 
+
+    function isDeadlinePassed(week){
+      if(!week.deadlineDate)return false;
+      const time=week.deadlineTime||"23:59";
+      return new Date(`${week.deadlineDate}T${time}:00`) < new Date()
+    }
+
+    function buildWeekDays(week){
+      const days=[];
+      let current=new Date(`${week.startDate}T12:00:00`);
+      const end=new Date(`${week.endDate}T12:00:00`);
+      while(current<=end){
+        days.push(current.toISOString().slice(0,10));
+        current.setDate(current.getDate()+1)
+      }
+      return days
+    }
+
+    function defaultAvailabilityDays(week){
+      return buildWeekDays(week).map(date=>({
+        date,
+        available:false,
+        earliestStart:"17:30",
+        latestStart:"20:00",
+        comment:""
+      }))
+    }
+
+    function renderDriverWeek(week,existingData,user){
+      const closed=isDeadlinePassed(week);
+      const wrapper=document.createElement("section");
+      wrapper.className="driver-week-card";
+
+      const existingDays=existingData?.days||defaultAvailabilityDays(week);
+
+      wrapper.innerHTML=`
+        <div class="panel-header">
+          <div>
+            <h3>${formatDate(week.startDate)} → ${formatDate(week.endDate)}</h3>
+            <p class="muted">${escapeHtml(week.message||"Merci d’indiquer vos disponibilités.")}</p>
+            <div class="deadline-warning">Réponse avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"—"}</div>
+          </div>
+          <span class="status-badge ${existingData?"status-open":"status-draft"}">${existingData?"Réponse enregistrée":"À compléter"}</span>
+        </div>
+
+        ${closed?`
+          <div class="availability-closed">
+            La date limite est dépassée. Contactez le manager pour toute modification.
+          </div>
+        `:`
+          <form class="availability-form" data-week-id="${week.id}">
+            <div class="availability-days"></div>
+            <div class="form-actions">
+              <button class="button button-primary save-availability" type="submit">
+                ${existingData?"Mettre à jour mes disponibilités":"Envoyer mes disponibilités"}
+              </button>
+            </div>
+            <div class="message availability-message"></div>
+          </form>
+        `}
+      `;
+
+      if(!closed){
+        const daysContainer=wrapper.querySelector(".availability-days");
+
+        existingDays.forEach(day=>{
+          const card=document.createElement("div");
+          card.className=`availability-day ${day.available?"":"is-unavailable"}`;
+          card.dataset.date=day.date;
+          card.innerHTML=`
+            <div class="availability-day-header">
+              <h3>${formatDay(day.date)}</h3>
+              <label class="availability-state">
+                <input class="day-available" type="checkbox" ${day.available?"checked":""}>
+                <span>Disponible</span>
+              </label>
+            </div>
+            <div class="availability-details">
+              <div class="availability-grid">
+                <div class="field">
+                  <label>Disponible dès</label>
+                  <input class="earliest-start" type="time" value="${day.earliestStart||"17:30"}">
+                </div>
+                <div class="field">
+                  <label>Peut commencer au plus tard</label>
+                  <input class="latest-start" type="time" value="${day.latestStart||"20:00"}">
+                </div>
+              </div>
+              <div class="field">
+                <label>Commentaire facultatif</label>
+                <input class="day-comment" type="text" value="${escapeHtml(day.comment||"")}" placeholder="Exemple : prévenir suffisamment tôt">
+              </div>
+            </div>
+          `;
+
+          const checkbox=card.querySelector(".day-available");
+          checkbox.addEventListener("change",()=>{
+            card.classList.toggle("is-unavailable",!checkbox.checked)
+          });
+
+          daysContainer.appendChild(card)
+        });
+
+        const form=wrapper.querySelector(".availability-form");
+        form.addEventListener("submit",async event=>{
+          event.preventDefault();
+          const messageEl=form.querySelector(".availability-message");
+          const button=form.querySelector(".save-availability");
+          clearMessage(messageEl);
+
+          const days=[...form.querySelectorAll(".availability-day")].map(card=>{
+            const available=card.querySelector(".day-available").checked;
+            return {
+              date:card.dataset.date,
+              available,
+              earliestStart:available?card.querySelector(".earliest-start").value:"",
+              latestStart:available?card.querySelector(".latest-start").value:"",
+              comment:available?card.querySelector(".day-comment").value.trim():""
+            }
+          });
+
+          button.disabled=true;
+          button.textContent="Enregistrement…";
+
+          try{
+            await setDoc(
+              doc(db,"availabilities",`${week.id}_${user.uid}`),
+              {
+                weekId:week.id,
+                weekStartDate:week.startDate,
+                userId:user.uid,
+                driverName:currentProfile.name||"",
+                driverEmail:currentProfile.email||user.email||"",
+                days,
+                submittedAt:serverTimestamp(),
+                updatedAt:serverTimestamp()
+              },
+              {merge:true}
+            );
+
+            showMessage(messageEl,"Vos disponibilités ont été enregistrées.","success")
+          }catch(error){
+            console.error(error);
+            showMessage(messageEl,`Impossible d’enregistrer : ${error.code||error.message}`,"error")
+          }finally{
+            button.disabled=false;
+            button.textContent="Mettre à jour mes disponibilités"
+          }
+        })
+      }
+
+      return wrapper
+    }
+
+    function subscribeToOpenDriverWeeks(user){
+      if(unsubscribeDriverWeeks)unsubscribeDriverWeeks();
+
+      const weeksQuery=query(collection(db,"weeks"),orderBy("startDate","asc"));
+
+      unsubscribeDriverWeeks=onSnapshot(
+        weeksQuery,
+        async snapshot=>{
+          const openWeeks=[];
+          snapshot.forEach(docSnap=>{
+            const week={id:docSnap.id,...docSnap.data()};
+            if(week.status==="open")openWeeks.push(week)
+          });
+
+          if(openWeeks.length===0){
+            driverWeeksContainer.innerHTML='<div class="empty-state">Aucune semaine ouverte pour le moment.</div>';
+            return
+          }
+
+          driverWeeksContainer.innerHTML="";
+
+          for(const week of openWeeks){
+            try{
+              const availabilitySnap=await getDoc(doc(db,"availabilities",`${week.id}_${user.uid}`));
+              driverWeeksContainer.appendChild(
+                renderDriverWeek(week,availabilitySnap.exists()?availabilitySnap.data():null,user)
+              )
+            }catch(error){
+              console.error(error);
+              showMessage(driverMessage,`Impossible de charger les disponibilités : ${error.code||error.message}`,"error")
+            }
+          }
+        },
+        error=>{
+          console.error(error);
+          driverWeeksContainer.innerHTML='<div class="empty-state">Impossible de charger les semaines ouvertes.</div>';
+          showMessage(driverMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+        }
+      )
+    }
+
     loginForm.addEventListener("submit",async event=>{
       event.preventDefault();clearMessage(loginMessage);
       loginButton.disabled=true;loginButton.textContent="Connexion…";
@@ -823,10 +1096,35 @@
     });
 
     onAuthStateChanged(auth,async user=>{
-      clearMessage(loginMessage);clearMessage(appMessage);
-      if(!user){currentProfile=null;if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}showLogin();return}
-      try{showApp(await loadUserProfile(user))}
-      catch(error){console.error(error);await signOut(auth);showLogin();showMessage(loginMessage,error.message||"Accès refusé.","error")}
+      clearMessage(loginMessage);clearMessage(appMessage);clearMessage(driverMessage);
+
+      if(!user){
+        currentProfile=null;
+        currentDriverUser=null;
+        if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
+        if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
+        if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
+        if(unsubscribeDriverWeeks){unsubscribeDriverWeeks();unsubscribeDriverWeeks=null}
+        showLogin();
+        return
+      }
+
+      try{
+        const profile=await loadUserProfile(user);
+
+        if(["admin","manager"].includes(profile.role)){
+          showApp(profile)
+        }else if(profile.role==="driver"){
+          showDriverApp(profile,user)
+        }else{
+          throw new Error("Rôle utilisateur non reconnu.")
+        }
+      }catch(error){
+        console.error(error);
+        await signOut(auth);
+        showLogin();
+        showMessage(loginMessage,error.message||"Accès refusé.","error")
+      }
     });
   </script>
 </body>
