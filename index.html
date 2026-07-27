@@ -99,7 +99,12 @@
     .availability-day-header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
     .availability-day-header h3{margin:0}
     .availability-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .availability-day.is-unavailable .availability-details{opacity:.45;pointer-events:none}
+    .service-availability{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fafafa}
+    .service-availability+.service-availability{margin-top:12px}
+    .service-availability-header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
+    .service-availability-header label{margin:0}
+    .service-availability.is-disabled .service-fields{opacity:.45;pointer-events:none}
+    .availability-day.is-unavailable .availability-details{opacity:1;pointer-events:auto}
     .availability-state{display:flex;gap:8px;align-items:center}
     .availability-state input{width:auto}
     .driver-summary{padding:14px;border-radius:12px;background:var(--soft);margin-bottom:18px}
@@ -1545,14 +1550,26 @@
       return days
     }
 
+    function normalizeAvailabilityDay(day){
+      const legacyAvailable=day?.available===true;
+      const legacyEarliest=day?.earliestStart||"17:30";
+      const legacyLatest=day?.latestStart||"20:00";
+      const legacyMidday=legacyAvailable&&legacyEarliest<"16:00";
+
+      return {
+        date:day?.date||"",
+        middayAvailable:day?.middayAvailable===true||legacyMidday,
+        middayEarliest:day?.middayEarliest||(legacyMidday?legacyEarliest:"11:30"),
+        middayLatest:day?.middayLatest||(legacyMidday?legacyLatest:"14:00"),
+        eveningAvailable:day?.eveningAvailable===true||(legacyAvailable&&!legacyMidday),
+        eveningEarliest:day?.eveningEarliest||(!legacyMidday&&legacyAvailable?legacyEarliest:"17:30"),
+        eveningLatest:day?.eveningLatest||(!legacyMidday&&legacyAvailable?legacyLatest:"20:00"),
+        comment:day?.comment||""
+      }
+    }
+
     function defaultAvailabilityDays(week){
-      return buildWeekDays(week).map(date=>({
-        date,
-        available:false,
-        earliestStart:"17:30",
-        latestStart:"20:00",
-        comment:""
-      }))
+      return buildWeekDays(week).map(date=>normalizeAvailabilityDay({date}))
     }
 
     function renderDriverWeek(week,existingData,user){
@@ -1560,7 +1577,7 @@
       const wrapper=document.createElement("section");
       wrapper.className="driver-week-card";
 
-      const existingDays=existingData?.days||defaultAvailabilityDays(week);
+      const existingDays=(existingData?.days||defaultAvailabilityDays(week)).map(normalizeAvailabilityDay);
 
       wrapper.innerHTML=`
         <div class="panel-header">
@@ -1594,27 +1611,58 @@
 
         existingDays.forEach(day=>{
           const card=document.createElement("div");
-          card.className=`availability-day ${day.available?"":"is-unavailable"}`;
+          const anyAvailable=day.middayAvailable||day.eveningAvailable;
+          card.className=`availability-day ${anyAvailable?"":"is-unavailable"}`;
           card.dataset.date=day.date;
           card.innerHTML=`
             <div class="availability-day-header">
               <h3>${formatDay(day.date)}</h3>
-              <label class="availability-state">
-                <input class="day-available" type="checkbox" ${day.available?"checked":""}>
-                <span>Disponible</span>
-              </label>
+              <span class="status-badge ${anyAvailable?"status-open":"status-draft"}">
+                ${anyAvailable?"Disponible":"Indisponible"}
+              </span>
             </div>
+
             <div class="availability-details">
-              <div class="availability-grid">
-                <div class="field">
-                  <label>Heure de début la plus tôt</label>
-                  <input class="earliest-start" type="time" value="${day.earliestStart||"17:30"}">
+              <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
+                <div class="service-availability-header">
+                  <strong>Service de midi</strong>
+                  <label class="availability-state">
+                    <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
+                    <span>Disponible</span>
+                  </label>
                 </div>
-                <div class="field">
-                  <label>Heure de début la plus tardive</label>
-                  <input class="latest-start" type="time" value="${day.latestStart||"20:00"}">
+                <div class="availability-grid service-fields">
+                  <div class="field">
+                    <label>Début au plus tôt</label>
+                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}">
+                  </div>
+                  <div class="field">
+                    <label>Début au plus tard</label>
+                    <input class="midday-latest" type="time" value="${day.middayLatest||"14:00"}">
+                  </div>
                 </div>
-              </div>
+              </section>
+
+              <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
+                <div class="service-availability-header">
+                  <strong>Service du soir</strong>
+                  <label class="availability-state">
+                    <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
+                    <span>Disponible</span>
+                  </label>
+                </div>
+                <div class="availability-grid service-fields">
+                  <div class="field">
+                    <label>Début au plus tôt</label>
+                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}">
+                  </div>
+                  <div class="field">
+                    <label>Début au plus tard</label>
+                    <input class="evening-latest" type="time" value="${day.eveningLatest||"20:00"}">
+                  </div>
+                </div>
+              </section>
+
               <div class="field">
                 <label>Commentaire facultatif</label>
                 <input class="day-comment" type="text" value="${escapeHtml(day.comment||"")}" placeholder="Exemple : prévenir suffisamment tôt">
@@ -1622,10 +1670,21 @@
             </div>
           `;
 
-          const checkbox=card.querySelector(".day-available");
-          checkbox.addEventListener("change",()=>{
-            card.classList.toggle("is-unavailable",!checkbox.checked)
-          });
+          const middayCheckbox=card.querySelector(".midday-available");
+          const eveningCheckbox=card.querySelector(".evening-available");
+
+          function updateAvailabilityCard(){
+            card.querySelector(".midday-service").classList.toggle("is-disabled",!middayCheckbox.checked);
+            card.querySelector(".evening-service").classList.toggle("is-disabled",!eveningCheckbox.checked);
+            const available=middayCheckbox.checked||eveningCheckbox.checked;
+            card.classList.toggle("is-unavailable",!available);
+            const badge=card.querySelector(".status-badge");
+            badge.textContent=available?"Disponible":"Indisponible";
+            badge.className=`status-badge ${available?"status-open":"status-draft"}`
+          }
+
+          middayCheckbox.addEventListener("change",updateAvailabilityCard);
+          eveningCheckbox.addEventListener("change",updateAvailabilityCard);
 
           daysContainer.appendChild(card)
         });
@@ -1638,13 +1697,20 @@
           clearMessage(messageEl);
 
           const days=[...form.querySelectorAll(".availability-day")].map(card=>{
-            const available=card.querySelector(".day-available").checked;
+            const middayAvailable=card.querySelector(".midday-available").checked;
+            const eveningAvailable=card.querySelector(".evening-available").checked;
+
             return {
               date:card.dataset.date,
-              available,
-              earliestStart:available?card.querySelector(".earliest-start").value:"",
-              latestStart:available?card.querySelector(".latest-start").value:"",
-              comment:available?card.querySelector(".day-comment").value.trim():""
+              middayAvailable,
+              middayEarliest:middayAvailable?card.querySelector(".midday-earliest").value:"",
+              middayLatest:middayAvailable?card.querySelector(".midday-latest").value:"",
+              eveningAvailable,
+              eveningEarliest:eveningAvailable?card.querySelector(".evening-earliest").value:"",
+              eveningLatest:eveningAvailable?card.querySelector(".evening-latest").value:"",
+              comment:(middayAvailable||eveningAvailable)
+                ? card.querySelector(".day-comment").value.trim()
+                : ""
             }
           });
 
@@ -2158,10 +2224,18 @@
     }
 
     function timeFits(day,time){
-      if(!day||day.available!==true)return false;
-      const earliest=day.earliestStart||"00:00";
-      const latest=day.latestStart||"23:59";
-      return earliest<=time&&time<=latest
+      if(!day)return false;
+      const normalized=normalizeAvailabilityDay(day);
+
+      if(servicePeriod(time)==="midi"){
+        return normalized.middayAvailable===true
+          && normalized.middayEarliest<=time
+          && time<=normalized.middayLatest
+      }
+
+      return normalized.eveningAvailable===true
+        && normalized.eveningEarliest<=time
+        && time<=normalized.eveningLatest
     }
 
     function confidentialScore(privateData){
@@ -2881,6 +2955,16 @@
       saveNeedButton.textContent="Enregistrement…";
 
       try{
+        const duplicateNeed=currentNeeds.find(need=>
+          need.weekId===week.id
+          && need.date===needDate.value
+          && need.time===needTime.value
+        );
+
+        if(duplicateNeed){
+          throw new Error("Un besoin existe déjà pour ce jour et cette heure.")
+        }
+
         await addDoc(collection(db,"needs"),{
           weekId:week.id,
           weekStartDate:week.startDate,
