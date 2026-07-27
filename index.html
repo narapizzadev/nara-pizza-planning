@@ -92,6 +92,16 @@
     .plan-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
     .summary-chip{padding:7px 10px;border-radius:999px;background:#f2f2f2;font-size:13px;font-weight:700}
     .validated-banner{padding:12px 14px;border-radius:10px;background:#ecfdf3;color:var(--success);font-weight:700;margin-bottom:16px}
+    .closed-banner{padding:12px 14px;border-radius:10px;background:#eef2ff;color:#3730a3;font-weight:700;margin-bottom:16px}
+    .confirmation-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+    .confirmation-summary-card{padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .confirmation-summary-card strong,.confirmation-summary-card small{display:block}
+    .confirmation-summary-card strong{font-size:24px}
+    .confirmation-summary-card small{margin-top:4px;color:var(--muted)}
+    .confirmation-summary-card.confirmed{background:#ecfdf3;color:var(--success)}
+    .confirmation-summary-card.pending{background:#fff8e1;color:#9a6700}
+    .confirmation-summary-card.refused{background:#fff1f0;color:var(--error)}
+    @media(max-width:700px){.confirmation-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:820px){.plan-columns{grid-template-columns:1fr}}
 
   
@@ -384,6 +394,10 @@
             <button id="validatePlanButton" class="button button-secondary hidden" type="button">
               Valider le planning
             </button>
+
+            <button id="closePlanButton" class="button button-primary hidden" type="button">
+              Clôturer et publier
+            </button>
           </div>
 
           <div id="planningMessage" class="message"></div>
@@ -517,6 +531,7 @@
     const planningWeekSelect = document.getElementById("planningWeekSelect");
     const generatePlanButton = document.getElementById("generatePlanButton");
     const validatePlanButton = document.getElementById("validatePlanButton");
+    const closePlanButton = document.getElementById("closePlanButton");
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
 
@@ -584,7 +599,9 @@
         const w=docSnap.data();
         const card=document.createElement("article");
         card.className="week-card";
-        card.innerHTML=`<div><h3>${formatDate(w.startDate)} → ${formatDate(w.endDate)}</h3><p class="week-meta">Réponse avant le ${formatDate(w.deadlineDate)} à ${w.deadlineTime||"—"}</p>${w.message?`<p class="week-meta">${escapeHtml(w.message)}</p>`:""}</div><span class="status-badge ${w.status==="open"?"status-open":"status-draft"}">${w.status==="open"?"Ouverte":"Brouillon"}</span>`;
+        const weekStatusText=w.status==="open"?"Ouverte":w.status==="closed"?"Clôturée":"Brouillon";
+        const weekStatusClass=w.status==="open"?"status-open":w.status==="closed"?"confirmation-confirmed":"status-draft";
+        card.innerHTML=`<div><h3>${formatDate(w.startDate)} → ${formatDate(w.endDate)}</h3><p class="week-meta">Réponse avant le ${formatDate(w.deadlineDate)} à ${w.deadlineTime||"—"}</p>${w.message?`<p class="week-meta">${escapeHtml(w.message)}</p>`:""}</div><span class="status-badge ${weekStatusClass}">${weekStatusText}</span>`;
         weekList.appendChild(card)
       })
     }
@@ -1311,6 +1328,8 @@
       }else{
         currentPlan=null;
         validatePlanButton.classList.add("hidden");
+        closePlanButton.classList.add("hidden");
+        generatePlanButton.disabled=false;
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
     }
@@ -1446,6 +1465,30 @@
       return {required,selected,waiting,missing:Math.max(0,required-selected)}
     }
 
+    function confirmationTotals(plan){
+      let total=0;
+      let confirmed=0;
+      let pending=0;
+      let refused=0;
+
+      if(!plan)return {total,confirmed,pending,refused};
+
+      plan.assignments.forEach(slot=>{
+        slot.selected.forEach(driver=>{
+          total+=1;
+          const id=assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId);
+          const assignment=currentAssignmentStatuses.get(id);
+          const status=assignment?.status||"pending";
+
+          if(status==="confirmed")confirmed+=1;
+          else if(status==="refused")refused+=1;
+          else pending+=1
+        })
+      });
+
+      return {total,confirmed,pending,refused}
+    }
+
     function renderPlan(){
       if(!currentPlan){
         planContainer.innerHTML='<div class="empty-state">Aucune proposition disponible.</div>';
@@ -1456,14 +1499,60 @@
       const totals=planTotals(currentPlan);
       planContainer.innerHTML="";
 
-      if(currentPlan.status==="validated"){
+      const confirmations=confirmationTotals(currentPlan);
+      generatePlanButton.disabled=currentPlan.status==="closed";
+
+      if(currentPlan.status==="closed"){
+        const banner=document.createElement("div");
+        banner.className="closed-banner";
+        banner.textContent="Planning clôturé et publié";
+        planContainer.appendChild(banner);
+        validatePlanButton.classList.add("hidden");
+        closePlanButton.classList.add("hidden")
+      }else if(currentPlan.status==="validated"){
         const banner=document.createElement("div");
         banner.className="validated-banner";
-        banner.textContent="Planning validé";
+        banner.textContent="Planning validé — confirmations en cours";
         planContainer.appendChild(banner);
-        validatePlanButton.classList.add("hidden")
+        validatePlanButton.classList.add("hidden");
+        closePlanButton.classList.remove("hidden");
+        closePlanButton.disabled=!(
+          confirmations.total>0
+          && confirmations.pending===0
+          && confirmations.refused===0
+          && confirmations.confirmed===confirmations.total
+        );
+        closePlanButton.title=closePlanButton.disabled
+          ? "Tous les livreurs doivent confirmer avant la clôture."
+          : "Clôturer et publier le planning final."
       }else{
-        validatePlanButton.classList.remove("hidden")
+        validatePlanButton.classList.remove("hidden");
+        closePlanButton.classList.add("hidden");
+        generatePlanButton.disabled=false
+      }
+
+      if(["validated","closed"].includes(currentPlan.status)){
+        const confirmationSummary=document.createElement("div");
+        confirmationSummary.className="confirmation-summary";
+        confirmationSummary.innerHTML=`
+          <div class="confirmation-summary-card">
+            <strong>${confirmations.total}</strong>
+            <small>Affectations</small>
+          </div>
+          <div class="confirmation-summary-card confirmed">
+            <strong>${confirmations.confirmed}</strong>
+            <small>Confirmées</small>
+          </div>
+          <div class="confirmation-summary-card pending">
+            <strong>${confirmations.pending}</strong>
+            <small>En attente</small>
+          </div>
+          <div class="confirmation-summary-card refused">
+            <strong>${confirmations.refused}</strong>
+            <small>Refusées</small>
+          </div>
+        `;
+        planContainer.appendChild(confirmationSummary)
       }
 
       const summary=document.createElement("div");
@@ -1492,7 +1581,7 @@
                   ${currentPlan.status==="validated"
                     ? `<span class="confirmation-badge confirmation-${(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status)||"pending"}">${assignmentStatusLabel(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status||"pending")}</span>`
                     : ""}
-                  ${slot.waitlist.length
+                  ${slot.waitlist.length&&currentPlan.status!=="closed"
                     ? `<button class="button button-ghost replace-driver" data-slot="${slotIndex}" data-driver="${index}" type="button">Remplacer</button>`
                     : ""}
                 </div>
@@ -1592,6 +1681,8 @@
             await syncDriverAssignments(currentPlan);
             await applyAutomaticReplacements(currentPlan);
             await loadAssignmentStatuses(currentPlan.weekId)
+          }else if(currentPlan.status==="closed"){
+            await loadAssignmentStatuses(currentPlan.weekId)
           }
 
           renderPlan()
@@ -1650,6 +1741,8 @@
       }else{
         currentPlan=null;
         validatePlanButton.classList.add("hidden");
+        closePlanButton.classList.add("hidden");
+        generatePlanButton.disabled=false;
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
     });
@@ -1734,6 +1827,76 @@
       }finally{
         validatePlanButton.disabled=false;
         validatePlanButton.textContent="Valider le planning"
+      }
+    });
+
+    closePlanButton.addEventListener("click",async()=>{
+      if(!currentPlan||currentPlan.status!=="validated")return;
+
+      await loadAssignmentStatuses(currentPlan.weekId);
+      const totals=confirmationTotals(currentPlan);
+
+      if(
+        totals.total===0
+        || totals.pending>0
+        || totals.refused>0
+        || totals.confirmed!==totals.total
+      ){
+        showMessage(
+          planningMessage,
+          "Le planning ne peut être clôturé que lorsque toutes les affectations sont confirmées.",
+          "error"
+        );
+        renderPlan();
+        return
+      }
+
+      const confirmed=window.confirm(
+        "Clôturer et publier définitivement ce planning ? Les disponibilités de cette semaine seront fermées."
+      );
+      if(!confirmed)return;
+
+      closePlanButton.disabled=true;
+      closePlanButton.textContent="Clôture…";
+
+      try{
+        currentPlan.status="closed";
+
+        await setDoc(
+          doc(db,"plans",currentPlan.weekId),
+          {
+            ...currentPlan,
+            closedAt:serverTimestamp(),
+            closedBy:auth.currentUser.uid,
+            closedByName:currentProfile.name||""
+          },
+          {merge:true}
+        );
+
+        await updateDoc(doc(db,"weeks",currentPlan.weekId),{
+          status:"closed",
+          closedAt:serverTimestamp(),
+          closedBy:auth.currentUser.uid,
+          closedByName:currentProfile.name||""
+        });
+
+        renderPlan();
+        showMessage(
+          planningMessage,
+          "Le planning final est clôturé et publié.",
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        currentPlan.status="validated";
+        showMessage(
+          planningMessage,
+          `Impossible de clôturer : ${error.code||error.message}`,
+          "error"
+        );
+        renderPlan()
+      }finally{
+        closePlanButton.textContent="Clôturer et publier"
       }
     });
 
