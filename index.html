@@ -114,6 +114,17 @@
 
   
     .planning-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px}
+    .availability-admin-summary{margin:16px 0 18px}
+    .availability-admin-grid{display:grid;gap:12px}
+    .availability-admin-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
+    .availability-admin-card h3{margin-bottom:8px}
+    .availability-admin-days{display:grid;gap:8px}
+    .availability-admin-day{display:grid;grid-template-columns:180px 1fr;gap:12px;padding:9px 0;border-top:1px solid #eee}
+    .availability-admin-day:first-child{border-top:none}
+    .availability-admin-slots{display:flex;gap:8px;flex-wrap:wrap}
+    .availability-chip{display:inline-flex;padding:6px 9px;border-radius:999px;background:#ecfdf3;color:var(--success);font-size:12px;font-weight:700}
+    .availability-chip.off{background:#f2f2f2;color:var(--muted)}
+    @media(max-width:700px){.availability-admin-day{grid-template-columns:1fr}}
     .planning-controls .field{flex:1 1 300px;margin-bottom:0}
     .plan-list{display:grid;gap:16px}
     .plan-slot{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
@@ -564,6 +575,19 @@
           </div>
 
           <div id="planningMessage" class="message"></div>
+
+          <section class="availability-admin-summary">
+            <div class="panel-header">
+              <div>
+                <h3>Disponibilités reçues</h3>
+                <p class="muted">Les réponses de la semaine sélectionnée apparaissent ici avant de générer le planning.</p>
+              </div>
+            </div>
+            <div id="planningAvailabilityContainer" class="availability-admin-grid">
+              <div class="empty-state">Choisissez une semaine.</div>
+            </div>
+          </section>
+
           <div id="planContainer" class="plan-list">
             <div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>
           </div>
@@ -780,6 +804,7 @@
     const closePlanButton = document.getElementById("closePlanButton");
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
+    const planningAvailabilityContainer = document.getElementById("planningAvailabilityContainer");
 
     const kitchenWeekSelect = document.getElementById("kitchenWeekSelect");
     const loadKitchenButton = document.getElementById("loadKitchenButton");
@@ -2210,6 +2235,7 @@
 
     function preparePlanningSection(){
       clearMessage(planningMessage);
+      loadPlanningAvailabilities(planningWeekSelect.value);
       populatePlanningWeekSelect();
 
       if(planningWeekSelect.value){
@@ -2243,6 +2269,79 @@
       const reliability=Number(privateData?.reliability||3);
       const experience=Number(privateData?.experience||3);
       return priority*3+reliability*2+experience
+    }
+
+    function availabilityLabel(day){
+      const normalized=normalizeAvailabilityDay(day);
+      const labels=[];
+
+      if(normalized.middayAvailable){
+        labels.push(`<span class="availability-chip">Midi ${normalized.middayEarliest}–${normalized.middayLatest}</span>`)
+      }
+
+      if(normalized.eveningAvailable){
+        labels.push(`<span class="availability-chip">Soir ${normalized.eveningEarliest}–${normalized.eveningLatest}</span>`)
+      }
+
+      if(labels.length===0){
+        labels.push('<span class="availability-chip off">Indisponible</span>')
+      }
+
+      return labels.join("")
+    }
+
+    async function loadPlanningAvailabilities(weekId){
+      if(!weekId){
+        planningAvailabilityContainer.innerHTML='<div class="empty-state">Choisissez une semaine.</div>';
+        return
+      }
+
+      planningAvailabilityContainer.innerHTML='<div class="empty-state">Chargement des disponibilités…</div>';
+
+      try{
+        const snapshot=await getDocs(collection(db,"weeks",weekId,"availabilities"));
+        const responses=[];
+
+        snapshot.forEach(docSnap=>{
+          responses.push({id:docSnap.id,...docSnap.data()})
+        });
+
+        if(responses.length===0){
+          planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+          return
+        }
+
+        responses.sort((a,b)=>(a.driverName||"").localeCompare(b.driverName||"","fr"));
+        planningAvailabilityContainer.innerHTML="";
+
+        responses.forEach(response=>{
+          const card=document.createElement("article");
+          card.className="availability-admin-card";
+
+          const days=(response.days||[])
+            .slice()
+            .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+          card.innerHTML=`
+            <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
+            <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
+            <div class="availability-admin-days">
+              ${days.map(day=>`
+                <div class="availability-admin-day">
+                  <strong>${escapeHtml(formatDay(day.date))}</strong>
+                  <div class="availability-admin-slots">${availabilityLabel(day)}</div>
+                </div>
+              `).join("")}
+            </div>
+          `;
+
+          planningAvailabilityContainer.appendChild(card)
+        })
+      }catch(error){
+        console.error(error);
+        planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
+        showMessage(planningMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+      }
     }
 
     async function loadPlanningData(weekId){
@@ -2733,6 +2832,8 @@
     });
 
     planningWeekSelect.addEventListener("change",()=>{
+      loadPlanningAvailabilities(planningWeekSelect.value);
+
       if(planningWeekSelect.value){
         loadSavedPlan(planningWeekSelect.value)
       }else{
