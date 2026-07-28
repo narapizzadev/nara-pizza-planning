@@ -2953,10 +2953,6 @@
                     <label>Début au plus tôt</label>
                     <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
                   </div>
-                  <div class="field">
-                    <label>Je peux commencer au plus tard à</label>
-                    <input class="midday-latest" type="time" value="${day.middayLatest||"12:00"}" max="12:00">
-                  </div>
                 </div>
               </section>
 
@@ -2972,10 +2968,6 @@
                   <div class="field">
                     <label>Début au plus tôt</label>
                     <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
-                  </div>
-                  <div class="field">
-                    <label>Je peux commencer au plus tard à</label>
-                    <input class="evening-latest" type="time" value="${day.eveningLatest||"19:00"}" max="19:00">
                   </div>
                 </div>
               </section>
@@ -3024,10 +3016,10 @@
               date:card.dataset.date,
               middayAvailable,
               middayEarliest:middayAvailable?card.querySelector(".midday-earliest").value:"",
-              middayLatest:middayAvailable?card.querySelector(".midday-latest").value:"",
+              middayLatest:middayAvailable?"12:00":"",
               eveningAvailable,
               eveningEarliest:eveningAvailable?card.querySelector(".evening-earliest").value:"",
-              eveningLatest:eveningAvailable?card.querySelector(".evening-latest").value:"",
+              eveningLatest:eveningAvailable?"19:00":"",
               comment:(middayAvailable||eveningAvailable)
                 ? card.querySelector(".day-comment").value.trim()
                 : ""
@@ -3048,22 +3040,18 @@
           const invalidDay=days.find(day=>
             (day.middayAvailable && (
               !day.middayEarliest
-              || !day.middayLatest
-              || day.middayEarliest>day.middayLatest
-              || day.middayLatest>"12:00"
+              || day.middayEarliest>"12:00"
             ))
             || (day.eveningAvailable && (
               !day.eveningEarliest
-              || !day.eveningLatest
-              || day.eveningEarliest>day.eveningLatest
-              || day.eveningLatest>"19:00"
+              || day.eveningEarliest>"19:00"
             ))
           );
 
           if(invalidDay){
             showMessage(
               messageEl,
-              "Vérifiez les horaires : arrivée au plus tard à 12:00 pour midi et à 19:00 pour le soir.",
+              "Vérifiez l’heure de début disponible pour le service sélectionné.",
               "error"
             );
             return
