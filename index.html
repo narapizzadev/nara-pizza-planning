@@ -44,6 +44,43 @@
     .install-steps li+li{margin-top:8px}
     .install-tip{margin-top:16px;padding:13px 14px;border-radius:10px;background:var(--soft);line-height:1.45}
     .install-native-wrap{margin-top:18px}
+    .regulation-gate{width:min(860px,calc(100% - 24px));margin:24px auto 48px}
+    .regulation-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 8px 26px rgba(0,0,0,.08)}
+    .regulation-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+    .regulation-version{display:inline-flex;padding:7px 10px;border-radius:999px;background:#fff8e1;color:#8a5b00;font-size:13px;font-weight:800}
+    .regulation-intro{padding:14px;border-radius:12px;background:var(--soft);line-height:1.5;margin-bottom:18px}
+    .regulation-points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:18px}
+    .regulation-point{border:1px solid var(--border);border-radius:14px;padding:15px;background:#fafafa}
+    .regulation-point h3{margin-bottom:8px}
+    .regulation-point ul{margin:0;padding-left:20px;line-height:1.5}
+    .regulation-emergency{padding:15px;border-radius:12px;background:#fff1f0;color:#7a1f1a;margin-bottom:18px;line-height:1.5}
+    .regulation-checks{display:grid;gap:10px;margin:18px 0}
+    .regulation-check{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff}
+    .regulation-check input{width:auto;margin-top:3px}
+    .regulation-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .regulation-help-button{white-space:nowrap}
+    .regulation-overlay{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.5)}
+    .regulation-modal{width:min(900px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .regulation-modal-header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px;position:sticky;top:-24px;background:#fff;padding-top:24px;padding-bottom:12px;z-index:2}
+    .regulation-modal-close{border:none;background:#f2f2f2;width:40px;height:40px;border-radius:50%;font-size:22px}
+    .regulation-section{border-top:1px solid var(--border);padding:16px 0}
+    .regulation-section:first-of-type{border-top:none}
+    .regulation-section h3{margin-bottom:8px}
+    .regulation-section p,.regulation-section li{line-height:1.55}
+    .quick-procedure-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .quick-procedure{padding:14px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
+    .acceptance-list{display:grid;gap:10px}
+    .acceptance-card{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .acceptance-card small{display:block;color:var(--muted);margin-top:4px}
+    @media(max-width:700px){
+      .regulation-points,.quick-procedure-grid{grid-template-columns:1fr}
+      .regulation-card,.regulation-modal{padding:16px}
+      .regulation-actions{display:grid;grid-template-columns:1fr}
+      .regulation-actions .button{width:100%}
+      .regulation-help-button{font-size:0;padding:11px 13px}
+      .regulation-help-button::after{content:"📘";font-size:20px}
+      .acceptance-card{align-items:flex-start;flex-direction:column}
+    }
     @media(max-width:700px){
       .topbar{align-items:flex-start}
       .topbar-actions{gap:8px}
@@ -430,6 +467,7 @@
           <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Préparer les heures et le nombre de livreurs</small></span></button>
           <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Comparer besoins, disponibilités et classement</small></span></button>
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
+          <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
         </div>
 
         <section class="panel">
@@ -665,6 +703,31 @@
         </section>
       </section>
 
+      <section id="regulationAdminSection" class="section-view">
+        <div class="back-row">
+          <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Règlement interne des livreurs</h2>
+              <p class="muted">Version active : 1.0. Chaque nouvelle version devra être acceptée à nouveau.</p>
+            </div>
+            <button class="button button-secondary open-regulation-modal" type="button">Lire le règlement</button>
+          </div>
+
+          <div class="regulation-intro">
+            Le livreur doit accepter la version active avant de pouvoir transmettre ses disponibilités.
+          </div>
+
+          <h3>Acceptations enregistrées</h3>
+          <div id="regulationAcceptanceList" class="acceptance-list">
+            <div class="empty-state">Chargement des acceptations…</div>
+          </div>
+        </section>
+      </section>
+
       <section id="kitchenSection" class="section-view">
         <div class="back-row no-print">
           <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
@@ -808,6 +871,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">📘 Aide & règlement</button>
         <button class="button button-ghost install-help-button" type="button">📲 Ajouter l’app à l’écran</button>
         <button id="driverLogoutButton" class="button button-secondary" type="button">
           Se déconnecter
@@ -815,7 +879,105 @@
       </div>
     </header>
 
-    <main class="driver-main">
+    <section id="driverRegulationGate" class="regulation-gate hidden">
+      <article class="regulation-card">
+        <div class="regulation-header">
+          <div>
+            <h2>Règlement interne des livreurs</h2>
+            <p class="muted">À lire et accepter avant d’envoyer vos disponibilités.</p>
+          </div>
+          <span class="regulation-version">Version 1.0</span>
+        </div>
+
+        <div class="regulation-intro">
+          La sécurité des personnes passe toujours avant le délai, la commande et le véhicule.
+        </div>
+
+        <div class="regulation-points">
+          <section class="regulation-point">
+            <h3>📅 Planning</h3>
+            <ul>
+              <li>Une disponibilité n’est pas encore un horaire confirmé.</li>
+              <li>Le planning publié devient contraignant.</li>
+              <li>Tout échange ou remplacement doit être validé par le manager.</li>
+            </ul>
+          </section>
+
+          <section class="regulation-point">
+            <h3>🚗 Véhicules</h3>
+            <ul>
+              <li>Déclarez chaque semaine les moyens que vous pouvez réellement utiliser.</li>
+              <li>N’utilisez jamais un véhicule dangereux ou non autorisé.</li>
+              <li>Un véhicule personnel doit être assuré pour l’usage professionnel.</li>
+            </ul>
+          </section>
+
+          <section class="regulation-point">
+            <h3>🛡️ Sécurité</h3>
+            <ul>
+              <li>Aucun retard ne justifie une infraction ou une conduite dangereuse.</li>
+              <li>Le téléphone ne doit jamais être manipulé en mouvement.</li>
+              <li>Ceinture, casque et équipements de protection sont obligatoires.</li>
+            </ul>
+          </section>
+
+          <section class="regulation-point">
+            <h3>📦 Livraison</h3>
+            <ul>
+              <li>Vérifiez l’adresse, la commande, les boissons et le paiement avant le départ.</li>
+              <li>Respectez l’hygiène et protégez les commandes.</li>
+              <li>Signalez immédiatement retard, panne, accident, erreur ou client absent.</li>
+            </ul>
+          </section>
+
+          <section class="regulation-point">
+            <h3>💳 Paiements et données</h3>
+            <ul>
+              <li>Enregistrez chaque paiement immédiatement.</li>
+              <li>Gardez l’argent de l’entreprise séparé de l’argent personnel.</li>
+              <li>Les données clients sont strictement confidentielles.</li>
+            </ul>
+          </section>
+
+          <section class="regulation-point">
+            <h3>🤝 Comportement</h3>
+            <ul>
+              <li>Restez poli, discret et calme.</li>
+              <li>Évitez toute confrontation avec un client agressif.</li>
+              <li>Informez immédiatement le manager en cas de problème.</li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="regulation-emergency">
+          <strong>En cas d’accident, de panne, d’agression ou de danger :</strong>
+          mettez-vous en sécurité, appelez les secours ou la police si nécessaire, puis informez le manager.
+        </div>
+
+        <div class="regulation-actions">
+          <button class="button button-secondary open-regulation-modal" type="button">Lire le règlement complet</button>
+        </div>
+
+        <div class="regulation-checks">
+          <label class="regulation-check">
+            <input id="regulationReadCheck" type="checkbox">
+            <span>J’ai lu et compris les règles principales de livraison de Nara Pizza.</span>
+          </label>
+          <label class="regulation-check">
+            <input id="regulationCommitmentCheck" type="checkbox">
+            <span>Je m’engage à respecter le règlement interne pendant mes services.</span>
+          </label>
+        </div>
+
+        <button id="acceptRegulationButton" class="button button-primary button-full" type="button" disabled>
+          J’accepte et je continue
+        </button>
+
+        <div id="regulationGateMessage" class="message"></div>
+      </article>
+    </section>
+
+    <main id="driverMainContent" class="driver-main">
       <div class="driver-hero">
         <div>
           <h2 id="driverPageTitle">Mon planning</h2>
@@ -870,6 +1032,66 @@
     </main>
   </section>
 
+
+  <div id="regulationOverlay" class="regulation-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="regulationModalTitle">
+    <section class="regulation-modal">
+      <div class="regulation-modal-header">
+        <div>
+          <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
+          <p class="muted">Version 1.0 — résumé opérationnel consultable à tout moment.</p>
+        </div>
+        <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
+      </div>
+
+      <section class="regulation-section">
+        <h3>1. Disponibilités, planning et affectations</h3>
+        <p>Le livreur déclare chaque semaine ses disponibilités et ses moyens de livraison. Une disponibilité n’est pas encore un horaire confirmé. Le planning publié devient contraignant. Les échanges de service et les remplacements doivent être approuvés par le manager.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>2. Véhicules et contrôle avant départ</h3>
+        <p>Le livreur utilise uniquement un véhicule autorisé. Avant le départ, il contrôle notamment pneus, feux, freins, rétroviseurs, carburant ou batterie, documents, support téléphone et équipements de sécurité. Tout défaut est signalé avant utilisation.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>3. Sécurité routière</h3>
+        <p>Aucun délai ne justifie une infraction ou une conduite dangereuse. Sont interdits : téléphone tenu en main, application manipulée en mouvement, conduite agressive, alcool, stupéfiants, fatigue dangereuse et stationnement mettant autrui en danger. Pour écrire, lire ou appeler, le livreur s’arrête dans un endroit sûr.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>4. Commandes, hygiène et client</h3>
+        <p>Avant le départ, le livreur vérifie l’adresse, le numéro, les sacs, les boissons, les compléments, le paiement et les instructions. Les sacs restent propres et fermés. Une commande renversée, ouverte ou contaminée doit être signalée. Le livreur reste poli, discret et calme et n’entre pas dans un logement sauf procédure autorisée.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>5. Paiements, application et confidentialité</h3>
+        <p>Les paiements sont enregistrés immédiatement. L’argent de l’entreprise reste séparé de l’argent personnel. Les identifiants sont personnels. Les noms, adresses, téléphones, codes d’entrée et informations de commande des clients sont confidentiels et ne doivent jamais être réutilisés à titre privé.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>6. Comportement et incidents</h3>
+        <p>Harcèlement, discrimination, menaces, violence et publication de données internes sont interdits. Tout accident, chute, dommage, menace, perte de clé, vol, contravention ou incident significatif doit être signalé avant la fin du service, sauf urgence médicale.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>Procédures rapides</h3>
+        <div class="quick-procedure-grid">
+          <article class="quick-procedure"><strong>Retard</strong><p>Ne pas accélérer. Signaler le motif. S’arrêter pour répondre. Suivre l’instruction du manager.</p></article>
+          <article class="quick-procedure"><strong>Client absent</strong><p>Contacter. Attendre le délai prévu. Appeler le manager. Déposer ou retourner uniquement sur instruction.</p></article>
+          <article class="quick-procedure"><strong>Adresse incorrecte</strong><p>S’arrêter. Vérifier l’adresse. Contacter le client ou le manager. Ne pas manipuler l’app en mouvement.</p></article>
+          <article class="quick-procedure"><strong>Commande endommagée</strong><p>Ne pas la remettre discrètement. Photographier si utile. Informer. Attendre la décision.</p></article>
+          <article class="quick-procedure"><strong>Panne</strong><p>Se mettre en sécurité. Signaler. Protéger la commande. Suivre l’assistance.</p></article>
+          <article class="quick-procedure"><strong>Accident</strong><p>Sécuriser. Appeler secours ou police. Informer. Identifier et documenter.</p></article>
+          <article class="quick-procedure"><strong>Agression ou vol</strong><p>Ne pas confronter. Se mettre à l’abri. Appeler la police si nécessaire. Informer.</p></article>
+          <article class="quick-procedure"><strong>Fin de service</strong><p>Retour. Restitution. Nettoyage. Caisse. Incidents. Validation des heures.</p></article>
+        </div>
+      </section>
+
+      <section class="regulation-section">
+        <p class="muted">Le contrat de travail, la loi et la CCNT applicable priment sur ce résumé. La version complète interne doit être validée avant sa mise en service définitive.</p>
+      </section>
+    </section>
+  </div>
 
   <div id="installOverlay" class="install-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
     <section class="install-modal">
@@ -946,14 +1168,25 @@
     const closeInstallModal = document.getElementById("closeInstallModal");
     const nativeInstallWrap = document.getElementById("nativeInstallWrap");
     const nativeInstallButton = document.getElementById("nativeInstallButton");
+    const regulationOverlay = document.getElementById("regulationOverlay");
+    const closeRegulationModal = document.getElementById("closeRegulationModal");
+    const driverRegulationGate = document.getElementById("driverRegulationGate");
+    const driverMainContent = document.getElementById("driverMainContent");
+    const regulationReadCheck = document.getElementById("regulationReadCheck");
+    const regulationCommitmentCheck = document.getElementById("regulationCommitmentCheck");
+    const acceptRegulationButton = document.getElementById("acceptRegulationButton");
+    const regulationGateMessage = document.getElementById("regulationGateMessage");
+    const regulationAcceptanceList = document.getElementById("regulationAcceptanceList");
     let deferredInstallPrompt = null;
+    const REGULATION_VERSION = "1.0";
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
       drivers: document.getElementById("driversSection"),
       needs: document.getElementById("needsSection"),
       planning: document.getElementById("planningSection"),
-      kitchen: document.getElementById("kitchenSection")
+      kitchen: document.getElementById("kitchenSection"),
+      regulationAdmin: document.getElementById("regulationAdminSection")
     };
 
     const weekForm = document.getElementById("weekForm");
@@ -1034,6 +1267,7 @@
     let selectedNeedTemplateId = "";
     let currentDrivers = [];
     let planningDeadlineTimer = null;
+    let unsubscribeRegulationAcceptances = null;
     let unsubscribeDriverWeeks = null;
     let currentDriverUser = null;
     let unsubscribeDriverAssignments = null;
@@ -1073,7 +1307,7 @@
       document.getElementById("profileEmail").textContent=profile.email||"";
       document.getElementById("profileRole").textContent=profile.role||"";
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
-      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();subscribeToNeedTemplates()
+      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();subscribeToNeedTemplates();subscribeToRegulationAcceptances()
     }
 
     async function loadUserProfile(user){
@@ -1093,8 +1327,7 @@
       document.getElementById("driverProfileName").textContent=profile.name||"Livreur";
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
       document.getElementById("driverTopbarUser").textContent=`${profile.name||"Livreur"} · livreur`;
-      subscribeToOpenDriverWeeks(user);
-      subscribeToDriverAssignments(user)
+      checkDriverRegulationAcceptance(user)
     }
 
     function formatDate(value){if(!value)return"—";const d=new Date(`${value}T12:00:00`);return new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).format(d)}
@@ -1831,6 +2064,80 @@
 
     function defaultAvailabilityDays(week){
       return buildWeekDays(week).map(date=>normalizeAvailabilityDay({date}))
+    }
+
+    function regulationAcceptanceId(userId){
+      return `${userId}_${REGULATION_VERSION.replace(".","_")}`
+    }
+
+    async function checkDriverRegulationAcceptance(user){
+      driverMainContent.classList.add("hidden");
+      driverRegulationGate.classList.add("hidden");
+
+      try{
+        const acceptance=await getDoc(
+          doc(db,"regulationAcceptances",regulationAcceptanceId(user.uid))
+        );
+
+        if(acceptance.exists()&&acceptance.data().version===REGULATION_VERSION){
+          driverRegulationGate.classList.add("hidden");
+          driverMainContent.classList.remove("hidden");
+          subscribeToOpenDriverWeeks(user);
+          subscribeToDriverAssignments(user)
+        }else{
+          driverMainContent.classList.add("hidden");
+          driverRegulationGate.classList.remove("hidden")
+        }
+      }catch(error){
+        console.error(error);
+        driverMainContent.classList.add("hidden");
+        driverRegulationGate.classList.remove("hidden");
+        showMessage(regulationGateMessage,`Impossible de vérifier l’acceptation : ${error.code||error.message}`,"error")
+      }
+    }
+
+    function subscribeToRegulationAcceptances(){
+      if(unsubscribeRegulationAcceptances)unsubscribeRegulationAcceptances();
+
+      unsubscribeRegulationAcceptances=onSnapshot(
+        collection(db,"regulationAcceptances"),
+        snapshot=>{
+          const acceptances=[];
+          snapshot.forEach(docSnap=>acceptances.push({id:docSnap.id,...docSnap.data()}));
+
+          const drivers=currentDrivers.filter(driver=>driver.active===true);
+
+          if(drivers.length===0){
+            regulationAcceptanceList.innerHTML='<div class="empty-state">Aucun livreur actif.</div>';
+            return
+          }
+
+          regulationAcceptanceList.innerHTML="";
+
+          drivers.forEach(driver=>{
+            const acceptance=acceptances.find(item=>
+              item.userId===driver.id&&item.version===REGULATION_VERSION
+            );
+
+            const card=document.createElement("article");
+            card.className="acceptance-card";
+            card.innerHTML=`
+              <div>
+                <strong>${escapeHtml(driver.name||"Livreur")}</strong>
+                <small>${escapeHtml(driver.email||"")}</small>
+              </div>
+              <span class="status-badge ${acceptance?"status-open":"status-draft"}">
+                ${acceptance?"Accepté":"À accepter"}
+              </span>
+            `;
+            regulationAcceptanceList.appendChild(card)
+          })
+        },
+        error=>{
+          console.error(error);
+          regulationAcceptanceList.innerHTML='<div class="empty-state">Impossible de charger les acceptations.</div>'
+        }
+      )
     }
 
     function renderDriverWeek(week,existingData,user){
@@ -3121,6 +3428,68 @@
       }
     });
 
+    function openRegulationModal(){
+      regulationOverlay.classList.remove("hidden");
+      document.body.style.overflow="hidden"
+    }
+
+    function hideRegulationModal(){
+      regulationOverlay.classList.add("hidden");
+      document.body.style.overflow=""
+    }
+
+    document.querySelectorAll(".open-regulation-modal").forEach(button=>{
+      button.addEventListener("click",openRegulationModal)
+    });
+
+    closeRegulationModal.addEventListener("click",hideRegulationModal);
+
+    regulationOverlay.addEventListener("click",event=>{
+      if(event.target===regulationOverlay)hideRegulationModal()
+    });
+
+    function updateRegulationAcceptButton(){
+      acceptRegulationButton.disabled=!(
+        regulationReadCheck.checked&&regulationCommitmentCheck.checked
+      )
+    }
+
+    regulationReadCheck.addEventListener("change",updateRegulationAcceptButton);
+    regulationCommitmentCheck.addEventListener("change",updateRegulationAcceptButton);
+
+    acceptRegulationButton.addEventListener("click",async()=>{
+      if(!auth.currentUser||!currentProfile)return;
+
+      acceptRegulationButton.disabled=true;
+      acceptRegulationButton.textContent="Enregistrement…";
+      clearMessage(regulationGateMessage);
+
+      try{
+        await setDoc(
+          doc(db,"regulationAcceptances",regulationAcceptanceId(auth.currentUser.uid)),
+          {
+            userId:auth.currentUser.uid,
+            userName:currentProfile.name||"",
+            userEmail:currentProfile.email||auth.currentUser.email||"",
+            version:REGULATION_VERSION,
+            acceptedAt:serverTimestamp(),
+            acceptedBy:auth.currentUser.uid
+          }
+        );
+
+        driverRegulationGate.classList.add("hidden");
+        driverMainContent.classList.remove("hidden");
+        subscribeToOpenDriverWeeks(auth.currentUser);
+        subscribeToDriverAssignments(auth.currentUser)
+      }catch(error){
+        console.error(error);
+        showMessage(regulationGateMessage,`Impossible d’enregistrer l’acceptation : ${error.code||error.message}`,"error")
+      }finally{
+        acceptRegulationButton.textContent="J’accepte et je continue";
+        updateRegulationAcceptButton()
+      }
+    });
+
     function openInstallModal(){
       installOverlay.classList.remove("hidden");
       document.body.style.overflow="hidden"
@@ -3144,6 +3513,9 @@
     document.addEventListener("keydown",event=>{
       if(event.key==="Escape"&&!installOverlay.classList.contains("hidden")){
         hideInstallModal()
+      }
+      if(event.key==="Escape"&&!regulationOverlay.classList.contains("hidden")){
+        hideRegulationModal()
       }
     });
 
@@ -3175,6 +3547,7 @@
     document.getElementById("openNeeds").addEventListener("click",()=>showSection("needs"));
     document.getElementById("openPlanning").addEventListener("click",()=>showSection("planning"));
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
+    document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.querySelectorAll(".backToDashboard").forEach(b=>b.addEventListener("click",()=>showSection("dashboard")));
     document.getElementById("openDriverForm").addEventListener("click",openNewDriverForm);
     document.getElementById("cancelDriverForm").addEventListener("click",()=>{
@@ -3570,6 +3943,11 @@
         currentDriverOpenWeeks=[];
         currentDriverOpenWeeksCount=0;
         currentDriverWeekId="";
+        driverRegulationGate.classList.add("hidden");
+        driverMainContent.classList.add("hidden");
+        regulationReadCheck.checked=false;
+        regulationCommitmentCheck.checked=false;
+        updateRegulationAcceptButton();
         if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
         if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
