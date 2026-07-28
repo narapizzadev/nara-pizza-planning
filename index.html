@@ -310,6 +310,12 @@
     .score-warning{margin-top:7px;color:#9a6700;font-weight:700}
     .legacy-box,.collaboration-box{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:14px;background:#fafafa}
     .legacy-grid,.collaboration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .collaboration-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+    .collaboration-choice-grid .button{width:100%;min-height:52px;text-align:center}
+    .collaboration-choice-grid .button:last-child{grid-column:1/-1}
+    .collaboration-form-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 4px}
+    .collaboration-form-head h4{margin:0;font-size:18px}
+    @media(max-width:700px){.collaboration-choice-grid{grid-template-columns:1fr}.collaboration-choice-grid .button:last-child{grid-column:auto}}
     .request-list{display:grid;gap:12px;margin-top:14px}
     .request-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
     .request-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
@@ -1195,7 +1201,7 @@
             <h2>Règlement interne des livreurs</h2>
             <p class="muted">À lire et accepter avant d’envoyer vos disponibilités.</p>
           </div>
-          <span class="regulation-version">Version 1.1</span>
+          <span class="regulation-version">Version 1.2</span>
         </div>
 
         <div class="regulation-intro">
@@ -1324,9 +1330,18 @@
       <section class="panel collaboration-box">
         <div class="panel-header"><div><h3>Ma collaboration</h3><p class="muted">Déclarez une pause temporaire ou demandez la fin de votre collaboration.</p></div></div>
         <div id="myCollaborationStatus" class="form-note">Aucune demande en cours.</div>
-        <form id="collaborationRequestForm">
+        <div id="collaborationChoiceButtons" class="collaboration-choice-grid">
+          <button id="openPauseRequest" class="button button-primary" type="button">Déclarer une pause</button>
+          <button id="openEndRequest" class="button button-secondary" type="button">Mettre fin à ma collaboration</button>
+          <button id="openContactRequest" class="button button-ghost" type="button">Demander à être contacté par les RH</button>
+        </div>
+        <form id="collaborationRequestForm" class="hidden">
+          <div class="collaboration-form-head">
+            <h4 id="collaborationFormTitle">Déclarer une pause</h4>
+            <button id="cancelCollaborationRequest" class="button button-ghost" type="button">Annuler</button>
+          </div>
+          <select id="collaborationRequestType" class="hidden" aria-label="Type de demande"><option value="pause">Déclarer une pause temporaire</option><option value="end">Demander la fin de ma collaboration</option><option value="contact">Être contacté par les RH</option></select>
           <div class="collaboration-grid">
-            <div class="field"><label for="collaborationRequestType">Ma demande</label><select id="collaborationRequestType"><option value="pause">Déclarer une pause temporaire</option><option value="end">Demander la fin de ma collaboration</option><option value="contact">Être contacté par les RH</option></select></div>
             <div class="field"><label for="collaborationReason">Motif général</label><select id="collaborationReason"><option value="studies">Études ou examens</option><option value="internship">Stage professionnel</option><option value="military">Service militaire, civil ou protection civile</option><option value="travel">Voyage ou séjour à l’étranger</option><option value="family">Obligations familiales</option><option value="health">Maladie ou accident</option><option value="work">Autre activité professionnelle temporaire</option><option value="personal">Autre motif personnel</option></select></div>
             <div class="field pause-field"><label for="collaborationStartDate">Début</label><input id="collaborationStartDate" type="date"></div>
             <div class="field pause-field"><label for="collaborationEndDate">Retour prévu</label><input id="collaborationEndDate" type="date"></div>
@@ -1365,7 +1380,7 @@
       <div class="regulation-modal-header">
         <div>
           <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
-          <p class="muted">Version 1.1 — résumé opérationnel consultable à tout moment.</p>
+          <p class="muted">Version 1.2 — résumé opérationnel consultable à tout moment.</p>
         </div>
         <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
       </div>
@@ -1544,6 +1559,9 @@
     const collaborationRequestForm = document.getElementById("collaborationRequestForm");
     const collaborationRequestType = document.getElementById("collaborationRequestType");
     const collaborationRequestMessage = document.getElementById("collaborationRequestMessage");
+    const collaborationChoiceButtons = document.getElementById("collaborationChoiceButtons");
+    const collaborationFormTitle = document.getElementById("collaborationFormTitle");
+    const cancelCollaborationRequest = document.getElementById("cancelCollaborationRequest");
     const myCollaborationStatus = document.getElementById("myCollaborationStatus");
 
     const needsWeekSelect = document.getElementById("needsWeekSelect");
@@ -4450,10 +4468,30 @@
 
     document.getElementById("driverLegacyEnabled").addEventListener("change",event=>{document.getElementById("driverLegacyFields").classList.toggle("hidden",!event.target.checked)});
 
+    function openCollaborationRequest(type){
+      collaborationRequestType.value=type;
+      collaborationFormTitle.textContent=type==="pause"?"Déclarer une pause":type==="end"?"Mettre fin à ma collaboration":"Être contacté par les RH";
+      collaborationRequestForm.classList.remove("hidden");
+      collaborationChoiceButtons.classList.add("hidden");
+      collaborationRequestType.dispatchEvent(new Event("change"));
+      collaborationRequestForm.scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    function closeCollaborationRequest(){
+      collaborationRequestForm.reset();
+      collaborationRequestForm.classList.add("hidden");
+      collaborationChoiceButtons.classList.remove("hidden");
+      clearMessage(collaborationRequestMessage);
+    }
+    document.getElementById("openPauseRequest").addEventListener("click",()=>openCollaborationRequest("pause"));
+    document.getElementById("openEndRequest").addEventListener("click",()=>openCollaborationRequest("end"));
+    document.getElementById("openContactRequest").addEventListener("click",()=>openCollaborationRequest("contact"));
+    cancelCollaborationRequest.addEventListener("click",closeCollaborationRequest);
+
     collaborationRequestType.addEventListener("change",()=>{
       const isPause=collaborationRequestType.value==="pause";
       document.querySelectorAll(".pause-field").forEach(el=>el.classList.toggle("hidden",!isPause));
       document.querySelectorAll(".end-field").forEach(el=>el.classList.toggle("hidden",collaborationRequestType.value!=="end"));
+      document.getElementById("submitCollaborationRequest").textContent=collaborationRequestType.value==="pause"?"Envoyer la demande de pause":collaborationRequestType.value==="end"?"Envoyer la demande de fin":"Demander un contact RH";
     });
 
     function requestStatusLabel(status){return ({pending:"À traiter",approved:"Pause approuvée",rejected:"Refusée",rh_review:"Contrôle RH",end_confirmed:"Date de fin confirmée",closed:"Clôturée"})[status]||status}
@@ -4490,7 +4528,7 @@
       event.preventDefault(); clearMessage(collaborationRequestMessage);
       const type=collaborationRequestType.value; const startDate=document.getElementById("collaborationStartDate").value; const endDate=document.getElementById("collaborationEndDate").value;
       if(type==="pause"&&(!startDate||!endDate||endDate<startDate)){showMessage(collaborationRequestMessage,"Indiquez une période de pause valide.","error");return}
-      try{await addDoc(collection(db,"collaborationRequests"),{userId:auth.currentUser.uid,userName:currentProfile.name||"",userEmail:currentProfile.email||auth.currentUser.email||"",type,reason:document.getElementById("collaborationReason").value,startDate:type==="pause"?startDate:"",endDate:type==="pause"?endDate:"",desiredEndDate:type==="end"?document.getElementById("collaborationDesiredEndDate").value:"",comment:document.getElementById("collaborationComment").value.trim(),status:"pending",createdAt:serverTimestamp()}); collaborationRequestForm.reset(); collaborationRequestType.dispatchEvent(new Event("change")); showMessage(collaborationRequestMessage,"Votre demande a été transmise.","success")}catch(error){showMessage(collaborationRequestMessage,`Impossible d’envoyer la demande : ${error.code||error.message}`,"error")}
+      try{await addDoc(collection(db,"collaborationRequests"),{userId:auth.currentUser.uid,userName:currentProfile.name||"",userEmail:currentProfile.email||auth.currentUser.email||"",type,reason:document.getElementById("collaborationReason").value,startDate:type==="pause"?startDate:"",endDate:type==="pause"?endDate:"",desiredEndDate:type==="end"?document.getElementById("collaborationDesiredEndDate").value:"",comment:document.getElementById("collaborationComment").value.trim(),status:"pending",createdAt:serverTimestamp()}); closeCollaborationRequest(); myCollaborationStatus.innerHTML='<strong>Votre demande a été transmise.</strong>'; }catch(error){showMessage(collaborationRequestMessage,`Impossible d’envoyer la demande : ${error.code||error.message}`,"error")}
     });
 
     driverForm.addEventListener("submit",async event=>{
