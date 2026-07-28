@@ -1673,6 +1673,8 @@
     let currentCollaborationRequests = [];
     let unsubscribeCollaborationRequests = null;
     let planningDeadlineTimer = null;
+    let unsubscribePlanningAvailabilities = null;
+    let planningRefreshInProgress = false;
     let unsubscribeRegulationAcceptances = null;
     let unsubscribeDriverWeeks = null;
     let currentDriverUser = null;
@@ -2992,8 +2994,27 @@
             badge.className=`status-badge ${available?"status-open":"status-draft"}`
           }
 
+          const middayEarliestInput=card.querySelector(".midday-earliest");
+          const eveningEarliestInput=card.querySelector(".evening-earliest");
+
+          function validateServiceStart(input,limit,serviceLabel){
+            const value=input.value;
+            if(value && value>limit){
+              input.setCustomValidity(`Pour le ${serviceLabel}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`)
+            }else{
+              input.setCustomValidity("")
+            }
+          }
+
           middayCheckbox.addEventListener("change",updateAvailabilityCard);
           eveningCheckbox.addEventListener("change",updateAvailabilityCard);
+          middayEarliestInput.addEventListener("input",()=>validateServiceStart(middayEarliestInput,"12:00","service de midi"));
+          eveningEarliestInput.addEventListener("input",()=>validateServiceStart(eveningEarliestInput,"19:00","service du soir"));
+          middayEarliestInput.addEventListener("change",()=>validateServiceStart(middayEarliestInput,"12:00","service de midi"));
+          eveningEarliestInput.addEventListener("change",()=>validateServiceStart(eveningEarliestInput,"19:00","service du soir"));
+
+          validateServiceStart(middayEarliestInput,"12:00","service de midi");
+          validateServiceStart(eveningEarliestInput,"19:00","service du soir");
 
           daysContainer.appendChild(card)
         });
@@ -3049,11 +3070,21 @@
           );
 
           if(invalidDay){
+            const card=form.querySelector(`.availability-day[data-date="${invalidDay.date}"]`);
+            const middayInvalid=invalidDay.middayAvailable && (
+              !invalidDay.middayEarliest || invalidDay.middayEarliest>"12:00"
+            );
+            const limit=middayInvalid?"12:00":"19:00";
+            const service=middayInvalid?"service de midi":"service du soir";
+            const input=card?.querySelector(middayInvalid?".midday-earliest":".evening-earliest");
+
             showMessage(
               messageEl,
-              "Vérifiez l’heure de début disponible pour le service sélectionné.",
+              `${formatDay(invalidDay.date)} : pour le ${service}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`,
               "error"
             );
+            input?.focus();
+            input?.reportValidity();
             return
           }
 
@@ -3673,7 +3704,93 @@
       return labels.join("")
     }
 
-    async function loadPlanningAvailabilities(weekId){
+    function renderPlanningAvailabilitySnapshot(snapshot,weekId){
+      const responses=[];
+      const responseUserIds=new Set();
+
+      snapshot.forEach(docSnap=>{
+        const response={id:docSnap.id,...docSnap.data()};
+        responses.push(response);
+        responseUserIds.add(response.userId||docSnap.id)
+      });
+
+      const week=currentWeeks.find(item=>item.id===weekId)||null;
+      updateDeadlineDisplay(week,responseUserIds);
+
+      if(responses.length===0){
+        planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+        return
+      }
+
+      responses.sort((a,b)=>(a.driverName||"").localeCompare(b.driverName||"","fr"));
+      planningAvailabilityContainer.innerHTML="";
+
+      responses.forEach(response=>{
+        const card=document.createElement("article");
+        card.className="availability-admin-card";
+
+        const days=(response.days||[])
+          .slice()
+          .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+        card.innerHTML=`
+          <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
+          <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
+          <div class="delivery-method-summary">
+            ${(response.deliveryMethods||[]).length
+              ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
+              : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
+          </div>
+          <div class="availability-admin-days">
+            ${days.map(day=>`
+              <div class="availability-admin-day">
+                <strong>${escapeHtml(formatDay(day.date))}</strong>
+                <div class="availability-admin-slots">${availabilityLabel(day)}</div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+
+        planningAvailabilityContainer.appendChild(card)
+      })
+    }
+
+    async function refreshDraftProposalFromLatestData(weekId){
+      if(planningRefreshInProgress)return;
+      if(!currentPlan||currentPlan.weekId!==weekId||currentPlan.status!=="draft")return;
+
+      planningRefreshInProgress=true;
+
+      try{
+        const data=await loadPlanningData(weekId);
+        if(data.needs.length===0||data.availabilities.length===0)return;
+
+        currentPlan=createProposal(data);
+        await saveCurrentPlan();
+        renderPlan();
+        showMessage(
+          planningMessage,
+          "La proposition provisoire a été recalculée automatiquement avec les nouvelles disponibilités.",
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(
+          planningMessage,
+          `Les disponibilités ont été mises à jour, mais la proposition n’a pas pu être recalculée : ${error.code||error.message}`,
+          "error"
+        )
+      }finally{
+        planningRefreshInProgress=false
+      }
+    }
+
+    function loadPlanningAvailabilities(weekId){
+      if(unsubscribePlanningAvailabilities){
+        unsubscribePlanningAvailabilities();
+        unsubscribePlanningAvailabilities=null
+      }
+
       if(!weekId){
         planningAvailabilityContainer.innerHTML='<div class="empty-state">Choisissez une semaine.</div>';
         updateDeadlineDisplay(null,new Set());
@@ -3681,62 +3798,26 @@
       }
 
       planningAvailabilityContainer.innerHTML='<div class="empty-state">Chargement des disponibilités…</div>';
+      let firstSnapshot=true;
 
-      try{
-        const snapshot=await getDocs(collection(db,"weeks",weekId,"availabilities"));
-        const responses=[];
-        const responseUserIds=new Set();
+      unsubscribePlanningAvailabilities=onSnapshot(
+        collection(db,"weeks",weekId,"availabilities"),
+        snapshot=>{
+          renderPlanningAvailabilitySnapshot(snapshot,weekId);
 
-        snapshot.forEach(docSnap=>{
-          const response={id:docSnap.id,...docSnap.data()};
-          responses.push(response);
-          responseUserIds.add(response.userId||docSnap.id)
-        });
+          if(firstSnapshot){
+            firstSnapshot=false;
+            return
+          }
 
-        const week=currentWeeks.find(item=>item.id===weekId)||null;
-        updateDeadlineDisplay(week,responseUserIds);
-
-        if(responses.length===0){
-          planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
-          return
+          refreshDraftProposalFromLatestData(weekId)
+        },
+        error=>{
+          console.error(error);
+          planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
+          showMessage(planningMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
         }
-
-        responses.sort((a,b)=>(a.driverName||"").localeCompare(b.driverName||"","fr"));
-        planningAvailabilityContainer.innerHTML="";
-
-        responses.forEach(response=>{
-          const card=document.createElement("article");
-          card.className="availability-admin-card";
-
-          const days=(response.days||[])
-            .slice()
-            .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-
-          card.innerHTML=`
-            <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
-            <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
-            <div class="delivery-method-summary">
-              ${(response.deliveryMethods||[]).length
-                ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
-                : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
-            </div>
-            <div class="availability-admin-days">
-              ${days.map(day=>`
-                <div class="availability-admin-day">
-                  <strong>${escapeHtml(formatDay(day.date))}</strong>
-                  <div class="availability-admin-slots">${availabilityLabel(day)}</div>
-                </div>
-              `).join("")}
-            </div>
-          `;
-
-          planningAvailabilityContainer.appendChild(card)
-        })
-      }catch(error){
-        console.error(error);
-        planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
-        showMessage(planningMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
-      }
+      )
     }
 
     async function loadPlanningData(weekId){
@@ -4755,6 +4836,7 @@
         if(unsubscribeDriverWeeks){unsubscribeDriverWeeks();unsubscribeDriverWeeks=null}
         if(unsubscribeDriverAssignments){unsubscribeDriverAssignments();unsubscribeDriverAssignments=null}
         if(unsubscribeCollaborationRequests){unsubscribeCollaborationRequests();unsubscribeCollaborationRequests=null}
+        if(unsubscribePlanningAvailabilities){unsubscribePlanningAvailabilities();unsubscribePlanningAvailabilities=null}
         showLogin();
         return
       }
