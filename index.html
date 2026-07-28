@@ -303,25 +303,6 @@
     .driver-stat-card small{margin-top:3px;color:var(--muted);line-height:1.3}
     .driver-stat-detail{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.4}
     .driver-data-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
-    .score-explanation{margin-top:10px;padding:12px;border:1px solid #f1d1b9;border-radius:10px;background:#fffaf6;font-size:12px;line-height:1.5}
-    .score-explanation strong{display:block;margin-bottom:5px;font-size:13px}
-    .score-line{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
-    .score-line.total{margin-top:5px;padding-top:7px;border-top:1px solid #ead7c8;font-weight:800}
-    .score-warning{margin-top:7px;color:#9a6700;font-weight:700}
-    .legacy-box,.collaboration-box{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:14px;background:#fafafa}
-    .legacy-grid,.collaboration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .collaboration-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
-    .collaboration-choice-grid .button{width:100%;min-height:52px;text-align:center}
-    .collaboration-choice-grid .button:last-child{grid-column:1/-1}
-    .collaboration-form-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 4px}
-    .collaboration-form-head h4{margin:0;font-size:18px}
-    @media(max-width:700px){.collaboration-choice-grid{grid-template-columns:1fr}.collaboration-choice-grid .button:last-child{grid-column:auto}}
-    .request-list{display:grid;gap:12px;margin-top:14px}
-    .request-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
-    .request-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .status-pause{background:#eef4ff;color:#2457a6}.status-rh{background:#fff4dd;color:#8a5b00}.status-ended{background:#f2f2f2;color:#555}
-    @media(max-width:700px){.legacy-grid,.collaboration-grid{grid-template-columns:1fr}.request-head{display:block}}
     .driver-card h3{margin-bottom:4px}.driver-card p{margin-bottom:3px}.driver-meta{color:var(--muted);font-size:14px;line-height:1.4}
     .driver-actions{display:flex;align-items:center;gap:10px}.driver-score{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
     .score-chip{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f4f4f4;font-size:12px;font-weight:700}
@@ -355,17 +336,6 @@
     .service-availability-header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
     .service-availability-header label{margin:0}
     .service-availability.is-disabled .service-fields{opacity:.45;pointer-events:none}
-    .service-availability.validation-target{
-      scroll-margin-top:96px;
-      border-color:#b42318;
-      box-shadow:0 0 0 3px rgba(180,35,24,.14);
-      animation:validationPulse .9s ease 2;
-    }
-    .service-availability.validation-target input{border-color:#b42318}
-    @keyframes validationPulse{
-      0%,100%{transform:translateY(0)}
-      50%{transform:translateY(-2px)}
-    }
     .availability-day.is-unavailable .availability-details{opacity:1;pointer-events:auto}
     .availability-state{display:flex;gap:8px;align-items:center}
     .availability-state input{width:auto}
@@ -749,10 +719,9 @@
         <div class="field"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="email" required></div>
         <div class="field"><label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div>
         <button id="loginButton" class="button button-primary button-full" type="submit">Se connecter</button>
-        <button id="forgotPasswordButton" class="button button-ghost button-full" type="button">Mot de passe oublié ?</button>
       </form>
       <div id="loginMessage" class="message"></div>
-      <div class="footer">Nara Pizza Planning — version pilote 1.3</div>
+      <div class="footer">Nara Pizza Planning — version pilote</div>
     </main>
   </section>
 
@@ -764,7 +733,6 @@
       </div>
       <div class="topbar-actions">
         <button class="button button-ghost install-help-button" type="button">Installer</button>
-        <button class="button button-ghost open-password-modal" type="button">Mot de passe</button>
         <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
       </div>
     </header>
@@ -835,13 +803,6 @@
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
           </div>
 
-          <section class="collaboration-box">
-            <div class="panel-header">
-              <div><h3>Demandes et pauses</h3><p class="muted">Validez les pauses temporaires et traitez les demandes de fin de collaboration.</p></div>
-            </div>
-            <div id="collaborationRequestList" class="request-list"><div class="empty-state">Chargement des demandes…</div></div>
-          </section>
-
           <div id="driverList" class="driver-list">
             <div class="empty-state">Chargement des livreurs…</div>
           </div>
@@ -855,7 +816,7 @@
             </div>
 
             <div class="form-note">
-              La priorité de base et les notes sont confidentielles. Le score automatique évolue chaque jour selon les 30 derniers jours et les disponibilités transmises.
+              Les notes, la priorité, la fiabilité et l’expérience sont confidentielles et visibles uniquement par les managers.
             </div>
 
             <form id="driverForm">
@@ -888,26 +849,20 @@
                 </div>
 
                 <div class="field">
-                  <label for="driverPriority">Priorité manager de base (1 à 5)</label>
+                  <label for="driverPriority">Priorité interne (1 à 5)</label>
                   <input id="driverPriority" type="number" min="1" max="5" value="3" required>
-                  <small class="muted">Après 15 jours sans aucune disponibilité, la priorité effective baisse de 1 point, puis de nouveau tous les 15 jours.</small>
                 </div>
 
-                <input id="driverReliability" type="hidden" value="3">
-                <input id="driverExperience" type="hidden" value="3">
+                <div class="field">
+                  <label for="driverReliability">Fiabilité (1 à 5)</label>
+                  <input id="driverReliability" type="number" min="1" max="5" value="3" required>
+                </div>
+
+                <div class="field">
+                  <label for="driverExperience">Expérience (1 à 5)</label>
+                  <input id="driverExperience" type="number" min="1" max="5" value="3" required>
+                </div>
               </div>
-
-              <section class="legacy-box">
-                <label class="checkbox-row"><input id="driverLegacyEnabled" type="checkbox"><span><strong>Livreur déjà actif avant la mise en service de l’application</strong><br><small class="muted">Un questionnaire unique attribue un bonus historique temporaire, protégé pendant 6 mois puis réduit progressivement.</small></span></label>
-                <div id="driverLegacyFields" class="legacy-grid hidden">
-                  <div class="field"><label for="driverLegacyStart">Début du bonus historique</label><input id="driverLegacyStart" type="date"></div>
-                  <div class="field"><label for="driverLegacyTenure">Ancienneté</label><select id="driverLegacyTenure"><option value="0">Moins de 3 mois</option><option value="1">3 à 6 mois</option><option value="2">6 à 12 mois</option><option value="3">1 à 2 ans</option><option value="4">Plus de 2 ans</option></select></div>
-                  <div class="field"><label for="driverLegacyFrequency">Fréquence habituelle</label><select id="driverLegacyFrequency"><option value="0">Occasionnellement</option><option value="1">Environ 1 fois/semaine</option><option value="2">Environ 2 fois/semaine</option><option value="3">3 à 4 fois/semaine</option><option value="4">5 fois ou plus/semaine</option></select></div>
-                  <div class="field"><label for="driverLegacyReliability">Fiabilité historique</label><select id="driverLegacyReliability"><option value="0">Plusieurs problèmes importants</option><option value="1">Irrégulière</option><option value="2">Généralement fiable</option><option value="3">Très fiable</option><option value="4">Référence pour l’équipe</option></select></div>
-                  <div class="field"><label for="driverLegacyFlexibility">Disponibilité et flexibilité</label><select id="driverLegacyFlexibility"><option value="0">Très limitée</option><option value="1">Moyenne</option><option value="2">Bonne</option><option value="3">Très bonne, remplacements compris</option></select></div>
-                  <div class="form-note">Capital de départ : 0 à 5 = 0 point ; 6 à 8 = 2 points ; 9 à 11 = 4 points ; 12 à 15 = 6 points.</div>
-                </div>
-              </section>
 
               <div class="field" style="margin-top:16px">
                 <label for="driverNotes">Notes confidentielles</label>
@@ -1117,7 +1072,7 @@
           </div>
 
           <div class="form-note">
-            Classement utilisé : priorité manager effective + 0,2 par présence confirmée passée + 0,2 par acceptation honorée, sur les 30 derniers jours.
+            Classement utilisé : priorité × 3, fiabilité × 2 et expérience × 1.
             Un livreur peut travailler une fois au service de midi et une fois au service du soir le même jour,
             avec un maximum de 6 jours de travail par semaine.
           </div>
@@ -1201,7 +1156,6 @@
       <div class="topbar-actions">
         <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">Règl. & aide</button>
         <button class="button button-ghost install-help-button" type="button">Installer</button>
-        <button class="button button-ghost open-password-modal" type="button">Mot de passe</button>
         <button id="driverLogoutButton" class="button button-secondary" type="button">
           Sortir
         </button>
@@ -1215,7 +1169,7 @@
             <h2>Règlement interne des livreurs</h2>
             <p class="muted">À lire et accepter avant d’envoyer vos disponibilités.</p>
           </div>
-          <span class="regulation-version">Version 1.2</span>
+          <span class="regulation-version">Version 1.0</span>
         </div>
 
         <div class="regulation-intro">
@@ -1341,33 +1295,6 @@
         </div>
       </section>
 
-      <section class="panel collaboration-box">
-        <div class="panel-header"><div><h3>Ma collaboration</h3><p class="muted">Déclarez une pause temporaire ou demandez la fin de votre collaboration.</p></div></div>
-        <div id="myCollaborationStatus" class="form-note">Aucune demande en cours.</div>
-        <div id="collaborationChoiceButtons" class="collaboration-choice-grid">
-          <button id="openPauseRequest" class="button button-primary" type="button">Déclarer une pause</button>
-          <button id="openEndRequest" class="button button-secondary" type="button">Mettre fin à ma collaboration</button>
-          <button id="openContactRequest" class="button button-ghost" type="button">Demander à être contacté par les RH</button>
-        </div>
-        <form id="collaborationRequestForm" class="hidden">
-          <div class="collaboration-form-head">
-            <h4 id="collaborationFormTitle">Déclarer une pause</h4>
-            <button id="cancelCollaborationRequest" class="button button-ghost" type="button">Annuler</button>
-          </div>
-          <select id="collaborationRequestType" class="hidden" aria-label="Type de demande"><option value="pause">Déclarer une pause temporaire</option><option value="end">Demander la fin de ma collaboration</option><option value="contact">Être contacté par les RH</option></select>
-          <div class="collaboration-grid">
-            <div class="field"><label for="collaborationReason">Motif général</label><select id="collaborationReason"><option value="studies">Études ou examens</option><option value="internship">Stage professionnel</option><option value="military">Service militaire, civil ou protection civile</option><option value="travel">Voyage ou séjour à l’étranger</option><option value="family">Obligations familiales</option><option value="health">Maladie ou accident</option><option value="work">Autre activité professionnelle temporaire</option><option value="personal">Autre motif personnel</option></select></div>
-            <div class="field pause-field"><label for="collaborationStartDate">Début</label><input id="collaborationStartDate" type="date"></div>
-            <div class="field pause-field"><label for="collaborationEndDate">Retour prévu</label><input id="collaborationEndDate" type="date"></div>
-            <div class="field end-field hidden"><label for="collaborationDesiredEndDate">Date de fin souhaitée</label><input id="collaborationDesiredEndDate" type="date"></div>
-          </div>
-          <div class="field" style="margin-top:12px"><label for="collaborationComment">Commentaire facultatif</label><textarea id="collaborationComment" placeholder="Ne communiquez aucun diagnostic médical ni détail intime."></textarea></div>
-          <label class="checkbox-row"><input id="collaborationConfirm" type="checkbox" required><span>Je confirme que cette demande sera transmise au manager/RH et ne met pas automatiquement fin à mon contrat.</span></label>
-          <div class="form-actions"><button id="submitCollaborationRequest" class="button button-primary" type="submit">Envoyer la demande</button></div>
-          <div id="collaborationRequestMessage" class="message"></div>
-        </form>
-      </section>
-
       <section id="driverAvailabilityZone" class="driver-availability-zone">
         <div class="panel-header">
           <div>
@@ -1394,7 +1321,7 @@
       <div class="regulation-modal-header">
         <div>
           <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
-          <p class="muted">Version 1.2 — résumé opérationnel consultable à tout moment.</p>
+          <p class="muted">Version 1.0 — résumé opérationnel consultable à tout moment.</p>
         </div>
         <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
       </div>
@@ -1430,11 +1357,6 @@
       </section>
 
       <section class="regulation-section">
-        <h3>7. Études, pauses et fin de collaboration</h3>
-        <p>Nara Pizza permet notamment aux étudiants de déclarer une pause temporaire pour études, examens, stage, voyage, service obligatoire, obligations familiales ou autre motif. Une pause approuvée suspend les relances et la baisse automatique de priorité jusqu’à la date de retour. Après 60 jours sans disponibilité ni pause déclarée, une vérification administrative peut être ouverte. Le livreur peut aussi demander volontairement la fin de sa collaboration. Une demande dans l’application ne constitue jamais, à elle seule, une résiliation : les RH confirment par écrit la date officielle et le délai applicable.</p>
-      </section>
-
-      <section class="regulation-section">
         <h3>Procédures rapides</h3>
         <div class="quick-procedure-grid">
           <article class="quick-procedure"><strong>Retard</strong><p>Ne pas accélérer. Signaler le motif. S’arrêter pour répondre. Suivre l’instruction du manager.</p></article>
@@ -1451,40 +1373,6 @@
       <section class="regulation-section">
         <p class="muted">Le contrat de travail, la loi et la CCNT applicable priment sur ce résumé. La version complète interne doit être validée avant sa mise en service définitive.</p>
       </section>
-    </section>
-  </div>
-
-  <div id="passwordOverlay" class="install-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
-    <section class="install-modal" style="max-width:620px">
-      <div class="install-modal-header">
-        <div>
-          <h2 id="passwordModalTitle">Modifier mon mot de passe</h2>
-          <p class="muted">Cette modification s’applique immédiatement à votre compte.</p>
-        </div>
-        <button id="closePasswordModal" class="install-close" type="button" aria-label="Fermer">×</button>
-      </div>
-
-      <div class="form-grid one-column">
-        <div class="field">
-          <label for="currentPassword">Mot de passe actuel</label>
-          <input id="currentPassword" type="password" autocomplete="current-password">
-        </div>
-        <div class="field">
-          <label for="newPassword">Nouveau mot de passe</label>
-          <input id="newPassword" type="password" autocomplete="new-password" minlength="8">
-          <small class="muted">Au moins 8 caractères.</small>
-        </div>
-        <div class="field">
-          <label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
-          <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8">
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button id="savePasswordButton" class="button button-primary" type="button">Enregistrer le nouveau mot de passe</button>
-        <button id="cancelPasswordButton" class="button button-secondary" type="button">Annuler</button>
-      </div>
-      <div id="passwordMessage" class="message"></div>
     </section>
   </div>
 
@@ -1534,8 +1422,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, addDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+    import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getDocs, collection, addDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB337El2PUsl00uRTBK30H55-5oSCwCmzg",
@@ -1548,7 +1436,23 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+
+    /* -------------------------------------------------------------------
+       CACHE LOCAL PERSISTANT
+       Les donnees deja lues sont conservees dans le navigateur.
+       A chaque nouvelle visite, Firestore ne facture que les documents
+       reellement modifies depuis la derniere fois : c'est la plus grosse
+       economie de lectures de l'application.
+       ------------------------------------------------------------------- */
+    let db;
+    try{
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+      })
+    }catch(cacheError){
+      console.warn("Cache local indisponible, mode standard.", cacheError);
+      db = getFirestore(app)
+    }
     const driverCreatorApp = initializeApp(firebaseConfig, "driverCreator");
     const driverCreatorAuth = getAuth(driverCreatorApp);
 
@@ -1558,15 +1462,6 @@
     const loginForm = document.getElementById("loginForm");
     const loginButton = document.getElementById("loginButton");
     const loginMessage = document.getElementById("loginMessage");
-    const forgotPasswordButton = document.getElementById("forgotPasswordButton");
-    const passwordOverlay = document.getElementById("passwordOverlay");
-    const closePasswordModalButton = document.getElementById("closePasswordModal");
-    const cancelPasswordButton = document.getElementById("cancelPasswordButton");
-    const savePasswordButton = document.getElementById("savePasswordButton");
-    const currentPasswordInput = document.getElementById("currentPassword");
-    const newPasswordInput = document.getElementById("newPassword");
-    const confirmNewPasswordInput = document.getElementById("confirmNewPassword");
-    const passwordMessage = document.getElementById("passwordMessage");
     const appMessage = document.getElementById("appMessage");
     const installOverlay = document.getElementById("installOverlay");
     const closeInstallModal = document.getElementById("closeInstallModal");
@@ -1582,7 +1477,7 @@
     const regulationGateMessage = document.getElementById("regulationGateMessage");
     const regulationAcceptanceList = document.getElementById("regulationAcceptanceList");
     let deferredInstallPrompt = null;
-    const REGULATION_VERSION = "1.1";
+    const REGULATION_VERSION = "1.0";
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
@@ -1612,14 +1507,6 @@
     const driverFormMessage = document.getElementById("driverFormMessage");
     const saveDriverButton = document.getElementById("saveDriverButton");
     const driverPasswordField = document.getElementById("driverPasswordField");
-    const collaborationRequestList = document.getElementById("collaborationRequestList");
-    const collaborationRequestForm = document.getElementById("collaborationRequestForm");
-    const collaborationRequestType = document.getElementById("collaborationRequestType");
-    const collaborationRequestMessage = document.getElementById("collaborationRequestMessage");
-    const collaborationChoiceButtons = document.getElementById("collaborationChoiceButtons");
-    const collaborationFormTitle = document.getElementById("collaborationFormTitle");
-    const cancelCollaborationRequest = document.getElementById("cancelCollaborationRequest");
-    const myCollaborationStatus = document.getElementById("myCollaborationStatus");
 
     const needsWeekSelect = document.getElementById("needsWeekSelect");
     const needForm = document.getElementById("needForm");
@@ -1668,6 +1555,49 @@
     const kitchenSheet = document.getElementById("kitchenSheet");
     const kitchenMessage = document.getElementById("kitchenMessage");
 
+    /* -------------------------------------------------------------------
+       REGLAGES D'ECONOMIE FIREBASE
+       Modifier ces valeurs suffit a elargir ou reduire ce qui est charge.
+       ------------------------------------------------------------------- */
+    const HISTORY_DAYS = 93;            // historique manager : ~3 mois
+    const DRIVER_HISTORY_DAYS = 60;     // historique cote livreur : ~2 mois
+    const STATS_PAST_DAYS = 30;         // statistiques livreurs : 30 jours passes
+    const STATS_FUTURE_DAYS = 30;       // statistiques livreurs : 30 jours a venir
+    const STATS_CACHE_MS = 5 * 60 * 1000;        // stats rechargees au plus 1x / 5 min
+    const AVAILABILITY_CACHE_MS = 2 * 60 * 1000; // disponibilites rechargees au plus 1x / 2 min
+
+    function shiftedIsoDate(days){
+      const d = new Date();
+      d.setHours(12,0,0,0);
+      d.setDate(d.getDate()+days);
+      return d.toISOString().slice(0,10)
+    }
+
+    function historyStartDate(){ return shiftedIsoDate(-HISTORY_DAYS) }
+    function driverHistoryStartDate(){ return shiftedIsoDate(-DRIVER_HISTORY_DAYS) }
+
+    /* Ecritures groupees : 1 seul aller-retour reseau par paquet de 400. */
+    async function commitOperations(operations){
+      if(!operations.length)return 0;
+      for(let index=0;index<operations.length;index+=400){
+        const batch=writeBatch(db);
+        operations.slice(index,index+400).forEach(op=>{
+          if(op.type==="delete")batch.delete(op.ref);
+          else batch.set(op.ref,op.data,{merge:true})
+        });
+        await batch.commit()
+      }
+      return operations.length
+    }
+
+    let currentSectionName = "dashboard";
+    let driverPrivateLoaded = false;
+    let driverStatsLoadedAt = 0;
+    let regulationAcceptances = [];
+    let regulationAcceptancesLoadedAt = 0;
+    let needTemplatesSubscribed = false;
+    const availabilityCache = new Map();
+
     let currentProfile = null;
     let unsubscribeWeeks = null;
     let unsubscribeDrivers = null;
@@ -1680,12 +1610,7 @@
     let currentDrivers = [];
     let currentDriverPrivateData = new Map();
     let currentManagerAssignments = [];
-    let currentManagerAvailabilities = [];
-    let currentCollaborationRequests = [];
-    let unsubscribeCollaborationRequests = null;
     let planningDeadlineTimer = null;
-    let unsubscribePlanningAvailabilities = null;
-    let planningRefreshInProgress = false;
     let unsubscribeRegulationAcceptances = null;
     let unsubscribeDriverWeeks = null;
     let currentDriverUser = null;
@@ -1717,83 +1642,20 @@
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
-    function showSection(name){Object.values(sections).forEach(s=>s.classList.remove("active"));sections[name].classList.add("active");clearMessage(appMessage);if(name==="createWeek")prepareWeekForm();if(name==="needs")prepareNeedsSection();if(name==="planning")preparePlanningSection();if(name==="kitchen")prepareKitchenSection();window.scrollTo({top:0,behavior:"smooth"})}
-    function openPasswordModal(){
-      if(!auth.currentUser)return;
-      currentPasswordInput.value="";
-      newPasswordInput.value="";
-      confirmNewPasswordInput.value="";
-      clearMessage(passwordMessage);
-      passwordOverlay.classList.remove("hidden");
-      setTimeout(()=>currentPasswordInput.focus(),50)
+    function showSection(name){
+      currentSectionName=name;
+      Object.values(sections).forEach(s=>s.classList.remove("active"));
+      sections[name].classList.add("active");
+      clearMessage(appMessage);
+      // Chargement paresseux : chaque ecran ne lit Firestore que lorsqu'il est ouvert.
+      if(name==="createWeek")prepareWeekForm();
+      if(name==="drivers")prepareDriversSection();
+      if(name==="needs")prepareNeedsSection();
+      if(name==="planning")preparePlanningSection();
+      if(name==="kitchen")prepareKitchenSection();
+      if(name==="regulationAdmin")loadRegulationAcceptances();
+      window.scrollTo({top:0,behavior:"smooth"})
     }
-
-    function closePasswordModal(){
-      passwordOverlay.classList.add("hidden");
-      currentPasswordInput.value="";
-      newPasswordInput.value="";
-      confirmNewPasswordInput.value="";
-      clearMessage(passwordMessage)
-    }
-
-    async function requestPasswordReset(){
-      clearMessage(loginMessage);
-      const email=document.getElementById("email").value.trim();
-      if(!email){
-        showMessage(loginMessage,"Saisissez d’abord votre adresse e-mail.","error");
-        document.getElementById("email").focus();
-        return
-      }
-      forgotPasswordButton.disabled=true;
-      forgotPasswordButton.textContent="Envoi…";
-      try{
-        await sendPasswordResetEmail(auth,email);
-        showMessage(loginMessage,"Un e-mail de réinitialisation a été envoyé. Vérifiez aussi votre dossier spam.","success")
-      }catch(error){
-        console.error(error);
-        const message=error.code==="auth/invalid-email"?"L’adresse e-mail n’est pas valide.":"Impossible d’envoyer l’e-mail de réinitialisation. Vérifiez l’adresse et réessayez.";
-        showMessage(loginMessage,message,"error")
-      }finally{
-        forgotPasswordButton.disabled=false;
-        forgotPasswordButton.textContent="Mot de passe oublié ?"
-      }
-    }
-
-    async function changeCurrentUserPassword(){
-      clearMessage(passwordMessage);
-      const user=auth.currentUser;
-      const currentPassword=currentPasswordInput.value;
-      const newPassword=newPasswordInput.value;
-      const confirmation=confirmNewPasswordInput.value;
-      if(!user||!user.email){showMessage(passwordMessage,"Votre session n’est plus valide.","error");return}
-      if(!currentPassword){showMessage(passwordMessage,"Saisissez votre mot de passe actuel.","error");return}
-      if(newPassword.length<8){showMessage(passwordMessage,"Le nouveau mot de passe doit contenir au moins 8 caractères.","error");return}
-      if(newPassword!==confirmation){showMessage(passwordMessage,"La confirmation ne correspond pas au nouveau mot de passe.","error");return}
-      if(currentPassword===newPassword){showMessage(passwordMessage,"Choisissez un nouveau mot de passe différent de l’actuel.","error");return}
-      savePasswordButton.disabled=true;
-      savePasswordButton.textContent="Enregistrement…";
-      try{
-        const credential=EmailAuthProvider.credential(user.email,currentPassword);
-        await reauthenticateWithCredential(user,credential);
-        await updatePassword(user,newPassword);
-        currentPasswordInput.value="";
-        newPasswordInput.value="";
-        confirmNewPasswordInput.value="";
-        showMessage(passwordMessage,"Votre mot de passe a été modifié avec succès.","success")
-      }catch(error){
-        console.error(error);
-        let message="Impossible de modifier le mot de passe.";
-        if(["auth/invalid-credential","auth/wrong-password"].includes(error.code))message="Le mot de passe actuel est incorrect.";
-        else if(error.code==="auth/weak-password")message="Le nouveau mot de passe est trop faible.";
-        else if(error.code==="auth/too-many-requests")message="Trop de tentatives. Attendez quelques minutes avant de réessayer.";
-        else if(error.code==="auth/requires-recent-login")message="Reconnectez-vous, puis recommencez la modification.";
-        showMessage(passwordMessage,message,"error")
-      }finally{
-        savePasswordButton.disabled=false;
-        savePasswordButton.textContent="Enregistrer le nouveau mot de passe"
-      }
-    }
-
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
     function showApp(profile){
       currentProfile=profile;
@@ -1802,7 +1664,12 @@
       document.getElementById("profileEmail").textContent=profile.email||"";
       document.getElementById("profileRole").textContent=profile.role||"";
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
-      loginView.classList.add("hidden");appView.classList.remove("hidden");showSection("dashboard");subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();subscribeToNeedTemplates();subscribeToRegulationAcceptances()
+      loginView.classList.add("hidden");appView.classList.remove("hidden");
+      // Seules les donnees indispensables au tableau de bord sont abonnees ici.
+      // Modeles de besoins, acceptations du reglement et statistiques livreurs
+      // sont charges uniquement a l'ouverture de leur ecran.
+      subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();
+      showSection("dashboard")
     }
 
     async function loadUserProfile(user){
@@ -1840,26 +1707,25 @@
       if(!window.confirm(warning))return;
 
       try{
+        // Suppression groupee : un seul aller-retour par paquet au lieu d'un par document.
+        const operations=[];
+
         const needsSnapshot=await getDocs(query(collection(db,"needs"),where("weekId","==",week.id)));
-        for(const needDoc of needsSnapshot.docs){
-          await deleteDoc(needDoc.ref)
-        }
+        needsSnapshot.forEach(needDoc=>operations.push({type:"delete",ref:needDoc.ref}));
 
         const availabilitySnapshot=await getDocs(collection(db,"weeks",week.id,"availabilities"));
-        for(const availabilityDoc of availabilitySnapshot.docs){
-          await deleteDoc(availabilityDoc.ref)
-        }
+        availabilitySnapshot.forEach(availabilityDoc=>operations.push({type:"delete",ref:availabilityDoc.ref}));
 
         const assignmentsSnapshot=await getDocs(query(collection(db,"driverAssignments"),where("weekId","==",week.id)));
-        for(const assignmentDoc of assignmentsSnapshot.docs){
-          await deleteDoc(assignmentDoc.ref)
-        }
+        assignmentsSnapshot.forEach(assignmentDoc=>operations.push({type:"delete",ref:assignmentDoc.ref}));
 
-        const planRef=doc(db,"plans",week.id);
-        const planSnapshot=await getDoc(planRef);
-        if(planSnapshot.exists())await deleteDoc(planRef);
+        operations.push({type:"delete",ref:doc(db,"plans",week.id)});
+        operations.push({type:"delete",ref:doc(db,"weeks",week.id)});
 
-        await deleteDoc(doc(db,"weeks",week.id));
+        await commitOperations(operations);
+
+        availabilityCache.delete(week.id);
+        driverStatsLoadedAt=0;
         showMessage(appMessage,"La semaine et ses données associées ont été supprimées.","success")
       }catch(error){
         console.error(error);
@@ -1903,7 +1769,13 @@
 
     function subscribeToWeeks(){
       if(unsubscribeWeeks)unsubscribeWeeks();
-      const q=query(collection(db,"weeks"),orderBy("startDate","desc"));
+      // Seules les semaines des 3 derniers mois sont chargees.
+      // Les plus anciennes restent dans Firebase mais ne sont plus lues.
+      const q=query(
+        collection(db,"weeks"),
+        where("startDate",">=",historyStartDate()),
+        orderBy("startDate","desc")
+      );
       unsubscribeWeeks=onSnapshot(q,renderWeeks,error=>{
         console.error(error);
         weekList.innerHTML='<div class="empty-state">Impossible de charger les semaines.</div>';
@@ -1919,10 +1791,6 @@
       document.getElementById("driverReliability").value="3";
       document.getElementById("driverExperience").value="3";
       document.getElementById("driverActive").checked=true;
-      document.getElementById("driverLegacyEnabled").checked=false;
-      document.getElementById("driverLegacyFields").classList.add("hidden");
-      document.getElementById("driverLegacyStart").value=new Date().toISOString().slice(0,10);
-      ["driverLegacyTenure","driverLegacyFrequency","driverLegacyReliability","driverLegacyFlexibility"].forEach(id=>document.getElementById(id).value="0");
       document.getElementById("driverEmail").readOnly=false;
       document.getElementById("driverPassword").required=true;
       driverPasswordField.classList.remove("hidden");
@@ -1956,14 +1824,7 @@
           document.getElementById("driverPriority").value=privateData.priority||3;
           document.getElementById("driverReliability").value=privateData.reliability||3;
           document.getElementById("driverExperience").value=privateData.experience||3;
-          document.getElementById("driverNotes").value=privateData.notes||"";
-          document.getElementById("driverLegacyEnabled").checked=privateData.legacyEnabled===true;
-          document.getElementById("driverLegacyFields").classList.toggle("hidden",privateData.legacyEnabled!==true);
-          document.getElementById("driverLegacyStart").value=privateData.legacyStartDate||new Date().toISOString().slice(0,10);
-          document.getElementById("driverLegacyTenure").value=String(privateData.legacyTenure||0);
-          document.getElementById("driverLegacyFrequency").value=String(privateData.legacyFrequency||0);
-          document.getElementById("driverLegacyReliability").value=String(privateData.legacyReliability||0);
-          document.getElementById("driverLegacyFlexibility").value=String(privateData.legacyFlexibility||0)
+          document.getElementById("driverNotes").value=privateData.notes||""
         }
       }catch(error){
         console.error(error);
@@ -1978,14 +1839,6 @@
 
     function dateOnly(value){
       return value?new Date(`${value}T12:00:00`):null
-    }
-
-    function timestampToDate(value){
-      if(!value)return null;
-      if(typeof value.toDate==="function")return value.toDate();
-      if(value instanceof Date)return value;
-      const parsed=new Date(value);
-      return Number.isNaN(parsed.getTime())?null:parsed
     }
 
     function assignmentStatsForDriver(userId){
@@ -2025,101 +1878,21 @@
         }
       }
 
-      return {past:summarize(past),future:summarize(future),pastItems:past}
+      return {past:summarize(past),future:summarize(future)}
     }
 
-    function approvedPauseForDriver(userId){
-      const today=new Date(); today.setHours(12,0,0,0);
-      return currentCollaborationRequests.find(item=>{
-        if(item.userId!==userId||item.type!=="pause"||item.status!=="approved")return false;
-        const start=dateOnly(item.startDate); const end=dateOnly(item.endDate);
-        return start&&end&&today>=start&&today<=end
-      })||null
-    }
-
-    function availabilityActivityForDriver(userId,availabilities=currentManagerAvailabilities){
-      const pause=approvedPauseForDriver(userId);
-      const submissions=availabilities.filter(item=>item.userId===userId).map(item=>timestampToDate(item.updatedAt||item.submittedAt)).filter(Boolean).sort((a,b)=>b-a);
-      const lastSubmission=submissions[0]||null;
-      const today=new Date(); today.setHours(12,0,0,0);
-      if(pause)return {lastSubmission,daysWithoutAvailability:null,penalty:0,nextPenaltyDate:null,noHistory:!lastSubmission,pause};
-      if(!lastSubmission)return {lastSubmission:null,daysWithoutAvailability:null,penalty:0,nextPenaltyDate:null,noHistory:true,pause:null};
-      const last=new Date(lastSubmission); last.setHours(12,0,0,0);
-      const days=Math.max(0,Math.floor((today-last)/86400000));
-      const penalty=Math.floor(days/15);
-      const nextPenaltyDate=new Date(last); nextPenaltyDate.setDate(nextPenaltyDate.getDate()+(penalty+1)*15);
-      return {lastSubmission:last,daysWithoutAvailability:days,penalty,nextPenaltyDate,noHistory:false,pause:null}
-    }
-
-    function legacyBonusData(data){
-      if(data.legacyEnabled!==true||!data.legacyStartDate)return {raw:0,initial:0,factor:0,current:0,months:0};
-      const raw=[data.legacyTenure,data.legacyFrequency,data.legacyReliability,data.legacyFlexibility].reduce((sum,v)=>sum+Number(v||0),0);
-      const initial=raw>=12?6:raw>=9?4:raw>=6?2:0;
-      const start=dateOnly(data.legacyStartDate); const today=new Date(); today.setHours(12,0,0,0);
-      const months=Math.max(0,(today.getFullYear()-start.getFullYear())*12+today.getMonth()-start.getMonth());
-      const factor=months<6?1:months<9?.75:months<12?.5:months<15?.25:0;
-      return {raw,initial,factor,current:initial*factor,months}
-    }
-
-    function driverScoreData(driverId,privateData=null,assignments=currentManagerAssignments,availabilities=currentManagerAvailabilities){
-      const data=privateData||currentDriverPrivateData.get(driverId)||{};
-      const basePriority=Math.max(1,Math.min(5,Number(data.priority||3)));
-      const activity=availabilityActivityForDriver(driverId,availabilities);
-      const priorityPenalty=activity.penalty;
-      const effectivePriority=Math.max(0,basePriority-priorityPenalty);
-
-      const today=new Date();
-      today.setHours(12,0,0,0);
-      const pastStart=new Date(today);
-      pastStart.setDate(pastStart.getDate()-30);
-
-      const honored=assignments.filter(item=>{
-        const date=dateOnly(item.date);
-        return item.userId===driverId
-          && item.active!==false
-          && item.status==="confirmed"
-          && date
-          && date>=pastStart
-          && date<today
-      });
-
-      const presencePoints=honored.length*0.2;
-      const acceptancePoints=honored.length*0.2;
-      const automaticPoints=presencePoints+acceptancePoints;
-      const legacy=legacyBonusData(data);
-      const total=effectivePriority+automaticPoints+legacy.current;
-
-      const expiringSoon=honored.filter(item=>{
-        const date=dateOnly(item.date);
-        if(!date)return false;
-        const expiry=new Date(date);
-        expiry.setDate(expiry.getDate()+30);
-        const remaining=(expiry-today)/86400000;
-        return remaining>=0&&remaining<=7
-      }).length;
+    function driverScoreData(driverId){
+      const data=currentDriverPrivateData.get(driverId)||{};
+      const priority=Number(data.priority||3);
+      const reliability=Number(data.reliability||3);
+      const experience=Number(data.experience||3);
 
       return {
-        basePriority,
-        effectivePriority,
-        priorityPenalty,
-        presenceCount:honored.length,
-        acceptanceCount:honored.length,
-        presencePoints,
-        acceptancePoints,
-        automaticPoints,
-        legacy,
-        total,
-        expiringSoon,
-        activity
+        priority,
+        reliability,
+        experience,
+        total:priority*3+reliability*2+experience
       }
-    }
-
-    function formatScore(value){
-      return Number(value||0).toLocaleString("fr-CH",{minimumFractionDigits:1,maximumFractionDigits:1})
-    }
-
-    function formatShortDate(date){
-      return date?date.toLocaleDateString("fr-CH",{day:"2-digit",month:"2-digit",year:"numeric"}):"—"
     }
 
     function renderDrivers(){
@@ -2127,7 +1900,8 @@
         .slice()
         .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
 
-      if(planningWeekSelect?.value){
+      // Les disponibilites ne sont rechargees que si l'ecran planning est ouvert.
+      if(currentSectionName==="planning"&&planningWeekSelect?.value){
         loadPlanningAvailabilities(planningWeekSelect.value)
       }
 
@@ -2149,14 +1923,15 @@
             <h3>${escapeHtml(driver.name||"Livreur")}</h3>
             <p class="driver-meta">${escapeHtml(driver.email||"")}</p>
             <p class="driver-meta">${escapeHtml(driver.phone||"Téléphone non renseigné")} · ${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</p>
-            <p class="driver-data-note">Une présence est comptée lorsqu’une affectation confirmée est passée. Il ne s’agit pas d’un système de pointage physique.</p>
+            <p class="driver-data-note">Les données ci-dessous concernent les affectations et confirmations, pas une présence physique pointée.</p>
           </div>
 
           <div class="driver-score-panel">
             <div class="driver-score-row">
-              <span class="score-chip">Priorité de base ${score.basePriority}/5</span>
-              <span class="score-chip">Priorité effective ${formatScore(score.effectivePriority)}</span>
-              <span class="score-chip">Score actuel ${formatScore(score.total)}</span>
+              <span class="score-chip">Priorité ${score.priority}/5</span>
+              <span class="score-chip">Fiabilité ${score.reliability}/5</span>
+              <span class="score-chip">Expérience ${score.experience}/5</span>
+              <span class="score-chip">Score ${score.total}</span>
             </div>
 
             <div class="driver-stat-grid">
@@ -2180,20 +1955,6 @@
                 </div>
               </div>
             </div>
-
-            <div class="score-explanation">
-              <strong>Évolution du score sur 30 jours</strong>
-              <div class="score-line"><span>${score.presenceCount} présence${score.presenceCount>1?"s":""} confirmée${score.presenceCount>1?"s":""} × 0,2</span><span>+${formatScore(score.presencePoints)}</span></div>
-              <div class="score-line"><span>${score.acceptanceCount} acceptation${score.acceptanceCount>1?"s":""} honorée${score.acceptanceCount>1?"s":""} × 0,2</span><span>+${formatScore(score.acceptancePoints)}</span></div>
-              <div class="score-line"><span>Bonus historique temporaire (${Math.round(score.legacy.factor*100)} %)</span><span>+${formatScore(score.legacy.current)}</span></div>
-              <div class="score-line"><span>Priorité manager de base</span><span>${formatScore(score.basePriority)}</span></div>
-              <div class="score-line"><span>Pénalité sans disponibilité (${score.priorityPenalty} × 1)</span><span>−${formatScore(score.priorityPenalty)}</span></div>
-              <div class="score-line total"><span>Score de classement actuel</span><span>${formatScore(score.total)}</span></div>
-              <div class="driver-data-note">Dernière disponibilité : ${score.activity.lastSubmission?formatShortDate(score.activity.lastSubmission):"aucune donnée"}${score.activity.daysWithoutAvailability!==null?` · ${score.activity.daysWithoutAvailability} jour${score.activity.daysWithoutAvailability>1?"s":""} écoulé${score.activity.daysWithoutAvailability>1?"s":""}`:""}.</div>
-              ${score.activity.pause?`<div class="score-warning">Pause autorisée jusqu’au ${formatDate(score.activity.pause.endDate)} : pénalité d’inactivité suspendue.</div>`:""}
-              ${score.activity.nextPenaltyDate?`<div class="score-warning">Prochaine baisse automatique le ${formatShortDate(score.activity.nextPenaltyDate)} si aucune nouvelle disponibilité n’est envoyée.</div>`:""}
-              ${score.expiringSoon?`<div class="driver-data-note">${score.expiringSoon} affectation confirmée sortira du calcul dans les 7 prochains jours.</div>`:""}
-            </div>
           </div>
 
           <div class="driver-actions">
@@ -2207,20 +1968,52 @@
       })
     }
 
-    async function loadAllManagerAvailabilities(){
-      const results=[];
-      const weeks=currentWeeks.slice();
+    /* Scores confidentiels : petite collection, chargee une seule fois par session. */
+    async function loadDriverPrivateData(force){
+      if(driverPrivateLoaded&&!force)return;
 
-      await Promise.all(weeks.map(async week=>{
-        try{
-          const snapshot=await getDocs(collection(db,"weeks",week.id,"availabilities"));
-          snapshot.forEach(docSnap=>results.push({id:docSnap.id,...docSnap.data()}))
-        }catch(error){
-          console.error(`Disponibilités non chargées pour ${week.id}`,error)
-        }
-      }));
+      try{
+        const privateSnapshot=await getDocs(collection(db,"driverPrivate"));
+        currentDriverPrivateData=new Map();
+        privateSnapshot.forEach(docSnap=>{
+          currentDriverPrivateData.set(docSnap.id,docSnap.data())
+        });
+        driverPrivateLoaded=true
+      }catch(error){
+        console.error(error);
+        showMessage(appMessage,`Impossible de charger les scores confidentiels : ${error.code||error.message}`,"error")
+      }
+    }
 
-      return results
+    /* Statistiques 30 jours : autrefois toute la collection driverAssignments
+       etait relue a chaque modification d'un livreur. Desormais la lecture est
+       bornee a la fenetre reellement affichee et mise en cache 5 minutes. */
+    async function loadDriverAssignmentStats(force){
+      const now=Date.now();
+      if(!force&&driverStatsLoadedAt&&now-driverStatsLoadedAt<STATS_CACHE_MS)return;
+
+      try{
+        const statsSnapshot=await getDocs(query(
+          collection(db,"driverAssignments"),
+          where("date",">=",shiftedIsoDate(-STATS_PAST_DAYS)),
+          where("date","<=",shiftedIsoDate(STATS_FUTURE_DAYS))
+        ));
+
+        currentManagerAssignments=[];
+        statsSnapshot.forEach(docSnap=>{
+          currentManagerAssignments.push({id:docSnap.id,...docSnap.data()})
+        });
+        driverStatsLoadedAt=Date.now()
+      }catch(error){
+        console.error(error);
+        showMessage(appMessage,`Certaines statistiques n’ont pas pu être chargées : ${error.code||error.message}`,"error")
+      }
+    }
+
+    async function prepareDriversSection(){
+      await loadDriverPrivateData();
+      await loadDriverAssignmentStats();
+      renderDrivers()
     }
 
     function subscribeToDrivers(){
@@ -2228,36 +2021,15 @@
 
       unsubscribeDrivers=onSnapshot(
         collection(db,"users"),
-        async snapshot=>{
+        snapshot=>{
           currentDrivers=[];
           snapshot.forEach(docSnap=>{
             const data=docSnap.data();
             if(data.role==="driver")currentDrivers.push({id:docSnap.id,...data})
           });
 
-          try{
-            const [privateSnapshot,assignmentSnapshot,availabilityHistory]=await Promise.all([
-              getDocs(collection(db,"driverPrivate")),
-              getDocs(collection(db,"driverAssignments")),
-              loadAllManagerAvailabilities()
-            ]);
-
-            currentDriverPrivateData=new Map();
-            privateSnapshot.forEach(docSnap=>{
-              currentDriverPrivateData.set(docSnap.id,docSnap.data())
-            });
-
-            currentManagerAssignments=[];
-            assignmentSnapshot.forEach(docSnap=>{
-              currentManagerAssignments.push({id:docSnap.id,...docSnap.data()})
-            });
-
-            currentManagerAvailabilities=availabilityHistory
-          }catch(error){
-            console.error(error);
-            showMessage(appMessage,`Certaines statistiques n’ont pas pu être chargées : ${error.code||error.message}`,"error")
-          }
-
+          // Aucune relecture des affectations ici : elle avait lieu a chaque
+          // modification d'un livreur et coutait toute la collection.
           renderDrivers()
         },
         error=>{
@@ -2468,6 +2240,7 @@
 
     function prepareNeedsSection(){
       clearMessage(needFormMessage);
+      subscribeToNeedTemplates();   // charge uniquement a la 1re ouverture de l'ecran
       const week=getSelectedWeek();
 
       if(!week){
@@ -2607,6 +2380,8 @@
     }
 
     function subscribeToNeedTemplates(){
+      if(needTemplatesSubscribed)return;
+      needTemplatesSubscribed=true;
       if(unsubscribeNeedTemplates)unsubscribeNeedTemplates();
 
       unsubscribeNeedTemplates=onSnapshot(
@@ -2755,7 +2530,12 @@
     function subscribeToNeeds(){
       if(unsubscribeNeeds)unsubscribeNeeds();
 
-      const needsQuery=query(collection(db,"needs"),orderBy("date","asc"));
+      // Besoins limites a la meme fenetre de 3 mois que les semaines.
+      const needsQuery=query(
+        collection(db,"needs"),
+        where("date",">=",historyStartDate()),
+        orderBy("date","asc")
+      );
 
       unsubscribeNeeds=onSnapshot(
         needsQuery,
@@ -2842,48 +2622,60 @@
       }
     }
 
+    function renderRegulationAcceptances(){
+      const drivers=currentDrivers.filter(driver=>driver.active===true);
+
+      if(drivers.length===0){
+        regulationAcceptanceList.innerHTML='<div class="empty-state">Aucun livreur actif.</div>';
+        return
+      }
+
+      regulationAcceptanceList.innerHTML="";
+
+      drivers.forEach(driver=>{
+        const acceptance=regulationAcceptances.find(item=>
+          item.userId===driver.id&&item.version===REGULATION_VERSION
+        );
+
+        const card=document.createElement("article");
+        card.className="acceptance-card";
+        card.innerHTML=`
+          <div>
+            <strong>${escapeHtml(driver.name||"Livreur")}</strong>
+            <small>${escapeHtml(driver.email||"")}</small>
+          </div>
+          <span class="status-badge ${acceptance?"status-open":"status-draft"}">
+            ${acceptance?"Accepté":"À accepter"}
+          </span>
+        `;
+        regulationAcceptanceList.appendChild(card)
+      })
+    }
+
+    /* Lecture ponctuelle a l'ouverture de l'ecran, au lieu d'un abonnement
+       permanent ouvert des la connexion. Resultat garde 5 minutes en memoire. */
+    async function loadRegulationAcceptances(force){
+      const now=Date.now();
+
+      if(!force&&regulationAcceptancesLoadedAt&&now-regulationAcceptancesLoadedAt<STATS_CACHE_MS){
+        renderRegulationAcceptances();
+        return
+      }
+
+      try{
+        const snapshot=await getDocs(collection(db,"regulationAcceptances"));
+        regulationAcceptances=[];
+        snapshot.forEach(docSnap=>regulationAcceptances.push({id:docSnap.id,...docSnap.data()}));
+        regulationAcceptancesLoadedAt=Date.now();
+        renderRegulationAcceptances()
+      }catch(error){
+        console.error(error);
+        regulationAcceptanceList.innerHTML='<div class="empty-state">Impossible de charger les acceptations.</div>'
+      }
+    }
+
     function subscribeToRegulationAcceptances(){
-      if(unsubscribeRegulationAcceptances)unsubscribeRegulationAcceptances();
-
-      unsubscribeRegulationAcceptances=onSnapshot(
-        collection(db,"regulationAcceptances"),
-        snapshot=>{
-          const acceptances=[];
-          snapshot.forEach(docSnap=>acceptances.push({id:docSnap.id,...docSnap.data()}));
-
-          const drivers=currentDrivers.filter(driver=>driver.active===true);
-
-          if(drivers.length===0){
-            regulationAcceptanceList.innerHTML='<div class="empty-state">Aucun livreur actif.</div>';
-            return
-          }
-
-          regulationAcceptanceList.innerHTML="";
-
-          drivers.forEach(driver=>{
-            const acceptance=acceptances.find(item=>
-              item.userId===driver.id&&item.version===REGULATION_VERSION
-            );
-
-            const card=document.createElement("article");
-            card.className="acceptance-card";
-            card.innerHTML=`
-              <div>
-                <strong>${escapeHtml(driver.name||"Livreur")}</strong>
-                <small>${escapeHtml(driver.email||"")}</small>
-              </div>
-              <span class="status-badge ${acceptance?"status-open":"status-draft"}">
-                ${acceptance?"Accepté":"À accepter"}
-              </span>
-            `;
-            regulationAcceptanceList.appendChild(card)
-          })
-        },
-        error=>{
-          console.error(error);
-          regulationAcceptanceList.innerHTML='<div class="empty-state">Impossible de charger les acceptations.</div>'
-        }
-      )
+      loadRegulationAcceptances(true)
     }
 
     function renderDriverWeek(week,existingData,user){
@@ -2908,7 +2700,7 @@
             La date limite est dépassée. Contactez le manager pour toute modification.
           </div>
         `:`
-          <form class="availability-form" data-week-id="${week.id}" novalidate>
+          <form class="availability-form" data-week-id="${week.id}">
             <section class="delivery-methods-box">
               <h3>Mes moyens de livraison cette semaine</h3>
               <p class="muted">Cochez uniquement les moyens que vous pourrez réellement utiliser.</p>
@@ -2925,7 +2717,6 @@
               </div>
             </section>
 
-            <p class="muted" style="margin-top:12px">Vous pouvez modifier vos horaires autant de fois que nécessaire jusqu’à la date limite.</p>
             <div class="availability-days"></div>
             <div class="form-actions">
               <button class="button button-primary save-availability" type="submit">
@@ -2956,9 +2747,7 @@
             <div class="availability-details">
               <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <div>
-                    <strong>Service de midi — max. 12:00</strong>
-                  </div>
+                  <strong>Service de midi</strong><small class="muted">Arrivée au plus tard 12:00</small>
                   <label class="availability-state">
                     <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -2967,16 +2756,18 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}">
+                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
+                  </div>
+                  <div class="field">
+                    <label>Début au plus tard</label>
+                    <input class="midday-latest" type="time" value="${day.middayLatest||"12:00"}" max="12:00">
                   </div>
                 </div>
               </section>
 
               <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <div>
-                    <strong>Service du soir — max. 19:00</strong>
-                  </div>
+                  <strong>Service du soir</strong><small class="muted">Arrivée au plus tard 19:00</small>
                   <label class="availability-state">
                     <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -2985,7 +2776,11 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}">
+                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
+                  </div>
+                  <div class="field">
+                    <label>Début au plus tard</label>
+                    <input class="evening-latest" type="time" value="${day.eveningLatest||"19:00"}" max="19:00">
                   </div>
                 </div>
               </section>
@@ -3010,51 +2805,13 @@
             badge.className=`status-badge ${available?"status-open":"status-draft"}`
           }
 
-          const middayEarliestInput=card.querySelector(".midday-earliest");
-          const eveningEarliestInput=card.querySelector(".evening-earliest");
-
-          function clearServiceValidation(input){
-            input.setCustomValidity("");
-            input.closest(".service-availability")?.classList.remove("validation-target");
-          }
-
-          middayCheckbox.addEventListener("change",()=>{
-            updateAvailabilityCard();
-            clearServiceValidation(middayEarliestInput);
-          });
-          eveningCheckbox.addEventListener("change",()=>{
-            updateAvailabilityCard();
-            clearServiceValidation(eveningEarliestInput);
-          });
-          middayEarliestInput.addEventListener("input",()=>clearServiceValidation(middayEarliestInput));
-          eveningEarliestInput.addEventListener("input",()=>clearServiceValidation(eveningEarliestInput));
-          middayEarliestInput.addEventListener("change",()=>clearServiceValidation(middayEarliestInput));
-          eveningEarliestInput.addEventListener("change",()=>clearServiceValidation(eveningEarliestInput));
+          middayCheckbox.addEventListener("change",updateAvailabilityCard);
+          eveningCheckbox.addEventListener("change",updateAvailabilityCard);
 
           daysContainer.appendChild(card)
         });
 
         const form=wrapper.querySelector(".availability-form");
-
-        function guideToInvalidTime(input,messageEl,message){
-          if(!input)return;
-          form.querySelectorAll(".service-availability.validation-target").forEach(section=>{
-            section.classList.remove("validation-target");
-          });
-          const section=input.closest(".service-availability");
-          section?.classList.add("validation-target");
-          showMessage(messageEl,message,"error");
-
-          requestAnimationFrame(()=>{
-            (section||input).scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
-            window.setTimeout(()=>{
-              input.focus({preventScroll:true});
-            },450);
-          });
-
-          window.setTimeout(()=>section?.classList.remove("validation-target"),2600);
-        }
-
         form.addEventListener("submit",async event=>{
           event.preventDefault();
           const messageEl=form.querySelector(".availability-message");
@@ -3072,10 +2829,10 @@
               date:card.dataset.date,
               middayAvailable,
               middayEarliest:middayAvailable?card.querySelector(".midday-earliest").value:"",
-              middayLatest:middayAvailable?"12:00":"",
+              middayLatest:middayAvailable?card.querySelector(".midday-latest").value:"",
               eveningAvailable,
               eveningEarliest:eveningAvailable?card.querySelector(".evening-earliest").value:"",
-              eveningLatest:eveningAvailable?"19:00":"",
+              eveningLatest:eveningAvailable?card.querySelector(".evening-latest").value:"",
               comment:(middayAvailable||eveningAvailable)
                 ? card.querySelector(".day-comment").value.trim()
                 : ""
@@ -3096,25 +2853,24 @@
           const invalidDay=days.find(day=>
             (day.middayAvailable && (
               !day.middayEarliest
-              || day.middayEarliest>"12:00"
+              || !day.middayLatest
+              || day.middayEarliest>day.middayLatest
+              || day.middayLatest>"12:00"
             ))
             || (day.eveningAvailable && (
               !day.eveningEarliest
-              || day.eveningEarliest>"19:00"
+              || !day.eveningLatest
+              || day.eveningEarliest>day.eveningLatest
+              || day.eveningLatest>"19:00"
             ))
           );
 
           if(invalidDay){
-            const card=form.querySelector(`.availability-day[data-date="${invalidDay.date}"]`);
-            const middayInvalid=invalidDay.middayAvailable && (
-              !invalidDay.middayEarliest || invalidDay.middayEarliest>"12:00"
+            showMessage(
+              messageEl,
+              "Vérifiez les horaires : arrivée au plus tard à 12:00 pour midi et à 19:00 pour le soir.",
+              "error"
             );
-            const limit=middayInvalid?"12:00":"19:00";
-            const service=middayInvalid?"service de midi":"service du soir";
-            const input=card?.querySelector(middayInvalid?".midday-earliest":".evening-earliest");
-
-            const errorMessage=`${formatDay(invalidDay.date)} : pour le ${service}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`;
-            guideToInvalidTime(input,messageEl,errorMessage);
             return
           }
 
@@ -3138,6 +2894,7 @@
               {merge:true}
             );
 
+            availabilityCache.delete(week.id);
             showMessage(messageEl,"Vos disponibilités ont été enregistrées.","success")
           }catch(error){
             console.error(error);
@@ -3483,76 +3240,123 @@
       refreshDriverScreen()
     }
 
-    function subscribeToDriverAssignments(user){
+    /* Le livreur ne charge que ses affectations recentes.
+       Si l'index composite (userId + date) n'existe pas encore dans Firebase,
+       l'application bascule automatiquement sur la requete simple : aucun
+       risque de blocage, l'economie s'appliquera des que l'index sera cree. */
+    function subscribeToDriverAssignments(user,options={}){
       if(unsubscribeDriverAssignments)unsubscribeDriverAssignments();
 
-      const assignmentsQuery=query(
-        collection(db,"driverAssignments"),
-        where("userId","==",user.uid)
-      );
+      const useDateFilter=options.useDateFilter!==false;
+
+      const assignmentsQuery=useDateFilter
+        ? query(
+            collection(db,"driverAssignments"),
+            where("userId","==",user.uid),
+            where("date",">=",driverHistoryStartDate())
+          )
+        : query(
+            collection(db,"driverAssignments"),
+            where("userId","==",user.uid)
+          );
 
       unsubscribeDriverAssignments=onSnapshot(
         assignmentsQuery,
         snapshot=>renderDriverAssignments(snapshot,user),
         error=>{
           console.error(error);
+
+          if(useDateFilter&&error.code==="failed-precondition"){
+            console.warn("Index composite absent : repli sur la requête simple.");
+            subscribeToDriverAssignments(user,{useDateFilter:false});
+            return
+          }
+
           driverAssignmentsContainer.innerHTML='<div class="empty-state">Impossible de charger vos affectations.</div>';
           showMessage(driverMessage,`Erreur affectations : ${error.code||error.message}`,"error")
         }
       )
     }
 
-    async function syncDriverAssignments(plan){
-      if(!plan||plan.status!=="validated")return;
+    /* Compare l'affectation existante et celle voulue : si rien n'a change,
+       aucune ecriture n'est envoyee. Avant cette version, ouvrir l'ecran
+       planning reecrivait la totalite des affectations de la semaine. */
+    function assignmentIsUpToDate(existing,desired){
+      if(!existing)return false;
+
+      const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
+                  "userId","driverName","driverEmail","vehicleRequirement","active"];
+
+      if(keys.some(key=>(existing[key]??"")!==(desired[key]??"")))return false;
+
+      const a=(existing.deliveryMethods||[]).slice().sort().join("|");
+      const b=(desired.deliveryMethods||[]).slice().sort().join("|");
+      return a===b
+    }
+
+    async function syncDriverAssignments(plan,options={}){
+      if(!plan||plan.status!=="validated")return 0;
+
+      // Les affectations existantes sont deja en memoire : aucune lecture unitaire.
+      if(!options.statusesLoaded)await loadAssignmentStatuses(plan.weekId);
 
       const activeIds=new Set();
+      const operations=[];
 
       for(const slot of plan.assignments){
         for(const driver of slot.selected){
           const id=assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId);
           activeIds.add(id);
 
-          const existing=await getDoc(doc(db,"driverAssignments",id));
-          const existingData=existing.exists()?existing.data():null;
+          const existing=currentAssignmentStatuses.get(id)||null;
+          const deliveryMethods=driver.weeklyDeliveryMethods||[];
 
-          await setDoc(
-            doc(db,"driverAssignments",id),
-            {
-              weekId:plan.weekId,
-              weekStartDate:plan.weekStartDate||"",
-              weekEndDate:plan.weekEndDate||"",
-              date:slot.date,
-              time:slot.time,
-              needId:slot.needId||"",
-              userId:driver.userId,
-              driverName:driver.name||"",
-              driverEmail:driver.email||"",
-              deliveryMethods:driver.weeklyDeliveryMethods||[],
-              vehicleRequirement:(driver.weeklyDeliveryMethods||[]).length
-                ? driver.weeklyDeliveryMethods.map(deliveryMethodLabel).join(", ")
-                : (slot.notes||""),
-              status:existingData?.status||"pending",
-              active:true,
-              assignedAt:existingData?.assignedAt||serverTimestamp(),
-              updatedAt:serverTimestamp()
-            },
-            {merge:true}
-          )
-        }
-      }
+          const desired={
+            weekId:plan.weekId,
+            weekStartDate:plan.weekStartDate||"",
+            weekEndDate:plan.weekEndDate||"",
+            date:slot.date,
+            time:slot.time,
+            needId:slot.needId||"",
+            userId:driver.userId,
+            driverName:driver.name||"",
+            driverEmail:driver.email||"",
+            deliveryMethods,
+            vehicleRequirement:deliveryMethods.length
+              ? deliveryMethods.map(deliveryMethodLabel).join(", ")
+              : (slot.notes||""),
+            active:true
+          };
 
-      const existingAssignments=await getDocs(
-        query(collection(db,"driverAssignments"),where("weekId","==",plan.weekId))
-      );
+          if(assignmentIsUpToDate(existing,desired))continue;
 
-      for(const assignmentDoc of existingAssignments.docs){
-        if(!activeIds.has(assignmentDoc.id)){
-          await updateDoc(assignmentDoc.ref,{
-            active:false,
+          const payload={
+            ...desired,
+            status:existing?.status||"pending",
             updatedAt:serverTimestamp()
-          })
+          };
+
+          if(!existing)payload.assignedAt=serverTimestamp();
+
+          operations.push({ref:doc(db,"driverAssignments",id),data:payload});
+          currentAssignmentStatuses.set(id,{...(existing||{}),...desired,status:existing?.status||"pending"})
         }
       }
+
+      // Desactivation des affectations qui ne font plus partie du planning.
+      currentAssignmentStatuses.forEach((data,id)=>{
+        if(activeIds.has(id)||data.active===false)return;
+
+        operations.push({
+          ref:doc(db,"driverAssignments",id),
+          data:{active:false,updatedAt:serverTimestamp()}
+        });
+        currentAssignmentStatuses.set(id,{...data,active:false})
+      });
+
+      const written=await commitOperations(operations);
+      if(written)driverStatsLoadedAt=0;
+      return written
     }
 
     async function loadAssignmentStatuses(weekId){
@@ -3567,11 +3371,12 @@
       })
     }
 
-    async function applyAutomaticReplacements(plan){
+    async function applyAutomaticReplacements(plan,options={}){
       if(!plan||plan.status!=="validated")return false;
 
-      await loadAssignmentStatuses(plan.weekId);
+      if(!options.statusesLoaded)await loadAssignmentStatuses(plan.weekId);
       let changed=false;
+      const operations=[];
 
       for(const slot of plan.assignments){
         slot.declinedUserIds=Array.isArray(slot.declinedUserIds)?slot.declinedUserIds:[];
@@ -3599,18 +3404,18 @@
           slot.waitlist.sort((a,b)=>b.score-a.score);
           changed=true;
 
-          await updateDoc(doc(db,"driverAssignments",id),{
-            active:false,
-            replaced:true,
-            updatedAt:serverTimestamp()
-          })
+          operations.push({
+            ref:doc(db,"driverAssignments",id),
+            data:{active:false,replaced:true,updatedAt:serverTimestamp()}
+          });
+          currentAssignmentStatuses.set(id,{...assignment,active:false,replaced:true})
         }
       }
 
       if(changed){
+        await commitOperations(operations);
         await saveCurrentPlan();
-        await syncDriverAssignments(plan);
-        await loadAssignmentStatuses(plan.weekId)
+        await syncDriverAssignments(plan,{statusesLoaded:true})
       }
 
       return changed
@@ -3618,8 +3423,10 @@
 
     function preparePlanningSection(){
       clearMessage(planningMessage);
-      loadPlanningAvailabilities(planningWeekSelect.value);
+      // La liste est remplie AVANT la lecture : evite une lecture a vide
+      // puis une seconde lecture sur la bonne semaine.
       populatePlanningWeekSelect();
+      loadPlanningAvailabilities(planningWeekSelect.value);
 
       if(planningWeekSelect.value){
         loadSavedPlan(planningWeekSelect.value)
@@ -3647,8 +3454,11 @@
         && time<=normalized.eveningLatest
     }
 
-    function confidentialScore(driverId,privateData,assignments=currentManagerAssignments,availabilities=currentManagerAvailabilities){
-      return driverScoreData(driverId,privateData,assignments,availabilities).total
+    function confidentialScore(privateData){
+      const priority=Number(privateData?.priority||3);
+      const reliability=Number(privateData?.reliability||3);
+      const experience=Number(privateData?.experience||3);
+      return priority*3+reliability*2+experience
     }
 
     function formatCountdown(milliseconds){
@@ -3734,93 +3544,23 @@
       return labels.join("")
     }
 
-    function renderPlanningAvailabilitySnapshot(snapshot,weekId){
+    async function loadAvailabilitiesForWeek(weekId,force){
+      const cached=availabilityCache.get(weekId);
+      const now=Date.now();
+
+      if(!force&&cached&&now-cached.loadedAt<AVAILABILITY_CACHE_MS){
+        return cached.responses
+      }
+
+      const snapshot=await getDocs(collection(db,"weeks",weekId,"availabilities"));
       const responses=[];
-      const responseUserIds=new Set();
+      snapshot.forEach(docSnap=>responses.push({id:docSnap.id,...docSnap.data()}));
 
-      snapshot.forEach(docSnap=>{
-        const response={id:docSnap.id,...docSnap.data()};
-        responses.push(response);
-        responseUserIds.add(response.userId||docSnap.id)
-      });
-
-      const week=currentWeeks.find(item=>item.id===weekId)||null;
-      updateDeadlineDisplay(week,responseUserIds);
-
-      if(responses.length===0){
-        planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
-        return
-      }
-
-      responses.sort((a,b)=>(a.driverName||"").localeCompare(b.driverName||"","fr"));
-      planningAvailabilityContainer.innerHTML="";
-
-      responses.forEach(response=>{
-        const card=document.createElement("article");
-        card.className="availability-admin-card";
-
-        const days=(response.days||[])
-          .slice()
-          .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
-
-        card.innerHTML=`
-          <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
-          <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
-          <div class="delivery-method-summary">
-            ${(response.deliveryMethods||[]).length
-              ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
-              : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
-          </div>
-          <div class="availability-admin-days">
-            ${days.map(day=>`
-              <div class="availability-admin-day">
-                <strong>${escapeHtml(formatDay(day.date))}</strong>
-                <div class="availability-admin-slots">${availabilityLabel(day)}</div>
-              </div>
-            `).join("")}
-          </div>
-        `;
-
-        planningAvailabilityContainer.appendChild(card)
-      })
+      availabilityCache.set(weekId,{loadedAt:Date.now(),responses});
+      return responses
     }
 
-    async function refreshDraftProposalFromLatestData(weekId){
-      if(planningRefreshInProgress)return;
-      if(!currentPlan||currentPlan.weekId!==weekId||currentPlan.status!=="draft")return;
-
-      planningRefreshInProgress=true;
-
-      try{
-        const data=await loadPlanningData(weekId);
-        if(data.needs.length===0||data.availabilities.length===0)return;
-
-        currentPlan=createProposal(data);
-        await saveCurrentPlan();
-        renderPlan();
-        showMessage(
-          planningMessage,
-          "La proposition provisoire a été recalculée automatiquement avec les nouvelles disponibilités.",
-          "success"
-        )
-      }catch(error){
-        console.error(error);
-        showMessage(
-          planningMessage,
-          `Les disponibilités ont été mises à jour, mais la proposition n’a pas pu être recalculée : ${error.code||error.message}`,
-          "error"
-        )
-      }finally{
-        planningRefreshInProgress=false
-      }
-    }
-
-    function loadPlanningAvailabilities(weekId){
-      if(unsubscribePlanningAvailabilities){
-        unsubscribePlanningAvailabilities();
-        unsubscribePlanningAvailabilities=null
-      }
-
+    async function loadPlanningAvailabilities(weekId){
       if(!weekId){
         planningAvailabilityContainer.innerHTML='<div class="empty-state">Choisissez une semaine.</div>';
         updateDeadlineDisplay(null,new Set());
@@ -3828,26 +3568,58 @@
       }
 
       planningAvailabilityContainer.innerHTML='<div class="empty-state">Chargement des disponibilités…</div>';
-      let firstSnapshot=true;
 
-      unsubscribePlanningAvailabilities=onSnapshot(
-        collection(db,"weeks",weekId,"availabilities"),
-        snapshot=>{
-          renderPlanningAvailabilitySnapshot(snapshot,weekId);
+      try{
+        // Cache memoire : les disponibilites d'une meme semaine ne sont pas
+        // relues plusieurs fois de suite (l'ecran planning les demandait
+        // deux fois, plus une fois a chaque rafraichissement des livreurs).
+        const responses=await loadAvailabilitiesForWeek(weekId);
+        const responseUserIds=new Set(responses.map(response=>response.userId||response.id));
 
-          if(firstSnapshot){
-            firstSnapshot=false;
-            return
-          }
+        const week=currentWeeks.find(item=>item.id===weekId)||null;
+        updateDeadlineDisplay(week,responseUserIds);
 
-          refreshDraftProposalFromLatestData(weekId)
-        },
-        error=>{
-          console.error(error);
-          planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
-          showMessage(planningMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+        if(responses.length===0){
+          planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+          return
         }
-      )
+
+        responses.sort((a,b)=>(a.driverName||"").localeCompare(b.driverName||"","fr"));
+        planningAvailabilityContainer.innerHTML="";
+
+        responses.forEach(response=>{
+          const card=document.createElement("article");
+          card.className="availability-admin-card";
+
+          const days=(response.days||[])
+            .slice()
+            .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+
+          card.innerHTML=`
+            <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
+            <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
+            <div class="delivery-method-summary">
+              ${(response.deliveryMethods||[]).length
+                ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
+                : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
+            </div>
+            <div class="availability-admin-days">
+              ${days.map(day=>`
+                <div class="availability-admin-day">
+                  <strong>${escapeHtml(formatDay(day.date))}</strong>
+                  <div class="availability-admin-slots">${availabilityLabel(day)}</div>
+                </div>
+              `).join("")}
+            </div>
+          `;
+
+          planningAvailabilityContainer.appendChild(card)
+        })
+      }catch(error){
+        console.error(error);
+        planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
+        showMessage(planningMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
+      }
     }
 
     async function loadPlanningData(weekId){
@@ -3861,48 +3633,31 @@
           return dateCompare!==0?dateCompare:(a.time||"").localeCompare(b.time||"")
         });
 
-      const availabilitySnapshot=await getDocs(
-        collection(db,"weeks",weekId,"availabilities")
-      );
+      // Disponibilites : reprises du cache si elles viennent d'etre lues.
+      const availabilities=await loadAvailabilitiesForWeek(weekId);
 
-      const availabilities=[];
-      availabilitySnapshot.forEach(docSnap=>{
-        availabilities.push({id:docSnap.id,...docSnap.data()})
-      });
+      // Livreurs et scores : deja en memoire grace a l'abonnement users et au
+      // chargement unique de driverPrivate. Avant, cette fonction relisait
+      // toute la collection users puis un document par livreur.
+      await loadDriverPrivateData();
 
-      const drivers=[];
-      const [userSnapshot,assignmentSnapshot,availabilityHistory]=await Promise.all([
-        getDocs(collection(db,"users")),
-        getDocs(collection(db,"driverAssignments")),
-        loadAllManagerAvailabilities()
-      ]);
-      const assignmentHistory=assignmentSnapshot.docs.map(docSnap=>({id:docSnap.id,...docSnap.data()}));
+      const drivers=currentDrivers
+        .filter(profile=>profile.active===true)
+        .map(profile=>{
+          const privateData=currentDriverPrivateData.get(profile.id)||{priority:3,reliability:3,experience:3};
 
-      for(const userDocSnap of userSnapshot.docs){
-        const profile=userDocSnap.data();
-
-        if(profile.role!=="driver"||profile.active!==true)continue;
-
-        let privateData={priority:3,reliability:3,experience:3};
-
-        try{
-          const privateSnapshot=await getDoc(doc(db,"driverPrivate",userDocSnap.id));
-          if(privateSnapshot.exists())privateData=privateSnapshot.data()
-        }catch(error){
-          console.error(error)
-        }
-
-        drivers.push({
-          userId:userDocSnap.id,
-          name:profile.name||"Livreur",
-          email:profile.email||"",
-          phone:profile.phone||"",
-          vehicle:profile.vehicle||"",
-          score:confidentialScore(userDocSnap.id,privateData,assignmentHistory,availabilityHistory),
-          priority:Number(privateData.priority||3),
-          effectivePriority:driverScoreData(userDocSnap.id,privateData,assignmentHistory,availabilityHistory).effectivePriority
-        })
-      }
+          return {
+            userId:profile.id,
+            name:profile.name||"Livreur",
+            email:profile.email||"",
+            phone:profile.phone||"",
+            vehicle:profile.vehicle||"",
+            score:confidentialScore(privateData),
+            priority:Number(privateData.priority||3),
+            reliability:Number(privateData.reliability||3),
+            experience:Number(privateData.experience||3)
+          }
+        });
 
       return {week,needs,availabilities,drivers}
     }
@@ -4118,7 +3873,7 @@
                   <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}${driver.availabilityComment?` · ${escapeHtml(driver.availabilityComment)}`:""}</small>
                 </div>
                 <div>
-                  <span class="plan-score">Score ${formatScore(driver.score)}</span>
+                  <span class="plan-score">Score ${driver.score}</span>
                   ${currentPlan.status==="validated"
                     ? `<span class="confirmation-badge confirmation-${(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status)||"pending"}">${assignmentStatusLabel(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status||"pending")}</span>`
                     : ""}
@@ -4137,7 +3892,7 @@
                   <strong>${escapeHtml(driver.name)}</strong>
                   <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</small>
                 </div>
-                <span class="plan-score">Score ${formatScore(driver.score)}</span>
+                <span class="plan-score">Score ${driver.score}</span>
               </div>
             `).join("")
           : '<div class="empty-state">Aucun autre candidat.</div>';
@@ -4185,8 +3940,7 @@
           await saveCurrentPlan();
 
           if(currentPlan.status==="validated"){
-            await syncDriverAssignments(currentPlan);
-            await loadAssignmentStatuses(currentPlan.weekId)
+            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
           }
 
           renderPlan()
@@ -4219,9 +3973,10 @@
           currentPlan=snapshot.data();
 
           if(currentPlan.status==="validated"){
-            await syncDriverAssignments(currentPlan);
-            await applyAutomaticReplacements(currentPlan);
-            await loadAssignmentStatuses(currentPlan.weekId)
+            // Une seule lecture des statuts, partagee par les deux traitements.
+            await loadAssignmentStatuses(currentPlan.weekId);
+            await syncDriverAssignments(currentPlan,{statusesLoaded:true});
+            await applyAutomaticReplacements(currentPlan,{statusesLoaded:true})
           }else if(currentPlan.status==="closed"){
             await loadAssignmentStatuses(currentPlan.weekId)
           }
@@ -4374,14 +4129,6 @@
       hideInstallModal()
     });
 
-    forgotPasswordButton.addEventListener("click",requestPasswordReset);
-    document.querySelectorAll(".open-password-modal").forEach(button=>button.addEventListener("click",openPasswordModal));
-    closePasswordModalButton.addEventListener("click",closePasswordModal);
-    cancelPasswordButton.addEventListener("click",closePasswordModal);
-    savePasswordButton.addEventListener("click",changeCurrentUserPassword);
-    passwordOverlay.addEventListener("click",event=>{if(event.target===passwordOverlay)closePasswordModal()});
-    [currentPasswordInput,newPasswordInput,confirmNewPasswordInput].forEach(input=>input.addEventListener("keydown",event=>{if(event.key==="Enter")changeCurrentUserPassword()}));
-
     document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
     document.getElementById("openCreateWeek").addEventListener("click",()=>showSection("createWeek"));
     document.getElementById("openDrivers").addEventListener("click",()=>showSection("drivers"));
@@ -4508,8 +4255,8 @@
           {merge:true}
         );
 
-        await syncDriverAssignments(currentPlan);
         await loadAssignmentStatuses(currentPlan.weekId);
+        await syncDriverAssignments(currentPlan,{statusesLoaded:true});
         renderPlan();
         showMessage(planningMessage,"Le planning a été validé et envoyé aux livreurs.","success")
       }catch(error){
@@ -4572,6 +4319,8 @@
           closedByName:currentProfile.name||""
         });
 
+        availabilityCache.delete(currentPlan.weekId);
+        driverStatsLoadedAt=0;
         renderPlan();
         showMessage(
           planningMessage,
@@ -4683,6 +4432,7 @@
         });
 
         showMessage(needFormMessage,"Le besoin a été ajouté.","success");
+        availabilityCache.delete(week.id);
         needTime.value="17:30";
         needQuantity.value="1";
         needNotes.value=""
@@ -4693,71 +4443,6 @@
         saveNeedButton.disabled=false;
         saveNeedButton.textContent="Ajouter le besoin"
       }
-    });
-
-    document.getElementById("driverLegacyEnabled").addEventListener("change",event=>{document.getElementById("driverLegacyFields").classList.toggle("hidden",!event.target.checked)});
-
-    function openCollaborationRequest(type){
-      collaborationRequestType.value=type;
-      collaborationFormTitle.textContent=type==="pause"?"Déclarer une pause":type==="end"?"Mettre fin à ma collaboration":"Être contacté par les RH";
-      collaborationRequestForm.classList.remove("hidden");
-      collaborationChoiceButtons.classList.add("hidden");
-      collaborationRequestType.dispatchEvent(new Event("change"));
-      collaborationRequestForm.scrollIntoView({behavior:"smooth",block:"start"});
-    }
-    function closeCollaborationRequest(){
-      collaborationRequestForm.reset();
-      collaborationRequestForm.classList.add("hidden");
-      collaborationChoiceButtons.classList.remove("hidden");
-      clearMessage(collaborationRequestMessage);
-    }
-    document.getElementById("openPauseRequest").addEventListener("click",()=>openCollaborationRequest("pause"));
-    document.getElementById("openEndRequest").addEventListener("click",()=>openCollaborationRequest("end"));
-    document.getElementById("openContactRequest").addEventListener("click",()=>openCollaborationRequest("contact"));
-    cancelCollaborationRequest.addEventListener("click",closeCollaborationRequest);
-
-    collaborationRequestType.addEventListener("change",()=>{
-      const isPause=collaborationRequestType.value==="pause";
-      document.querySelectorAll(".pause-field").forEach(el=>el.classList.toggle("hidden",!isPause));
-      document.querySelectorAll(".end-field").forEach(el=>el.classList.toggle("hidden",collaborationRequestType.value!=="end"));
-      document.getElementById("submitCollaborationRequest").textContent=collaborationRequestType.value==="pause"?"Envoyer la demande de pause":collaborationRequestType.value==="end"?"Envoyer la demande de fin":"Demander un contact RH";
-    });
-
-    function requestStatusLabel(status){return ({pending:"À traiter",approved:"Pause approuvée",rejected:"Refusée",rh_review:"Contrôle RH",end_confirmed:"Date de fin confirmée",closed:"Clôturée"})[status]||status}
-    function requestTypeLabel(type){return ({pause:"Pause temporaire",end:"Fin de collaboration",contact:"Contact RH"})[type]||type}
-    function renderCollaborationRequests(){
-      if(currentProfile?.role==="driver"){
-        const mine=currentCollaborationRequests.filter(r=>r.userId===auth.currentUser?.uid).sort((a,b)=>(timestampToDate(b.createdAt)||0)-(timestampToDate(a.createdAt)||0));
-        myCollaborationStatus.innerHTML=mine.length?mine.slice(0,3).map(r=>`<strong>${requestTypeLabel(r.type)}</strong> — ${requestStatusLabel(r.status)}${r.endDate?` · jusqu’au ${formatDate(r.endDate)}`:""}`).join("<br>"):"Aucune demande en cours.";
-        return
-      }
-      if(!collaborationRequestList)return;
-      const requests=currentCollaborationRequests.slice().sort((a,b)=>(timestampToDate(b.createdAt)||0)-(timestampToDate(a.createdAt)||0));
-      collaborationRequestList.innerHTML=requests.length?"":'<div class="empty-state">Aucune demande.</div>';
-      requests.forEach(r=>{
-        const card=document.createElement("article"); card.className="request-card";
-        card.innerHTML=`<div class="request-head"><div><strong>${escapeHtml(r.userName||r.userEmail||"Livreur")}</strong><p class="muted">${requestTypeLabel(r.type)} · ${escapeHtml(r.reason||"motif non précisé")}</p></div><span class="status-badge status-rh">${requestStatusLabel(r.status||"pending")}</span></div><p>${r.startDate?`Du ${formatDate(r.startDate)} `:""}${r.endDate?`au ${formatDate(r.endDate)}`:""}${r.desiredEndDate?`Date souhaitée : ${formatDate(r.desiredEndDate)}`:""}</p>${r.comment?`<p class="muted">${escapeHtml(r.comment)}</p>`:""}<div class="request-actions"></div>`;
-        const actions=card.querySelector(".request-actions");
-        if(r.type==="pause"&&r.status==="pending"){
-          const approve=document.createElement("button"); approve.className="button button-primary"; approve.textContent="Approuver la pause"; approve.onclick=()=>updateDoc(doc(db,"collaborationRequests",r.id),{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:auth.currentUser.uid}); actions.appendChild(approve)
-        }
-        if(["end","contact"].includes(r.type)&&!["end_confirmed","closed"].includes(r.status)){
-          const review=document.createElement("button"); review.className="button button-secondary"; review.textContent="Passer en contrôle RH"; review.onclick=()=>updateDoc(doc(db,"collaborationRequests",r.id),{status:"rh_review",reviewedAt:serverTimestamp(),reviewedBy:auth.currentUser.uid}); actions.appendChild(review)
-        }
-        const mail=document.createElement("button"); mail.className="button button-ghost"; mail.textContent="Préparer l’e-mail"; mail.onclick=()=>{const rh=localStorage.getItem("naraRhEmail")||prompt("Adresse e-mail RH à mettre en copie :","")||""; if(rh)localStorage.setItem("naraRhEmail",rh); const subject=encodeURIComponent(`Nara Pizza — ${requestTypeLabel(r.type)}`); const body=encodeURIComponent(`Bonjour ${r.userName||""},\n\nNous confirmons la réception de votre demande : ${requestTypeLabel(r.type)}.\nStatut : ${requestStatusLabel(r.status||"pending")}.\n\nCette communication ne fixe pas automatiquement la fin du contrat. Les RH confirmeront les modalités applicables.\n\nCordialement,\nNara Pizza`); location.href=`mailto:${encodeURIComponent(r.userEmail||"")}?cc=${encodeURIComponent(rh)}&subject=${subject}&body=${body}`}; actions.appendChild(mail);
-        collaborationRequestList.appendChild(card)
-      })
-    }
-    function subscribeToCollaborationRequests(user){
-      if(unsubscribeCollaborationRequests)unsubscribeCollaborationRequests();
-      const qref=currentProfile?.role==="driver"?query(collection(db,"collaborationRequests"),where("userId","==",user.uid)):collection(db,"collaborationRequests");
-      unsubscribeCollaborationRequests=onSnapshot(qref,snap=>{currentCollaborationRequests=snap.docs.map(d=>({id:d.id,...d.data()}));renderCollaborationRequests();renderDrivers()},error=>console.error("Demandes",error))
-    }
-    collaborationRequestForm.addEventListener("submit",async event=>{
-      event.preventDefault(); clearMessage(collaborationRequestMessage);
-      const type=collaborationRequestType.value; const startDate=document.getElementById("collaborationStartDate").value; const endDate=document.getElementById("collaborationEndDate").value;
-      if(type==="pause"&&(!startDate||!endDate||endDate<startDate)){showMessage(collaborationRequestMessage,"Indiquez une période de pause valide.","error");return}
-      try{await addDoc(collection(db,"collaborationRequests"),{userId:auth.currentUser.uid,userName:currentProfile.name||"",userEmail:currentProfile.email||auth.currentUser.email||"",type,reason:document.getElementById("collaborationReason").value,startDate:type==="pause"?startDate:"",endDate:type==="pause"?endDate:"",desiredEndDate:type==="end"?document.getElementById("collaborationDesiredEndDate").value:"",comment:document.getElementById("collaborationComment").value.trim(),status:"pending",createdAt:serverTimestamp()}); closeCollaborationRequest(); myCollaborationStatus.innerHTML='<strong>Votre demande a été transmise.</strong>'; }catch(error){showMessage(collaborationRequestMessage,`Impossible d’envoyer la demande : ${error.code||error.message}`,"error")}
     });
 
     driverForm.addEventListener("submit",async event=>{
@@ -4779,12 +4464,6 @@
       const reliability=Number(document.getElementById("driverReliability").value);
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
-      const legacyEnabled=document.getElementById("driverLegacyEnabled").checked;
-      const legacyStartDate=document.getElementById("driverLegacyStart").value;
-      const legacyTenure=Number(document.getElementById("driverLegacyTenure").value);
-      const legacyFrequency=Number(document.getElementById("driverLegacyFrequency").value);
-      const legacyReliability=Number(document.getElementById("driverLegacyReliability").value);
-      const legacyFlexibility=Number(document.getElementById("driverLegacyFlexibility").value);
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -4815,10 +4494,14 @@
         }
 
         await setDoc(doc(db,"driverPrivate",userId),{
-          priority,reliability,experience,notes,legacyEnabled,legacyStartDate,legacyTenure,legacyFrequency,legacyReliability,legacyFlexibility,
+          priority,reliability,experience,notes,
           updatedAt:serverTimestamp(),
           updatedBy:auth.currentUser.uid
         },{merge:true});
+
+        // Les scores confidentiels viennent de changer : on force leur relecture.
+        await loadDriverPrivateData(true);
+        renderDrivers();
 
         showMessage(
           driverFormMessage,
@@ -4863,10 +4546,19 @@
         if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
         if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
+        if(unsubscribeNeedTemplates){unsubscribeNeedTemplates();unsubscribeNeedTemplates=null}
+        if(unsubscribeRegulationAcceptances){unsubscribeRegulationAcceptances();unsubscribeRegulationAcceptances=null}
         if(unsubscribeDriverWeeks){unsubscribeDriverWeeks();unsubscribeDriverWeeks=null}
         if(unsubscribeDriverAssignments){unsubscribeDriverAssignments();unsubscribeDriverAssignments=null}
-        if(unsubscribeCollaborationRequests){unsubscribeCollaborationRequests();unsubscribeCollaborationRequests=null}
-        if(unsubscribePlanningAvailabilities){unsubscribePlanningAvailabilities();unsubscribePlanningAvailabilities=null}
+        // Tous les abonnements sont fermes : plus aucune lecture facturee hors session.
+        needTemplatesSubscribed=false;
+        driverPrivateLoaded=false;
+        driverStatsLoadedAt=0;
+        regulationAcceptances=[];
+        regulationAcceptancesLoadedAt=0;
+        availabilityCache.clear();
+        currentManagerAssignments=[];
+        currentAssignmentStatuses=new Map();
         showLogin();
         return
       }
@@ -4875,11 +4567,9 @@
         const profile=await loadUserProfile(user);
 
         if(["admin","manager"].includes(profile.role)){
-          showApp(profile);
-          subscribeToCollaborationRequests(user)
+          showApp(profile)
         }else if(profile.role==="driver"){
-          showDriverApp(profile,user);
-          subscribeToCollaborationRequests(user)
+          showDriverApp(profile,user)
         }else{
           throw new Error("Rôle utilisateur non reconnu.")
         }
