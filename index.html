@@ -738,9 +738,10 @@
         <div class="field"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="email" required></div>
         <div class="field"><label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required></div>
         <button id="loginButton" class="button button-primary button-full" type="submit">Se connecter</button>
+        <button id="forgotPasswordButton" class="button button-ghost button-full" type="button">Mot de passe oublié ?</button>
       </form>
       <div id="loginMessage" class="message"></div>
-      <div class="footer">Nara Pizza Planning — version pilote</div>
+      <div class="footer">Nara Pizza Planning — version pilote 1.3</div>
     </main>
   </section>
 
@@ -752,6 +753,7 @@
       </div>
       <div class="topbar-actions">
         <button class="button button-ghost install-help-button" type="button">Installer</button>
+        <button class="button button-ghost open-password-modal" type="button">Mot de passe</button>
         <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
       </div>
     </header>
@@ -1188,6 +1190,7 @@
       <div class="topbar-actions">
         <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">Règl. & aide</button>
         <button class="button button-ghost install-help-button" type="button">Installer</button>
+        <button class="button button-ghost open-password-modal" type="button">Mot de passe</button>
         <button id="driverLogoutButton" class="button button-secondary" type="button">
           Sortir
         </button>
@@ -1440,6 +1443,40 @@
     </section>
   </div>
 
+  <div id="passwordOverlay" class="install-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+    <section class="install-modal" style="max-width:620px">
+      <div class="install-modal-header">
+        <div>
+          <h2 id="passwordModalTitle">Modifier mon mot de passe</h2>
+          <p class="muted">Cette modification s’applique immédiatement à votre compte.</p>
+        </div>
+        <button id="closePasswordModal" class="install-close" type="button" aria-label="Fermer">×</button>
+      </div>
+
+      <div class="form-grid one-column">
+        <div class="field">
+          <label for="currentPassword">Mot de passe actuel</label>
+          <input id="currentPassword" type="password" autocomplete="current-password">
+        </div>
+        <div class="field">
+          <label for="newPassword">Nouveau mot de passe</label>
+          <input id="newPassword" type="password" autocomplete="new-password" minlength="8">
+          <small class="muted">Au moins 8 caractères.</small>
+        </div>
+        <div class="field">
+          <label for="confirmNewPassword">Confirmer le nouveau mot de passe</label>
+          <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8">
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button id="savePasswordButton" class="button button-primary" type="button">Enregistrer le nouveau mot de passe</button>
+        <button id="cancelPasswordButton" class="button button-secondary" type="button">Annuler</button>
+      </div>
+      <div id="passwordMessage" class="message"></div>
+    </section>
+  </div>
+
   <div id="installOverlay" class="install-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installModalTitle">
     <section class="install-modal">
       <div class="install-modal-header">
@@ -1486,7 +1523,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, getDocs, collection, addDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1510,6 +1547,15 @@
     const loginForm = document.getElementById("loginForm");
     const loginButton = document.getElementById("loginButton");
     const loginMessage = document.getElementById("loginMessage");
+    const forgotPasswordButton = document.getElementById("forgotPasswordButton");
+    const passwordOverlay = document.getElementById("passwordOverlay");
+    const closePasswordModalButton = document.getElementById("closePasswordModal");
+    const cancelPasswordButton = document.getElementById("cancelPasswordButton");
+    const savePasswordButton = document.getElementById("savePasswordButton");
+    const currentPasswordInput = document.getElementById("currentPassword");
+    const newPasswordInput = document.getElementById("newPassword");
+    const confirmNewPasswordInput = document.getElementById("confirmNewPassword");
+    const passwordMessage = document.getElementById("passwordMessage");
     const appMessage = document.getElementById("appMessage");
     const installOverlay = document.getElementById("installOverlay");
     const closeInstallModal = document.getElementById("closeInstallModal");
@@ -1659,6 +1705,82 @@
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
     function showSection(name){Object.values(sections).forEach(s=>s.classList.remove("active"));sections[name].classList.add("active");clearMessage(appMessage);if(name==="createWeek")prepareWeekForm();if(name==="needs")prepareNeedsSection();if(name==="planning")preparePlanningSection();if(name==="kitchen")prepareKitchenSection();window.scrollTo({top:0,behavior:"smooth"})}
+    function openPasswordModal(){
+      if(!auth.currentUser)return;
+      currentPasswordInput.value="";
+      newPasswordInput.value="";
+      confirmNewPasswordInput.value="";
+      clearMessage(passwordMessage);
+      passwordOverlay.classList.remove("hidden");
+      setTimeout(()=>currentPasswordInput.focus(),50)
+    }
+
+    function closePasswordModal(){
+      passwordOverlay.classList.add("hidden");
+      currentPasswordInput.value="";
+      newPasswordInput.value="";
+      confirmNewPasswordInput.value="";
+      clearMessage(passwordMessage)
+    }
+
+    async function requestPasswordReset(){
+      clearMessage(loginMessage);
+      const email=document.getElementById("email").value.trim();
+      if(!email){
+        showMessage(loginMessage,"Saisissez d’abord votre adresse e-mail.","error");
+        document.getElementById("email").focus();
+        return
+      }
+      forgotPasswordButton.disabled=true;
+      forgotPasswordButton.textContent="Envoi…";
+      try{
+        await sendPasswordResetEmail(auth,email);
+        showMessage(loginMessage,"Un e-mail de réinitialisation a été envoyé. Vérifiez aussi votre dossier spam.","success")
+      }catch(error){
+        console.error(error);
+        const message=error.code==="auth/invalid-email"?"L’adresse e-mail n’est pas valide.":"Impossible d’envoyer l’e-mail de réinitialisation. Vérifiez l’adresse et réessayez.";
+        showMessage(loginMessage,message,"error")
+      }finally{
+        forgotPasswordButton.disabled=false;
+        forgotPasswordButton.textContent="Mot de passe oublié ?"
+      }
+    }
+
+    async function changeCurrentUserPassword(){
+      clearMessage(passwordMessage);
+      const user=auth.currentUser;
+      const currentPassword=currentPasswordInput.value;
+      const newPassword=newPasswordInput.value;
+      const confirmation=confirmNewPasswordInput.value;
+      if(!user||!user.email){showMessage(passwordMessage,"Votre session n’est plus valide.","error");return}
+      if(!currentPassword){showMessage(passwordMessage,"Saisissez votre mot de passe actuel.","error");return}
+      if(newPassword.length<8){showMessage(passwordMessage,"Le nouveau mot de passe doit contenir au moins 8 caractères.","error");return}
+      if(newPassword!==confirmation){showMessage(passwordMessage,"La confirmation ne correspond pas au nouveau mot de passe.","error");return}
+      if(currentPassword===newPassword){showMessage(passwordMessage,"Choisissez un nouveau mot de passe différent de l’actuel.","error");return}
+      savePasswordButton.disabled=true;
+      savePasswordButton.textContent="Enregistrement…";
+      try{
+        const credential=EmailAuthProvider.credential(user.email,currentPassword);
+        await reauthenticateWithCredential(user,credential);
+        await updatePassword(user,newPassword);
+        currentPasswordInput.value="";
+        newPasswordInput.value="";
+        confirmNewPasswordInput.value="";
+        showMessage(passwordMessage,"Votre mot de passe a été modifié avec succès.","success")
+      }catch(error){
+        console.error(error);
+        let message="Impossible de modifier le mot de passe.";
+        if(["auth/invalid-credential","auth/wrong-password"].includes(error.code))message="Le mot de passe actuel est incorrect.";
+        else if(error.code==="auth/weak-password")message="Le nouveau mot de passe est trop faible.";
+        else if(error.code==="auth/too-many-requests")message="Trop de tentatives. Attendez quelques minutes avant de réessayer.";
+        else if(error.code==="auth/requires-recent-login")message="Reconnectez-vous, puis recommencez la modification.";
+        showMessage(passwordMessage,message,"error")
+      }finally{
+        savePasswordButton.disabled=false;
+        savePasswordButton.textContent="Enregistrer le nouveau mot de passe"
+      }
+    }
+
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
     function showApp(profile){
       currentProfile=profile;
@@ -4152,6 +4274,14 @@
       nativeInstallWrap.classList.add("hidden");
       hideInstallModal()
     });
+
+    forgotPasswordButton.addEventListener("click",requestPasswordReset);
+    document.querySelectorAll(".open-password-modal").forEach(button=>button.addEventListener("click",openPasswordModal));
+    closePasswordModalButton.addEventListener("click",closePasswordModal);
+    cancelPasswordButton.addEventListener("click",closePasswordModal);
+    savePasswordButton.addEventListener("click",changeCurrentUserPassword);
+    passwordOverlay.addEventListener("click",event=>{if(event.target===passwordOverlay)closePasswordModal()});
+    [currentPasswordInput,newPasswordInput,confirmNewPasswordInput].forEach(input=>input.addEventListener("keydown",event=>{if(event.key==="Enter")changeCurrentUserPassword()}));
 
     document.getElementById("logoutButton").addEventListener("click",()=>signOut(auth));
     document.getElementById("openCreateWeek").addEventListener("click",()=>showSection("createWeek"));
