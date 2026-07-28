@@ -355,6 +355,17 @@
     .service-availability-header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
     .service-availability-header label{margin:0}
     .service-availability.is-disabled .service-fields{opacity:.45;pointer-events:none}
+    .service-availability.validation-target{
+      scroll-margin-top:96px;
+      border-color:#b42318;
+      box-shadow:0 0 0 3px rgba(180,35,24,.14);
+      animation:validationPulse .9s ease 2;
+    }
+    .service-availability.validation-target input{border-color:#b42318}
+    @keyframes validationPulse{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-2px)}
+    }
     .availability-day.is-unavailable .availability-details{opacity:1;pointer-events:auto}
     .availability-state{display:flex;gap:8px;align-items:center}
     .availability-state input{width:auto}
@@ -2897,7 +2908,7 @@
             La date limite est dépassée. Contactez le manager pour toute modification.
           </div>
         `:`
-          <form class="availability-form" data-week-id="${week.id}">
+          <form class="availability-form" data-week-id="${week.id}" novalidate>
             <section class="delivery-methods-box">
               <h3>Mes moyens de livraison cette semaine</h3>
               <p class="muted">Cochez uniquement les moyens que vous pourrez réellement utiliser.</p>
@@ -2944,7 +2955,10 @@
             <div class="availability-details">
               <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service de midi</strong>
+                  <div>
+                    <strong>Service de midi</strong>
+                    <small>Arrivée au plus tard 12:00</small>
+                  </div>
                   <label class="availability-state">
                     <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -2960,7 +2974,10 @@
 
               <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service du soir</strong>
+                  <div>
+                    <strong>Service du soir</strong>
+                    <small>Arrivée au plus tard 19:00</small>
+                  </div>
                   <label class="availability-state">
                     <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -3020,6 +3037,29 @@
         });
 
         const form=wrapper.querySelector(".availability-form");
+
+        function guideToInvalidTime(input,messageEl,message){
+          if(!input)return;
+          form.querySelectorAll(".service-availability.validation-target").forEach(section=>{
+            section.classList.remove("validation-target");
+          });
+          const section=input.closest(".service-availability");
+          section?.classList.add("validation-target");
+          showMessage(messageEl,message,"error");
+
+          requestAnimationFrame(()=>{
+            (section||input).scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
+            window.setTimeout(()=>{
+              input.focus({preventScroll:true});
+              if(typeof input.showPicker==="function"){
+                try{input.showPicker()}catch(error){}
+              }
+            },450);
+          });
+
+          window.setTimeout(()=>section?.classList.remove("validation-target"),2600);
+        }
+
         form.addEventListener("submit",async event=>{
           event.preventDefault();
           const messageEl=form.querySelector(".availability-message");
@@ -3078,13 +3118,8 @@
             const service=middayInvalid?"service de midi":"service du soir";
             const input=card?.querySelector(middayInvalid?".midday-earliest":".evening-earliest");
 
-            showMessage(
-              messageEl,
-              `${formatDay(invalidDay.date)} : pour le ${service}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`,
-              "error"
-            );
-            input?.focus();
-            input?.reportValidity();
+            const errorMessage=`${formatDay(invalidDay.date)} : pour le ${service}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`;
+            guideToInvalidTime(input,messageEl,errorMessage);
             return
           }
 
