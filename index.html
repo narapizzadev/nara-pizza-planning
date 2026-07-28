@@ -303,6 +303,19 @@
     .driver-stat-card small{margin-top:3px;color:var(--muted);line-height:1.3}
     .driver-stat-detail{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.4}
     .driver-data-note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
+    .score-explanation{margin-top:10px;padding:12px;border:1px solid #f1d1b9;border-radius:10px;background:#fffaf6;font-size:12px;line-height:1.5}
+    .score-explanation strong{display:block;margin-bottom:5px;font-size:13px}
+    .score-line{display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+    .score-line.total{margin-top:5px;padding-top:7px;border-top:1px solid #ead7c8;font-weight:800}
+    .score-warning{margin-top:7px;color:#9a6700;font-weight:700}
+    .legacy-box,.collaboration-box{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:14px;background:#fafafa}
+    .legacy-grid,.collaboration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .request-list{display:grid;gap:12px;margin-top:14px}
+    .request-card{border:1px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+    .request-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .status-pause{background:#eef4ff;color:#2457a6}.status-rh{background:#fff4dd;color:#8a5b00}.status-ended{background:#f2f2f2;color:#555}
+    @media(max-width:700px){.legacy-grid,.collaboration-grid{grid-template-columns:1fr}.request-head{display:block}}
     .driver-card h3{margin-bottom:4px}.driver-card p{margin-bottom:3px}.driver-meta{color:var(--muted);font-size:14px;line-height:1.4}
     .driver-actions{display:flex;align-items:center;gap:10px}.driver-score{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
     .score-chip{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f4f4f4;font-size:12px;font-weight:700}
@@ -803,6 +816,13 @@
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
           </div>
 
+          <section class="collaboration-box">
+            <div class="panel-header">
+              <div><h3>Demandes et pauses</h3><p class="muted">Validez les pauses temporaires et traitez les demandes de fin de collaboration.</p></div>
+            </div>
+            <div id="collaborationRequestList" class="request-list"><div class="empty-state">Chargement des demandes…</div></div>
+          </section>
+
           <div id="driverList" class="driver-list">
             <div class="empty-state">Chargement des livreurs…</div>
           </div>
@@ -816,7 +836,7 @@
             </div>
 
             <div class="form-note">
-              Les notes, la priorité, la fiabilité et l’expérience sont confidentielles et visibles uniquement par les managers.
+              La priorité de base et les notes sont confidentielles. Le score automatique évolue chaque jour selon les 30 derniers jours et les disponibilités transmises.
             </div>
 
             <form id="driverForm">
@@ -849,20 +869,26 @@
                 </div>
 
                 <div class="field">
-                  <label for="driverPriority">Priorité interne (1 à 5)</label>
+                  <label for="driverPriority">Priorité manager de base (1 à 5)</label>
                   <input id="driverPriority" type="number" min="1" max="5" value="3" required>
+                  <small class="muted">Après 15 jours sans aucune disponibilité, la priorité effective baisse de 1 point, puis de nouveau tous les 15 jours.</small>
                 </div>
 
-                <div class="field">
-                  <label for="driverReliability">Fiabilité (1 à 5)</label>
-                  <input id="driverReliability" type="number" min="1" max="5" value="3" required>
-                </div>
-
-                <div class="field">
-                  <label for="driverExperience">Expérience (1 à 5)</label>
-                  <input id="driverExperience" type="number" min="1" max="5" value="3" required>
-                </div>
+                <input id="driverReliability" type="hidden" value="3">
+                <input id="driverExperience" type="hidden" value="3">
               </div>
+
+              <section class="legacy-box">
+                <label class="checkbox-row"><input id="driverLegacyEnabled" type="checkbox"><span><strong>Livreur déjà actif avant la mise en service de l’application</strong><br><small class="muted">Un questionnaire unique attribue un bonus historique temporaire, protégé pendant 6 mois puis réduit progressivement.</small></span></label>
+                <div id="driverLegacyFields" class="legacy-grid hidden">
+                  <div class="field"><label for="driverLegacyStart">Début du bonus historique</label><input id="driverLegacyStart" type="date"></div>
+                  <div class="field"><label for="driverLegacyTenure">Ancienneté</label><select id="driverLegacyTenure"><option value="0">Moins de 3 mois</option><option value="1">3 à 6 mois</option><option value="2">6 à 12 mois</option><option value="3">1 à 2 ans</option><option value="4">Plus de 2 ans</option></select></div>
+                  <div class="field"><label for="driverLegacyFrequency">Fréquence habituelle</label><select id="driverLegacyFrequency"><option value="0">Occasionnellement</option><option value="1">Environ 1 fois/semaine</option><option value="2">Environ 2 fois/semaine</option><option value="3">3 à 4 fois/semaine</option><option value="4">5 fois ou plus/semaine</option></select></div>
+                  <div class="field"><label for="driverLegacyReliability">Fiabilité historique</label><select id="driverLegacyReliability"><option value="0">Plusieurs problèmes importants</option><option value="1">Irrégulière</option><option value="2">Généralement fiable</option><option value="3">Très fiable</option><option value="4">Référence pour l’équipe</option></select></div>
+                  <div class="field"><label for="driverLegacyFlexibility">Disponibilité et flexibilité</label><select id="driverLegacyFlexibility"><option value="0">Très limitée</option><option value="1">Moyenne</option><option value="2">Bonne</option><option value="3">Très bonne, remplacements compris</option></select></div>
+                  <div class="form-note">Capital de départ : 0 à 5 = 0 point ; 6 à 8 = 2 points ; 9 à 11 = 4 points ; 12 à 15 = 6 points.</div>
+                </div>
+              </section>
 
               <div class="field" style="margin-top:16px">
                 <label for="driverNotes">Notes confidentielles</label>
@@ -1072,7 +1098,7 @@
           </div>
 
           <div class="form-note">
-            Classement utilisé : priorité × 3, fiabilité × 2 et expérience × 1.
+            Classement utilisé : priorité manager effective + 0,2 par présence confirmée passée + 0,2 par acceptation honorée, sur les 30 derniers jours.
             Un livreur peut travailler une fois au service de midi et une fois au service du soir le même jour,
             avec un maximum de 6 jours de travail par semaine.
           </div>
@@ -1169,7 +1195,7 @@
             <h2>Règlement interne des livreurs</h2>
             <p class="muted">À lire et accepter avant d’envoyer vos disponibilités.</p>
           </div>
-          <span class="regulation-version">Version 1.0</span>
+          <span class="regulation-version">Version 1.1</span>
         </div>
 
         <div class="regulation-intro">
@@ -1295,6 +1321,24 @@
         </div>
       </section>
 
+      <section class="panel collaboration-box">
+        <div class="panel-header"><div><h3>Ma collaboration</h3><p class="muted">Déclarez une pause temporaire ou demandez la fin de votre collaboration.</p></div></div>
+        <div id="myCollaborationStatus" class="form-note">Aucune demande en cours.</div>
+        <form id="collaborationRequestForm">
+          <div class="collaboration-grid">
+            <div class="field"><label for="collaborationRequestType">Ma demande</label><select id="collaborationRequestType"><option value="pause">Déclarer une pause temporaire</option><option value="end">Demander la fin de ma collaboration</option><option value="contact">Être contacté par les RH</option></select></div>
+            <div class="field"><label for="collaborationReason">Motif général</label><select id="collaborationReason"><option value="studies">Études ou examens</option><option value="internship">Stage professionnel</option><option value="military">Service militaire, civil ou protection civile</option><option value="travel">Voyage ou séjour à l’étranger</option><option value="family">Obligations familiales</option><option value="health">Maladie ou accident</option><option value="work">Autre activité professionnelle temporaire</option><option value="personal">Autre motif personnel</option></select></div>
+            <div class="field pause-field"><label for="collaborationStartDate">Début</label><input id="collaborationStartDate" type="date"></div>
+            <div class="field pause-field"><label for="collaborationEndDate">Retour prévu</label><input id="collaborationEndDate" type="date"></div>
+            <div class="field end-field hidden"><label for="collaborationDesiredEndDate">Date de fin souhaitée</label><input id="collaborationDesiredEndDate" type="date"></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label for="collaborationComment">Commentaire facultatif</label><textarea id="collaborationComment" placeholder="Ne communiquez aucun diagnostic médical ni détail intime."></textarea></div>
+          <label class="checkbox-row"><input id="collaborationConfirm" type="checkbox" required><span>Je confirme que cette demande sera transmise au manager/RH et ne met pas automatiquement fin à mon contrat.</span></label>
+          <div class="form-actions"><button id="submitCollaborationRequest" class="button button-primary" type="submit">Envoyer la demande</button></div>
+          <div id="collaborationRequestMessage" class="message"></div>
+        </form>
+      </section>
+
       <section id="driverAvailabilityZone" class="driver-availability-zone">
         <div class="panel-header">
           <div>
@@ -1321,7 +1365,7 @@
       <div class="regulation-modal-header">
         <div>
           <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
-          <p class="muted">Version 1.0 — résumé opérationnel consultable à tout moment.</p>
+          <p class="muted">Version 1.1 — résumé opérationnel consultable à tout moment.</p>
         </div>
         <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
       </div>
@@ -1354,6 +1398,11 @@
       <section class="regulation-section">
         <h3>6. Comportement et incidents</h3>
         <p>Harcèlement, discrimination, menaces, violence et publication de données internes sont interdits. Tout accident, chute, dommage, menace, perte de clé, vol, contravention ou incident significatif doit être signalé avant la fin du service, sauf urgence médicale.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>7. Études, pauses et fin de collaboration</h3>
+        <p>Nara Pizza permet notamment aux étudiants de déclarer une pause temporaire pour études, examens, stage, voyage, service obligatoire, obligations familiales ou autre motif. Une pause approuvée suspend les relances et la baisse automatique de priorité jusqu’à la date de retour. Après 60 jours sans disponibilité ni pause déclarée, une vérification administrative peut être ouverte. Le livreur peut aussi demander volontairement la fin de sa collaboration. Une demande dans l’application ne constitue jamais, à elle seule, une résiliation : les RH confirment par écrit la date officielle et le délai applicable.</p>
       </section>
 
       <section class="regulation-section">
@@ -1461,7 +1510,7 @@
     const regulationGateMessage = document.getElementById("regulationGateMessage");
     const regulationAcceptanceList = document.getElementById("regulationAcceptanceList");
     let deferredInstallPrompt = null;
-    const REGULATION_VERSION = "1.0";
+    const REGULATION_VERSION = "1.1";
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
@@ -1491,6 +1540,11 @@
     const driverFormMessage = document.getElementById("driverFormMessage");
     const saveDriverButton = document.getElementById("saveDriverButton");
     const driverPasswordField = document.getElementById("driverPasswordField");
+    const collaborationRequestList = document.getElementById("collaborationRequestList");
+    const collaborationRequestForm = document.getElementById("collaborationRequestForm");
+    const collaborationRequestType = document.getElementById("collaborationRequestType");
+    const collaborationRequestMessage = document.getElementById("collaborationRequestMessage");
+    const myCollaborationStatus = document.getElementById("myCollaborationStatus");
 
     const needsWeekSelect = document.getElementById("needsWeekSelect");
     const needForm = document.getElementById("needForm");
@@ -1551,6 +1605,9 @@
     let currentDrivers = [];
     let currentDriverPrivateData = new Map();
     let currentManagerAssignments = [];
+    let currentManagerAvailabilities = [];
+    let currentCollaborationRequests = [];
+    let unsubscribeCollaborationRequests = null;
     let planningDeadlineTimer = null;
     let unsubscribeRegulationAcceptances = null;
     let unsubscribeDriverWeeks = null;
@@ -1709,6 +1766,10 @@
       document.getElementById("driverReliability").value="3";
       document.getElementById("driverExperience").value="3";
       document.getElementById("driverActive").checked=true;
+      document.getElementById("driverLegacyEnabled").checked=false;
+      document.getElementById("driverLegacyFields").classList.add("hidden");
+      document.getElementById("driverLegacyStart").value=new Date().toISOString().slice(0,10);
+      ["driverLegacyTenure","driverLegacyFrequency","driverLegacyReliability","driverLegacyFlexibility"].forEach(id=>document.getElementById(id).value="0");
       document.getElementById("driverEmail").readOnly=false;
       document.getElementById("driverPassword").required=true;
       driverPasswordField.classList.remove("hidden");
@@ -1742,7 +1803,14 @@
           document.getElementById("driverPriority").value=privateData.priority||3;
           document.getElementById("driverReliability").value=privateData.reliability||3;
           document.getElementById("driverExperience").value=privateData.experience||3;
-          document.getElementById("driverNotes").value=privateData.notes||""
+          document.getElementById("driverNotes").value=privateData.notes||"";
+          document.getElementById("driverLegacyEnabled").checked=privateData.legacyEnabled===true;
+          document.getElementById("driverLegacyFields").classList.toggle("hidden",privateData.legacyEnabled!==true);
+          document.getElementById("driverLegacyStart").value=privateData.legacyStartDate||new Date().toISOString().slice(0,10);
+          document.getElementById("driverLegacyTenure").value=String(privateData.legacyTenure||0);
+          document.getElementById("driverLegacyFrequency").value=String(privateData.legacyFrequency||0);
+          document.getElementById("driverLegacyReliability").value=String(privateData.legacyReliability||0);
+          document.getElementById("driverLegacyFlexibility").value=String(privateData.legacyFlexibility||0)
         }
       }catch(error){
         console.error(error);
@@ -1757,6 +1825,14 @@
 
     function dateOnly(value){
       return value?new Date(`${value}T12:00:00`):null
+    }
+
+    function timestampToDate(value){
+      if(!value)return null;
+      if(typeof value.toDate==="function")return value.toDate();
+      if(value instanceof Date)return value;
+      const parsed=new Date(value);
+      return Number.isNaN(parsed.getTime())?null:parsed
     }
 
     function assignmentStatsForDriver(userId){
@@ -1796,21 +1872,101 @@
         }
       }
 
-      return {past:summarize(past),future:summarize(future)}
+      return {past:summarize(past),future:summarize(future),pastItems:past}
     }
 
-    function driverScoreData(driverId){
-      const data=currentDriverPrivateData.get(driverId)||{};
-      const priority=Number(data.priority||3);
-      const reliability=Number(data.reliability||3);
-      const experience=Number(data.experience||3);
+    function approvedPauseForDriver(userId){
+      const today=new Date(); today.setHours(12,0,0,0);
+      return currentCollaborationRequests.find(item=>{
+        if(item.userId!==userId||item.type!=="pause"||item.status!=="approved")return false;
+        const start=dateOnly(item.startDate); const end=dateOnly(item.endDate);
+        return start&&end&&today>=start&&today<=end
+      })||null
+    }
+
+    function availabilityActivityForDriver(userId,availabilities=currentManagerAvailabilities){
+      const pause=approvedPauseForDriver(userId);
+      const submissions=availabilities.filter(item=>item.userId===userId).map(item=>timestampToDate(item.updatedAt||item.submittedAt)).filter(Boolean).sort((a,b)=>b-a);
+      const lastSubmission=submissions[0]||null;
+      const today=new Date(); today.setHours(12,0,0,0);
+      if(pause)return {lastSubmission,daysWithoutAvailability:null,penalty:0,nextPenaltyDate:null,noHistory:!lastSubmission,pause};
+      if(!lastSubmission)return {lastSubmission:null,daysWithoutAvailability:null,penalty:0,nextPenaltyDate:null,noHistory:true,pause:null};
+      const last=new Date(lastSubmission); last.setHours(12,0,0,0);
+      const days=Math.max(0,Math.floor((today-last)/86400000));
+      const penalty=Math.floor(days/15);
+      const nextPenaltyDate=new Date(last); nextPenaltyDate.setDate(nextPenaltyDate.getDate()+(penalty+1)*15);
+      return {lastSubmission:last,daysWithoutAvailability:days,penalty,nextPenaltyDate,noHistory:false,pause:null}
+    }
+
+    function legacyBonusData(data){
+      if(data.legacyEnabled!==true||!data.legacyStartDate)return {raw:0,initial:0,factor:0,current:0,months:0};
+      const raw=[data.legacyTenure,data.legacyFrequency,data.legacyReliability,data.legacyFlexibility].reduce((sum,v)=>sum+Number(v||0),0);
+      const initial=raw>=12?6:raw>=9?4:raw>=6?2:0;
+      const start=dateOnly(data.legacyStartDate); const today=new Date(); today.setHours(12,0,0,0);
+      const months=Math.max(0,(today.getFullYear()-start.getFullYear())*12+today.getMonth()-start.getMonth());
+      const factor=months<6?1:months<9?.75:months<12?.5:months<15?.25:0;
+      return {raw,initial,factor,current:initial*factor,months}
+    }
+
+    function driverScoreData(driverId,privateData=null,assignments=currentManagerAssignments,availabilities=currentManagerAvailabilities){
+      const data=privateData||currentDriverPrivateData.get(driverId)||{};
+      const basePriority=Math.max(1,Math.min(5,Number(data.priority||3)));
+      const activity=availabilityActivityForDriver(driverId,availabilities);
+      const priorityPenalty=activity.penalty;
+      const effectivePriority=Math.max(0,basePriority-priorityPenalty);
+
+      const today=new Date();
+      today.setHours(12,0,0,0);
+      const pastStart=new Date(today);
+      pastStart.setDate(pastStart.getDate()-30);
+
+      const honored=assignments.filter(item=>{
+        const date=dateOnly(item.date);
+        return item.userId===driverId
+          && item.active!==false
+          && item.status==="confirmed"
+          && date
+          && date>=pastStart
+          && date<today
+      });
+
+      const presencePoints=honored.length*0.2;
+      const acceptancePoints=honored.length*0.2;
+      const automaticPoints=presencePoints+acceptancePoints;
+      const legacy=legacyBonusData(data);
+      const total=effectivePriority+automaticPoints+legacy.current;
+
+      const expiringSoon=honored.filter(item=>{
+        const date=dateOnly(item.date);
+        if(!date)return false;
+        const expiry=new Date(date);
+        expiry.setDate(expiry.getDate()+30);
+        const remaining=(expiry-today)/86400000;
+        return remaining>=0&&remaining<=7
+      }).length;
 
       return {
-        priority,
-        reliability,
-        experience,
-        total:priority*3+reliability*2+experience
+        basePriority,
+        effectivePriority,
+        priorityPenalty,
+        presenceCount:honored.length,
+        acceptanceCount:honored.length,
+        presencePoints,
+        acceptancePoints,
+        automaticPoints,
+        legacy,
+        total,
+        expiringSoon,
+        activity
       }
+    }
+
+    function formatScore(value){
+      return Number(value||0).toLocaleString("fr-CH",{minimumFractionDigits:1,maximumFractionDigits:1})
+    }
+
+    function formatShortDate(date){
+      return date?date.toLocaleDateString("fr-CH",{day:"2-digit",month:"2-digit",year:"numeric"}):"—"
     }
 
     function renderDrivers(){
@@ -1840,15 +1996,14 @@
             <h3>${escapeHtml(driver.name||"Livreur")}</h3>
             <p class="driver-meta">${escapeHtml(driver.email||"")}</p>
             <p class="driver-meta">${escapeHtml(driver.phone||"Téléphone non renseigné")} · ${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</p>
-            <p class="driver-data-note">Les données ci-dessous concernent les affectations et confirmations, pas une présence physique pointée.</p>
+            <p class="driver-data-note">Une présence est comptée lorsqu’une affectation confirmée est passée. Il ne s’agit pas d’un système de pointage physique.</p>
           </div>
 
           <div class="driver-score-panel">
             <div class="driver-score-row">
-              <span class="score-chip">Priorité ${score.priority}/5</span>
-              <span class="score-chip">Fiabilité ${score.reliability}/5</span>
-              <span class="score-chip">Expérience ${score.experience}/5</span>
-              <span class="score-chip">Score ${score.total}</span>
+              <span class="score-chip">Priorité de base ${score.basePriority}/5</span>
+              <span class="score-chip">Priorité effective ${formatScore(score.effectivePriority)}</span>
+              <span class="score-chip">Score actuel ${formatScore(score.total)}</span>
             </div>
 
             <div class="driver-stat-grid">
@@ -1872,6 +2027,20 @@
                 </div>
               </div>
             </div>
+
+            <div class="score-explanation">
+              <strong>Évolution du score sur 30 jours</strong>
+              <div class="score-line"><span>${score.presenceCount} présence${score.presenceCount>1?"s":""} confirmée${score.presenceCount>1?"s":""} × 0,2</span><span>+${formatScore(score.presencePoints)}</span></div>
+              <div class="score-line"><span>${score.acceptanceCount} acceptation${score.acceptanceCount>1?"s":""} honorée${score.acceptanceCount>1?"s":""} × 0,2</span><span>+${formatScore(score.acceptancePoints)}</span></div>
+              <div class="score-line"><span>Bonus historique temporaire (${Math.round(score.legacy.factor*100)} %)</span><span>+${formatScore(score.legacy.current)}</span></div>
+              <div class="score-line"><span>Priorité manager de base</span><span>${formatScore(score.basePriority)}</span></div>
+              <div class="score-line"><span>Pénalité sans disponibilité (${score.priorityPenalty} × 1)</span><span>−${formatScore(score.priorityPenalty)}</span></div>
+              <div class="score-line total"><span>Score de classement actuel</span><span>${formatScore(score.total)}</span></div>
+              <div class="driver-data-note">Dernière disponibilité : ${score.activity.lastSubmission?formatShortDate(score.activity.lastSubmission):"aucune donnée"}${score.activity.daysWithoutAvailability!==null?` · ${score.activity.daysWithoutAvailability} jour${score.activity.daysWithoutAvailability>1?"s":""} écoulé${score.activity.daysWithoutAvailability>1?"s":""}`:""}.</div>
+              ${score.activity.pause?`<div class="score-warning">Pause autorisée jusqu’au ${formatDate(score.activity.pause.endDate)} : pénalité d’inactivité suspendue.</div>`:""}
+              ${score.activity.nextPenaltyDate?`<div class="score-warning">Prochaine baisse automatique le ${formatShortDate(score.activity.nextPenaltyDate)} si aucune nouvelle disponibilité n’est envoyée.</div>`:""}
+              ${score.expiringSoon?`<div class="driver-data-note">${score.expiringSoon} affectation confirmée sortira du calcul dans les 7 prochains jours.</div>`:""}
+            </div>
           </div>
 
           <div class="driver-actions">
@@ -1883,6 +2052,22 @@
         card.querySelector(".edit-driver").addEventListener("click",()=>openEditDriverForm(driver.id,driver));
         driverList.appendChild(card)
       })
+    }
+
+    async function loadAllManagerAvailabilities(){
+      const results=[];
+      const weeks=currentWeeks.slice();
+
+      await Promise.all(weeks.map(async week=>{
+        try{
+          const snapshot=await getDocs(collection(db,"weeks",week.id,"availabilities"));
+          snapshot.forEach(docSnap=>results.push({id:docSnap.id,...docSnap.data()}))
+        }catch(error){
+          console.error(`Disponibilités non chargées pour ${week.id}`,error)
+        }
+      }));
+
+      return results
     }
 
     function subscribeToDrivers(){
@@ -1898,9 +2083,10 @@
           });
 
           try{
-            const [privateSnapshot,assignmentSnapshot]=await Promise.all([
+            const [privateSnapshot,assignmentSnapshot,availabilityHistory]=await Promise.all([
               getDocs(collection(db,"driverPrivate")),
-              getDocs(collection(db,"driverAssignments"))
+              getDocs(collection(db,"driverAssignments")),
+              loadAllManagerAvailabilities()
             ]);
 
             currentDriverPrivateData=new Map();
@@ -1911,7 +2097,9 @@
             currentManagerAssignments=[];
             assignmentSnapshot.forEach(docSnap=>{
               currentManagerAssignments.push({id:docSnap.id,...docSnap.data()})
-            })
+            });
+
+            currentManagerAvailabilities=availabilityHistory
           }catch(error){
             console.error(error);
             showMessage(appMessage,`Certaines statistiques n’ont pas pu être chargées : ${error.code||error.message}`,"error")
@@ -3270,11 +3458,8 @@
         && time<=normalized.eveningLatest
     }
 
-    function confidentialScore(privateData){
-      const priority=Number(privateData?.priority||3);
-      const reliability=Number(privateData?.reliability||3);
-      const experience=Number(privateData?.experience||3);
-      return priority*3+reliability*2+experience
+    function confidentialScore(driverId,privateData,assignments=currentManagerAssignments,availabilities=currentManagerAvailabilities){
+      return driverScoreData(driverId,privateData,assignments,availabilities).total
     }
 
     function formatCountdown(milliseconds){
@@ -3447,7 +3632,12 @@
       });
 
       const drivers=[];
-      const userSnapshot=await getDocs(collection(db,"users"));
+      const [userSnapshot,assignmentSnapshot,availabilityHistory]=await Promise.all([
+        getDocs(collection(db,"users")),
+        getDocs(collection(db,"driverAssignments")),
+        loadAllManagerAvailabilities()
+      ]);
+      const assignmentHistory=assignmentSnapshot.docs.map(docSnap=>({id:docSnap.id,...docSnap.data()}));
 
       for(const userDocSnap of userSnapshot.docs){
         const profile=userDocSnap.data();
@@ -3469,10 +3659,9 @@
           email:profile.email||"",
           phone:profile.phone||"",
           vehicle:profile.vehicle||"",
-          score:confidentialScore(privateData),
+          score:confidentialScore(userDocSnap.id,privateData,assignmentHistory,availabilityHistory),
           priority:Number(privateData.priority||3),
-          reliability:Number(privateData.reliability||3),
-          experience:Number(privateData.experience||3)
+          effectivePriority:driverScoreData(userDocSnap.id,privateData,assignmentHistory,availabilityHistory).effectivePriority
         })
       }
 
@@ -3690,7 +3879,7 @@
                   <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}${driver.availabilityComment?` · ${escapeHtml(driver.availabilityComment)}`:""}</small>
                 </div>
                 <div>
-                  <span class="plan-score">Score ${driver.score}</span>
+                  <span class="plan-score">Score ${formatScore(driver.score)}</span>
                   ${currentPlan.status==="validated"
                     ? `<span class="confirmation-badge confirmation-${(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status)||"pending"}">${assignmentStatusLabel(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status||"pending")}</span>`
                     : ""}
@@ -3709,7 +3898,7 @@
                   <strong>${escapeHtml(driver.name)}</strong>
                   <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</small>
                 </div>
-                <span class="plan-score">Score ${driver.score}</span>
+                <span class="plan-score">Score ${formatScore(driver.score)}</span>
               </div>
             `).join("")
           : '<div class="empty-state">Aucun autre candidat.</div>';
@@ -4259,6 +4448,51 @@
       }
     });
 
+    document.getElementById("driverLegacyEnabled").addEventListener("change",event=>{document.getElementById("driverLegacyFields").classList.toggle("hidden",!event.target.checked)});
+
+    collaborationRequestType.addEventListener("change",()=>{
+      const isPause=collaborationRequestType.value==="pause";
+      document.querySelectorAll(".pause-field").forEach(el=>el.classList.toggle("hidden",!isPause));
+      document.querySelectorAll(".end-field").forEach(el=>el.classList.toggle("hidden",collaborationRequestType.value!=="end"));
+    });
+
+    function requestStatusLabel(status){return ({pending:"À traiter",approved:"Pause approuvée",rejected:"Refusée",rh_review:"Contrôle RH",end_confirmed:"Date de fin confirmée",closed:"Clôturée"})[status]||status}
+    function requestTypeLabel(type){return ({pause:"Pause temporaire",end:"Fin de collaboration",contact:"Contact RH"})[type]||type}
+    function renderCollaborationRequests(){
+      if(currentProfile?.role==="driver"){
+        const mine=currentCollaborationRequests.filter(r=>r.userId===auth.currentUser?.uid).sort((a,b)=>(timestampToDate(b.createdAt)||0)-(timestampToDate(a.createdAt)||0));
+        myCollaborationStatus.innerHTML=mine.length?mine.slice(0,3).map(r=>`<strong>${requestTypeLabel(r.type)}</strong> — ${requestStatusLabel(r.status)}${r.endDate?` · jusqu’au ${formatDate(r.endDate)}`:""}`).join("<br>"):"Aucune demande en cours.";
+        return
+      }
+      if(!collaborationRequestList)return;
+      const requests=currentCollaborationRequests.slice().sort((a,b)=>(timestampToDate(b.createdAt)||0)-(timestampToDate(a.createdAt)||0));
+      collaborationRequestList.innerHTML=requests.length?"":'<div class="empty-state">Aucune demande.</div>';
+      requests.forEach(r=>{
+        const card=document.createElement("article"); card.className="request-card";
+        card.innerHTML=`<div class="request-head"><div><strong>${escapeHtml(r.userName||r.userEmail||"Livreur")}</strong><p class="muted">${requestTypeLabel(r.type)} · ${escapeHtml(r.reason||"motif non précisé")}</p></div><span class="status-badge status-rh">${requestStatusLabel(r.status||"pending")}</span></div><p>${r.startDate?`Du ${formatDate(r.startDate)} `:""}${r.endDate?`au ${formatDate(r.endDate)}`:""}${r.desiredEndDate?`Date souhaitée : ${formatDate(r.desiredEndDate)}`:""}</p>${r.comment?`<p class="muted">${escapeHtml(r.comment)}</p>`:""}<div class="request-actions"></div>`;
+        const actions=card.querySelector(".request-actions");
+        if(r.type==="pause"&&r.status==="pending"){
+          const approve=document.createElement("button"); approve.className="button button-primary"; approve.textContent="Approuver la pause"; approve.onclick=()=>updateDoc(doc(db,"collaborationRequests",r.id),{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:auth.currentUser.uid}); actions.appendChild(approve)
+        }
+        if(["end","contact"].includes(r.type)&&!["end_confirmed","closed"].includes(r.status)){
+          const review=document.createElement("button"); review.className="button button-secondary"; review.textContent="Passer en contrôle RH"; review.onclick=()=>updateDoc(doc(db,"collaborationRequests",r.id),{status:"rh_review",reviewedAt:serverTimestamp(),reviewedBy:auth.currentUser.uid}); actions.appendChild(review)
+        }
+        const mail=document.createElement("button"); mail.className="button button-ghost"; mail.textContent="Préparer l’e-mail"; mail.onclick=()=>{const rh=localStorage.getItem("naraRhEmail")||prompt("Adresse e-mail RH à mettre en copie :","")||""; if(rh)localStorage.setItem("naraRhEmail",rh); const subject=encodeURIComponent(`Nara Pizza — ${requestTypeLabel(r.type)}`); const body=encodeURIComponent(`Bonjour ${r.userName||""},\n\nNous confirmons la réception de votre demande : ${requestTypeLabel(r.type)}.\nStatut : ${requestStatusLabel(r.status||"pending")}.\n\nCette communication ne fixe pas automatiquement la fin du contrat. Les RH confirmeront les modalités applicables.\n\nCordialement,\nNara Pizza`); location.href=`mailto:${encodeURIComponent(r.userEmail||"")}?cc=${encodeURIComponent(rh)}&subject=${subject}&body=${body}`}; actions.appendChild(mail);
+        collaborationRequestList.appendChild(card)
+      })
+    }
+    function subscribeToCollaborationRequests(user){
+      if(unsubscribeCollaborationRequests)unsubscribeCollaborationRequests();
+      const qref=currentProfile?.role==="driver"?query(collection(db,"collaborationRequests"),where("userId","==",user.uid)):collection(db,"collaborationRequests");
+      unsubscribeCollaborationRequests=onSnapshot(qref,snap=>{currentCollaborationRequests=snap.docs.map(d=>({id:d.id,...d.data()}));renderCollaborationRequests();renderDrivers()},error=>console.error("Demandes",error))
+    }
+    collaborationRequestForm.addEventListener("submit",async event=>{
+      event.preventDefault(); clearMessage(collaborationRequestMessage);
+      const type=collaborationRequestType.value; const startDate=document.getElementById("collaborationStartDate").value; const endDate=document.getElementById("collaborationEndDate").value;
+      if(type==="pause"&&(!startDate||!endDate||endDate<startDate)){showMessage(collaborationRequestMessage,"Indiquez une période de pause valide.","error");return}
+      try{await addDoc(collection(db,"collaborationRequests"),{userId:auth.currentUser.uid,userName:currentProfile.name||"",userEmail:currentProfile.email||auth.currentUser.email||"",type,reason:document.getElementById("collaborationReason").value,startDate:type==="pause"?startDate:"",endDate:type==="pause"?endDate:"",desiredEndDate:type==="end"?document.getElementById("collaborationDesiredEndDate").value:"",comment:document.getElementById("collaborationComment").value.trim(),status:"pending",createdAt:serverTimestamp()}); collaborationRequestForm.reset(); collaborationRequestType.dispatchEvent(new Event("change")); showMessage(collaborationRequestMessage,"Votre demande a été transmise.","success")}catch(error){showMessage(collaborationRequestMessage,`Impossible d’envoyer la demande : ${error.code||error.message}`,"error")}
+    });
+
     driverForm.addEventListener("submit",async event=>{
       event.preventDefault();
       clearMessage(driverFormMessage);
@@ -4278,6 +4512,12 @@
       const reliability=Number(document.getElementById("driverReliability").value);
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
+      const legacyEnabled=document.getElementById("driverLegacyEnabled").checked;
+      const legacyStartDate=document.getElementById("driverLegacyStart").value;
+      const legacyTenure=Number(document.getElementById("driverLegacyTenure").value);
+      const legacyFrequency=Number(document.getElementById("driverLegacyFrequency").value);
+      const legacyReliability=Number(document.getElementById("driverLegacyReliability").value);
+      const legacyFlexibility=Number(document.getElementById("driverLegacyFlexibility").value);
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -4308,7 +4548,7 @@
         }
 
         await setDoc(doc(db,"driverPrivate",userId),{
-          priority,reliability,experience,notes,
+          priority,reliability,experience,notes,legacyEnabled,legacyStartDate,legacyTenure,legacyFrequency,legacyReliability,legacyFlexibility,
           updatedAt:serverTimestamp(),
           updatedBy:auth.currentUser.uid
         },{merge:true});
@@ -4358,6 +4598,7 @@
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
         if(unsubscribeDriverWeeks){unsubscribeDriverWeeks();unsubscribeDriverWeeks=null}
         if(unsubscribeDriverAssignments){unsubscribeDriverAssignments();unsubscribeDriverAssignments=null}
+        if(unsubscribeCollaborationRequests){unsubscribeCollaborationRequests();unsubscribeCollaborationRequests=null}
         showLogin();
         return
       }
@@ -4366,9 +4607,11 @@
         const profile=await loadUserProfile(user);
 
         if(["admin","manager"].includes(profile.role)){
-          showApp(profile)
+          showApp(profile);
+          subscribeToCollaborationRequests(user)
         }else if(profile.role==="driver"){
-          showDriverApp(profile,user)
+          showDriverApp(profile,user);
+          subscribeToCollaborationRequests(user)
         }else{
           throw new Error("Rôle utilisateur non reconnu.")
         }
