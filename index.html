@@ -82,12 +82,173 @@
       .acceptance-card{align-items:flex-start;flex-direction:column}
     }
     @media(max-width:700px){
-      .topbar{align-items:flex-start}
-      .topbar-actions{gap:8px}
-      .install-help-button{font-size:0;padding:11px 13px}
+      html,body{max-width:100%;overflow-x:hidden}
+      .topbar{
+        position:sticky;
+        top:0;
+        display:grid;
+        grid-template-columns:1fr;
+        gap:10px;
+        align-items:start;
+        padding:10px 12px;
+      }
+      .topbar-brand{
+        width:100%;
+        min-width:0;
+        gap:10px;
+      }
+      .topbar-brand img{
+        width:58px;
+        flex:0 0 auto;
+      }
+      .topbar-title{
+        min-width:0;
+        flex:1;
+      }
+      .topbar-title strong{
+        font-size:18px;
+        line-height:1.15;
+        white-space:normal;
+      }
+      .topbar-title small{
+        max-width:100%;
+        font-size:13px;
+      }
+      .topbar-actions{
+        width:100%;
+        display:grid;
+        grid-template-columns:48px 48px 1fr;
+        gap:8px;
+        justify-content:stretch;
+      }
+      .topbar-actions .button{
+        position:static!important;
+        width:100%;
+        min-width:0;
+        min-height:46px;
+        padding:10px;
+      }
+      .topbar-actions .button-secondary{
+        font-size:16px;
+        white-space:nowrap;
+      }
+      .install-help-button,.regulation-help-button{
+        font-size:0;
+        padding:10px;
+      }
       .install-help-button::after{content:"📲";font-size:20px}
+      .regulation-help-button::after{content:"📘";font-size:20px}
       .install-grid{grid-template-columns:1fr}
-      .install-modal{padding:18px}
+      .install-modal{padding:16px}
+
+      .driver-main{
+        width:100%;
+        max-width:100%;
+        padding:16px 10px 36px;
+      }
+      .driver-week-card{
+        width:100%;
+        max-width:100%;
+        padding:12px;
+        overflow:hidden;
+      }
+      .availability-day,.service-availability{
+        min-width:0;
+        max-width:100%;
+      }
+      .service-availability-header{
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:6px 10px;
+        align-items:start;
+      }
+      .service-availability-header strong{
+        min-width:0;
+        font-size:18px;
+        line-height:1.2;
+      }
+      .service-availability-header small{
+        grid-column:1;
+        min-width:0;
+        font-size:13px;
+        line-height:1.3;
+      }
+      .service-availability-header .availability-state{
+        grid-column:2;
+        grid-row:1 / span 2;
+        align-self:start;
+      }
+      .availability-grid{
+        grid-template-columns:1fr;
+      }
+      .availability-grid input,
+      .day-comment{
+        width:100%;
+        min-width:0;
+        max-width:100%;
+      }
+
+      .regulation-overlay{
+        align-items:flex-end;
+        padding:8px;
+        overflow:hidden;
+      }
+      .regulation-modal{
+        width:100%;
+        max-width:calc(100vw - 16px);
+        max-height:92dvh;
+        min-width:0;
+        padding:16px;
+        border-radius:18px 18px 0 0;
+        overflow-x:hidden;
+        overflow-y:auto;
+      }
+      .regulation-modal-header{
+        top:-16px;
+        margin-left:0;
+        margin-right:0;
+        padding-top:16px;
+      }
+      .regulation-modal h2{
+        font-size:27px;
+        line-height:1.15;
+        overflow-wrap:anywhere;
+      }
+      .regulation-modal h3{
+        font-size:20px;
+        line-height:1.25;
+        overflow-wrap:anywhere;
+      }
+      .regulation-modal p,
+      .regulation-modal li{
+        font-size:16px;
+        line-height:1.5;
+        overflow-wrap:anywhere;
+        word-break:normal;
+      }
+      .regulation-modal-close{
+        flex:0 0 40px;
+      }
+      .quick-procedure-grid{grid-template-columns:1fr}
+    }
+
+    @media(max-width:380px){
+      .topbar-actions{
+        grid-template-columns:44px 44px 1fr;
+      }
+      .topbar-actions .button-secondary{
+        font-size:14px;
+        padding:8px;
+      }
+      .topbar-brand img{width:52px}
+      .topbar-title strong{font-size:16px}
+      .regulation-modal h2{font-size:24px}
+      .availability-day-header{
+        align-items:flex-start;
+      }
+      .availability-day-header h3{
+        font-size:17px;
+      }
     }
     .layout{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 48px}.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}
     .profile-card{background:var(--soft);border-radius:14px;padding:14px 16px;min-width:230px}.profile-card p{margin-bottom:4px}.profile-card small{color:var(--muted)}
