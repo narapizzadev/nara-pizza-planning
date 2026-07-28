@@ -2942,7 +2942,7 @@
             <div class="availability-details">
               <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service de midi</strong><small class="muted">Arrivée au plus tard 12:00</small>
+                  <strong>Service de midi</strong>
                   <label class="availability-state">
                     <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -2954,7 +2954,7 @@
                     <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
                   </div>
                   <div class="field">
-                    <label>Début au plus tard</label>
+                    <label>Je peux commencer au plus tard à</label>
                     <input class="midday-latest" type="time" value="${day.middayLatest||"12:00"}" max="12:00">
                   </div>
                 </div>
@@ -2962,7 +2962,7 @@
 
               <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service du soir</strong><small class="muted">Arrivée au plus tard 19:00</small>
+                  <strong>Service du soir</strong>
                   <label class="availability-state">
                     <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -2974,7 +2974,7 @@
                     <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
                   </div>
                   <div class="field">
-                    <label>Début au plus tard</label>
+                    <label>Je peux commencer au plus tard à</label>
                     <input class="evening-latest" type="time" value="${day.eveningLatest||"19:00"}" max="19:00">
                   </div>
                 </div>
