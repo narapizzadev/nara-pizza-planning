@@ -17,6 +17,13 @@
     input,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white);color:var(--text)}
     textarea{min-height:96px;resize:vertical}input:focus,textarea:focus{outline:3px solid rgba(242,140,69,.2);border-color:var(--orange)}
     .checkbox-row{display:flex;gap:10px;align-items:flex-start;margin:8px 0 18px}.checkbox-row input{width:auto;margin-top:3px}
+    .delivery-methods-box{margin:16px 0;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
+    .delivery-methods-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .delivery-method-option{display:flex;gap:9px;align-items:center;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font-weight:700}
+    .delivery-method-option input{width:auto;margin:0}
+    .delivery-method-summary{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .delivery-method-chip{display:inline-flex;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700}
+    @media(max-width:600px){.delivery-methods-grid{grid-template-columns:1fr}}
     .button{border:none;border-radius:10px;padding:13px 16px;font-weight:700}.button-primary{background:var(--orange);color:#fff}.button-primary:hover{background:var(--orange-dark)}
     .button-secondary{background:#fff;color:var(--orange-dark);border:1px solid var(--orange)}.button-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
     .button:disabled{opacity:.6;cursor:wait}.button-full{width:100%}.message{display:none;margin-top:16px;padding:12px 14px;border-radius:10px;line-height:1.4}
@@ -127,6 +134,152 @@
     .missing-driver-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .missing-driver-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#fff1f0;color:var(--error);font-weight:700;text-decoration:none}
     @media(max-width:760px){.deadline-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+    /* Ajustements généraux pour smartphones et petits écrans */
+    @media(max-width:768px){
+      body{overflow-x:hidden}
+      .topbar{
+        position:sticky;
+        padding:10px 12px;
+        gap:10px;
+        align-items:center;
+      }
+      .topbar-brand{gap:9px;flex:1;min-width:0}
+      .topbar-brand img{width:62px;flex:0 0 auto}
+      .topbar-title strong{font-size:18px;line-height:1.15}
+      .topbar-title small{font-size:14px;max-width:38vw}
+      .topbar-actions{
+        flex:0 0 auto;
+        display:grid;
+        grid-template-columns:48px;
+        gap:7px;
+      }
+      .topbar-actions .button{
+        padding:10px 9px;
+        min-height:46px;
+      }
+      .topbar-actions .button-secondary{
+        position:absolute;
+        right:12px;
+        top:74px;
+        z-index:21;
+        padding:11px 14px;
+        min-height:48px;
+        background:#fff;
+      }
+      .driver-main{
+        width:100%;
+        padding:92px 10px 36px;
+      }
+      .driver-hero{
+        display:block;
+        margin-bottom:14px;
+      }
+      .driver-hero .profile-card{
+        min-width:0;
+        margin-top:12px;
+      }
+      .driver-week-card{
+        border-radius:14px;
+        padding:12px;
+      }
+      .availability-day{
+        padding:11px;
+        border-radius:12px;
+      }
+      .availability-day-header{
+        align-items:flex-start;
+        gap:8px;
+      }
+      .availability-day-header h3{
+        font-size:18px;
+        line-height:1.25;
+      }
+      .service-availability{
+        padding:11px;
+      }
+      .service-availability-header{
+        align-items:flex-start;
+        gap:8px;
+      }
+      .service-availability-header strong{
+        font-size:17px;
+        line-height:1.2;
+      }
+      .availability-state{
+        flex:0 0 auto;
+        gap:6px;
+      }
+      .availability-state input{
+        width:25px;
+        height:25px;
+      }
+      .availability-grid{
+        grid-template-columns:1fr;
+        gap:10px;
+      }
+      .availability-grid .field{
+        min-width:0;
+        margin-bottom:0;
+      }
+      .availability-grid input{
+        width:100%;
+        max-width:100%;
+        min-width:0;
+        padding:12px;
+      }
+      .service-fields{
+        width:100%;
+      }
+      .form-actions{
+        justify-content:stretch;
+      }
+      .form-actions .button{
+        width:100%;
+      }
+      .driver-week-tabs{
+        margin-left:-2px;
+        margin-right:-2px;
+      }
+    }
+
+    @supports(padding:max(0px)){
+      @media(max-width:768px){
+        .topbar{
+          padding-left:max(12px,env(safe-area-inset-left));
+          padding-right:max(12px,env(safe-area-inset-right));
+        }
+        .driver-main{
+          padding-left:max(10px,env(safe-area-inset-left));
+          padding-right:max(10px,env(safe-area-inset-right));
+        }
+      }
+    }
+
+    @media(max-width:430px){
+      .topbar-brand img{width:54px}
+      .topbar-title strong{font-size:16px}
+      .topbar-title small{font-size:12px;max-width:34vw}
+      .topbar-actions{grid-template-columns:44px}
+      .topbar-actions .button{min-height:42px;padding:8px}
+      .topbar-actions .button-secondary{
+        top:68px;
+        right:10px;
+        min-height:44px;
+        padding:10px 12px;
+        font-size:15px;
+      }
+      .driver-main{padding-top:86px}
+      .driver-week-card{padding:10px}
+      .availability-day{padding:9px}
+      .service-availability{padding:9px}
+      .availability-day-header h3{font-size:16px}
+      .service-availability-header strong{font-size:16px}
+      .availability-state span{font-size:14px}
+      .availability-state input{width:23px;height:23px}
+      .availability-grid input{padding:10px;font-size:16px}
+      .button{font-size:15px}
+    }
     .availability-admin-grid{display:grid;gap:12px}
     .availability-admin-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
     .availability-admin-card h3{margin-bottom:8px}
@@ -297,6 +450,19 @@
               <div class="field"><label for="deadlineTime">Heure limite</label><input id="deadlineTime" type="time" value="18:00" required></div>
             </div>
             <div class="field" style="margin-top:16px"><label for="weekMessage">Message aux livreurs</label><textarea id="weekMessage" placeholder="Merci d’indiquer vos disponibilités avant la date limite."></textarea></div>
+
+            <section class="delivery-methods-box">
+              <h3>Moyens de livraison autorisés cette semaine</h3>
+              <p class="muted">Le livreur choisira ensuite ceux qu’il peut réellement utiliser pendant cette semaine.</p>
+              <div id="weekDeliveryMethods" class="delivery-methods-grid">
+                <label class="delivery-method-option"><input type="checkbox" value="company_car" checked>🚗 Voiture pizzeria</label>
+                <label class="delivery-method-option"><input type="checkbox" value="personal_car" checked>🚙 Voiture personnelle</label>
+                <label class="delivery-method-option"><input type="checkbox" value="company_scooter" checked>🛵 Scooter pizzeria</label>
+                <label class="delivery-method-option"><input type="checkbox" value="personal_motorcycle" checked>🏍️ Moto personnelle</label>
+                <label class="delivery-method-option"><input type="checkbox" value="personal_bicycle" checked>🚲 Vélo personnel</label>
+              </div>
+            </section>
+
             <label class="checkbox-row"><input id="openImmediately" type="checkbox" checked><span>Ouvrir immédiatement cette semaine aux livreurs. Sinon, elle restera en brouillon.</span></label>
             <div class="form-actions"><button class="button button-ghost backToDashboard" type="button">Annuler</button><button id="saveWeekButton" class="button button-primary" type="submit">Enregistrer la semaine</button></div>
           </form>
@@ -799,6 +965,7 @@
     const deadlineTime = document.getElementById("deadlineTime");
     const weekMessage = document.getElementById("weekMessage");
     const openImmediately = document.getElementById("openImmediately");
+    const weekDeliveryMethods = document.getElementById("weekDeliveryMethods");
     const weekList = document.getElementById("weekList");
 
     const driverList = document.getElementById("driverList");
@@ -876,6 +1043,24 @@
     let currentDriverWeekId = "";
     let currentPlan = null;
     let currentAssignmentStatuses = new Map();
+
+    const DELIVERY_METHODS=[
+      {id:"company_car",label:"Voiture pizzeria",icon:"🚗"},
+      {id:"personal_car",label:"Voiture personnelle",icon:"🚙"},
+      {id:"company_scooter",label:"Scooter pizzeria",icon:"🛵"},
+      {id:"personal_motorcycle",label:"Moto personnelle",icon:"🏍️"},
+      {id:"personal_bicycle",label:"Vélo personnel",icon:"🚲"}
+    ];
+
+    function deliveryMethodLabel(id){
+      const method=DELIVERY_METHODS.find(item=>item.id===id);
+      return method?`${method.icon} ${method.label}`:id
+    }
+
+    function selectedWeekDeliveryMethods(){
+      return [...weekDeliveryMethods.querySelectorAll('input[type="checkbox"]:checked')]
+        .map(input=>input.value)
+    }
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
@@ -1636,10 +1821,10 @@
         date:day?.date||"",
         middayAvailable:day?.middayAvailable===true||legacyMidday,
         middayEarliest:day?.middayEarliest||(legacyMidday?legacyEarliest:"11:30"),
-        middayLatest:day?.middayLatest||(legacyMidday?legacyLatest:"14:00"),
+        middayLatest:day?.middayLatest||(legacyMidday?legacyLatest:"12:00"),
         eveningAvailable:day?.eveningAvailable===true||(legacyAvailable&&!legacyMidday),
         eveningEarliest:day?.eveningEarliest||(!legacyMidday&&legacyAvailable?legacyEarliest:"17:30"),
-        eveningLatest:day?.eveningLatest||(!legacyMidday&&legacyAvailable?legacyLatest:"20:00"),
+        eveningLatest:day?.eveningLatest||(!legacyMidday&&legacyAvailable?legacyLatest:"19:00"),
         comment:day?.comment||""
       }
     }
@@ -1671,6 +1856,22 @@
           </div>
         `:`
           <form class="availability-form" data-week-id="${week.id}">
+            <section class="delivery-methods-box">
+              <h3>Mes moyens de livraison cette semaine</h3>
+              <p class="muted">Cochez uniquement les moyens que vous pourrez réellement utiliser.</p>
+              <div class="delivery-methods-grid driver-delivery-methods">
+                ${(week.deliveryMethods||DELIVERY_METHODS.map(item=>item.id)).map(methodId=>{
+                  const selected=(existingData?.deliveryMethods||[]).includes(methodId);
+                  return `
+                    <label class="delivery-method-option">
+                      <input type="checkbox" value="${methodId}" ${selected?"checked":""}>
+                      ${escapeHtml(deliveryMethodLabel(methodId))}
+                    </label>
+                  `
+                }).join("")}
+              </div>
+            </section>
+
             <div class="availability-days"></div>
             <div class="form-actions">
               <button class="button button-primary save-availability" type="submit">
@@ -1701,7 +1902,7 @@
             <div class="availability-details">
               <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service de midi</strong>
+                  <strong>Service de midi</strong><small class="muted">Arrivée au plus tard 12:00</small>
                   <label class="availability-state">
                     <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -1710,18 +1911,18 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}">
+                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
                   </div>
                   <div class="field">
                     <label>Début au plus tard</label>
-                    <input class="midday-latest" type="time" value="${day.middayLatest||"14:00"}">
+                    <input class="midday-latest" type="time" value="${day.middayLatest||"12:00"}" max="12:00">
                   </div>
                 </div>
               </section>
 
               <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
                 <div class="service-availability-header">
-                  <strong>Service du soir</strong>
+                  <strong>Service du soir</strong><small class="muted">Arrivée au plus tard 19:00</small>
                   <label class="availability-state">
                     <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
                     <span>Disponible</span>
@@ -1730,11 +1931,11 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}">
+                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
                   </div>
                   <div class="field">
                     <label>Début au plus tard</label>
-                    <input class="evening-latest" type="time" value="${day.eveningLatest||"20:00"}">
+                    <input class="evening-latest" type="time" value="${day.eveningLatest||"19:00"}" max="19:00">
                   </div>
                 </div>
               </section>
@@ -1772,6 +1973,9 @@
           const button=form.querySelector(".save-availability");
           clearMessage(messageEl);
 
+          const deliveryMethods=[...form.querySelectorAll(".driver-delivery-methods input:checked")]
+            .map(input=>input.value);
+
           const days=[...form.querySelectorAll(".availability-day")].map(card=>{
             const middayAvailable=card.querySelector(".midday-available").checked;
             const eveningAvailable=card.querySelector(".evening-available").checked;
@@ -1790,6 +1994,41 @@
             }
           });
 
+          const hasAvailability=days.some(day=>day.middayAvailable||day.eveningAvailable);
+
+          if(hasAvailability&&deliveryMethods.length===0){
+            showMessage(
+              messageEl,
+              "Sélectionnez au moins un moyen de livraison disponible pour cette semaine.",
+              "error"
+            );
+            return
+          }
+
+          const invalidDay=days.find(day=>
+            (day.middayAvailable && (
+              !day.middayEarliest
+              || !day.middayLatest
+              || day.middayEarliest>day.middayLatest
+              || day.middayLatest>"12:00"
+            ))
+            || (day.eveningAvailable && (
+              !day.eveningEarliest
+              || !day.eveningLatest
+              || day.eveningEarliest>day.eveningLatest
+              || day.eveningLatest>"19:00"
+            ))
+          );
+
+          if(invalidDay){
+            showMessage(
+              messageEl,
+              "Vérifiez les horaires : arrivée au plus tard à 12:00 pour midi et à 19:00 pour le soir.",
+              "error"
+            );
+            return
+          }
+
           button.disabled=true;
           button.textContent="Enregistrement…";
 
@@ -1802,6 +2041,7 @@
                 userId:user.uid,
                 driverName:currentProfile.name||"",
                 driverEmail:currentProfile.email||user.email||"",
+                deliveryMethods,
                 days,
                 submittedAt:serverTimestamp(),
                 updatedAt:serverTimestamp()
@@ -2198,7 +2438,10 @@
               userId:driver.userId,
               driverName:driver.name||"",
               driverEmail:driver.email||"",
-              vehicleRequirement:slot.notes||"",
+              deliveryMethods:driver.weeklyDeliveryMethods||[],
+              vehicleRequirement:(driver.weeklyDeliveryMethods||[]).length
+                ? driver.weeklyDeliveryMethods.map(deliveryMethodLabel).join(", ")
+                : (slot.notes||""),
               status:existingData?.status||"pending",
               active:true,
               assignedAt:existingData?.assignedAt||serverTimestamp(),
@@ -2447,6 +2690,11 @@
           card.innerHTML=`
             <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
             <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
+            <div class="delivery-method-summary">
+              ${(response.deliveryMethods||[]).length
+                ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
+                : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
+            </div>
             <div class="availability-admin-days">
               ${days.map(day=>`
                 <div class="availability-admin-day">
@@ -2542,15 +2790,25 @@
             const alreadyWorksThisDate=workedDates.has(need.date);
             const respectsSixDayLimit=alreadyWorksThisDate||workedDates.size<6;
 
+            const weeklyDeliveryMethods=Array.isArray(availability?.deliveryMethods)
+              ? availability.deliveryMethods
+              : (driver.vehicle?[driver.vehicle]:[]);
+
             return {
               ...driver,
+              weeklyDeliveryMethods,
+              vehicle:weeklyDeliveryMethods.length
+                ? weeklyDeliveryMethods.map(deliveryMethodLabel).join(", ")
+                : (driver.vehicle||""),
               fits:timeFits(day,need.time),
+              hasDeliveryMethod:weeklyDeliveryMethods.length>0,
               respectsSixDayLimit,
               availabilityComment:day?.comment||""
             }
           })
           .filter(candidate=>
             candidate.fits
+            && candidate.hasDeliveryMethod
             && candidate.respectsSixDayLimit
             && !usedForService.has(candidate.userId)
           )
@@ -3139,13 +3397,23 @@
           throw new Error("Cette semaine existe déjà. Supprimez ou utilisez la semaine déjà créée.")
         }
 
+        const deliveryMethods=selectedWeekDeliveryMethods();
+
+        if(deliveryMethods.length===0){
+          throw new Error("Sélectionnez au moins un moyen de livraison autorisé pour cette semaine.")
+        }
+
         await addDoc(collection(db,"weeks"),{
           startDate:weekStart.value,endDate:weekEnd.value,deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
-          message:weekMessage.value.trim(),status:openImmediately.checked?"open":"draft",
+          message:weekMessage.value.trim(),deliveryMethods,status:openImmediately.checked?"open":"draft",
           createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,createdByName:currentProfile.name||""
         });
         showMessage(weekFormMessage,"La semaine a été enregistrée avec succès.","success");
-        weekForm.reset();deadlineTime.value="18:00";openImmediately.checked=true;prepareWeekForm();
+        weekForm.reset();
+        deadlineTime.value="18:00";
+        openImmediately.checked=true;
+        weekDeliveryMethods.querySelectorAll('input[type="checkbox"]').forEach(input=>input.checked=true);
+        prepareWeekForm();
         setTimeout(()=>showSection("dashboard"),900)
       }catch(error){console.error(error);showMessage(weekFormMessage,`Impossible d’enregistrer la semaine : ${error.code||error.message}`,"error")}
       finally{saveWeekButton.disabled=false;saveWeekButton.textContent="Enregistrer la semaine"}
