@@ -121,27 +121,29 @@
       .topbar-actions{
         width:100%;
         display:grid;
-        grid-template-columns:1fr;
-        gap:8px;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:7px;
       }
       .topbar-actions .button{
         position:static!important;
         width:100%;
         min-width:0;
-        min-height:44px;
-        padding:10px 12px;
+        min-height:42px;
+        padding:9px 6px;
         border-radius:10px;
-        font-size:14px;
-        line-height:1.2;
-        white-space:normal;
+        font-size:13px;
+        line-height:1.15;
+        white-space:nowrap;
         text-align:center;
+        overflow:hidden;
+        text-overflow:ellipsis;
       }
       .topbar-actions .button-secondary{
-        font-size:15px;
+        font-size:13px;
         white-space:nowrap;
       }
       .install-help-button,.regulation-help-button{
-        font-size:14px;
+        font-size:13px;
       }
       .install-help-button::after,
       .regulation-help-button::after{
@@ -243,15 +245,16 @@
 
     @media(max-width:380px){
       .topbar-actions{
-        grid-template-columns:1fr;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
       }
       .topbar-actions .button{
-        font-size:13px;
-        padding:9px 8px;
+        font-size:12px;
+        padding:8px 4px;
       }
       .topbar-actions .button-secondary{
-        font-size:14px;
-        padding:10px;
+        font-size:12px;
+        padding:8px 4px;
       }
       .topbar-brand img{width:52px}
       .topbar-title strong{font-size:16px}
@@ -596,7 +599,102 @@
     .confirmation-confirmed{background:#ecfdf3;color:var(--success)}
     .confirmation-refused{background:#fff1f0;color:var(--error)}
 
-  </style>
+  
+    /* Correctif final de l’en-tête mobile */
+    @media (max-width: 768px){
+      #driverView .topbar,
+      #appView .topbar{
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:stretch!important;
+        justify-content:flex-start!important;
+        gap:12px!important;
+        width:100%!important;
+        max-width:100%!important;
+        padding:12px!important;
+        box-sizing:border-box!important;
+        overflow:hidden!important;
+      }
+
+      #driverView .topbar-brand,
+      #appView .topbar-brand{
+        width:100%!important;
+        max-width:100%!important;
+        display:flex!important;
+        align-items:center!important;
+        gap:10px!important;
+        min-width:0!important;
+      }
+
+      #driverView .topbar-actions,
+      #appView .topbar-actions{
+        width:100%!important;
+        max-width:100%!important;
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:8px!important;
+        justify-content:stretch!important;
+        align-items:stretch!important;
+        position:static!important;
+        overflow:visible!important;
+        box-sizing:border-box!important;
+      }
+
+      #driverView .topbar-actions .button,
+      #appView .topbar-actions .button{
+        position:static!important;
+        inset:auto!important;
+        float:none!important;
+        display:flex!important;
+        align-items:center!important;
+        justify-content:center!important;
+        width:100%!important;
+        max-width:100%!important;
+        min-width:0!important;
+        min-height:44px!important;
+        margin:0!important;
+        padding:9px 6px!important;
+        box-sizing:border-box!important;
+        border-radius:10px!important;
+        font-size:13px!important;
+        line-height:1.15!important;
+        white-space:nowrap!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+        text-align:center!important;
+      }
+
+      #driverView .topbar-title strong,
+      #appView .topbar-title strong{
+        font-size:18px!important;
+        line-height:1.15!important;
+      }
+
+      #driverView .topbar-title small,
+      #appView .topbar-title small{
+        max-width:100%!important;
+        font-size:13px!important;
+      }
+
+      #driverView .topbar-brand img,
+      #appView .topbar-brand img{
+        width:58px!important;
+        flex:0 0 auto!important;
+      }
+    }
+
+    @media (max-width: 380px){
+      #driverView .topbar-actions,
+      #appView .topbar-actions{
+        grid-template-columns:1fr!important;
+      }
+
+      #driverView .topbar-actions .button,
+      #appView .topbar-actions .button{
+        font-size:14px!important;
+      }
+    }
+</style>
 </head>
 <body>
   <section id="loginView" class="auth-shell">
@@ -623,8 +721,8 @@
         <div class="topbar-title"><strong>Nara Pizza Planning</strong><small id="topbarUser">—</small></div>
       </div>
       <div class="topbar-actions">
-        <button class="button button-ghost install-help-button" type="button">Ajouter l’app à l’écran</button>
-        <button id="logoutButton" class="button button-secondary" type="button">Se déconnecter</button>
+        <button class="button button-ghost install-help-button" type="button">Installer</button>
+        <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
       </div>
     </header>
 
@@ -1045,10 +1143,10 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">Aide & règlement</button>
-        <button class="button button-ghost install-help-button" type="button">Ajouter l’app à l’écran</button>
+        <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">Règl. & aide</button>
+        <button class="button button-ghost install-help-button" type="button">Installer</button>
         <button id="driverLogoutButton" class="button button-secondary" type="button">
-          Se déconnecter
+          Sortir
         </button>
       </div>
     </header>
