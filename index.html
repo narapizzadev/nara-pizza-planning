@@ -2925,6 +2925,7 @@
               </div>
             </section>
 
+            <p class="muted" style="margin-top:12px">Vous pouvez modifier vos horaires autant de fois que nécessaire jusqu’à la date limite.</p>
             <div class="availability-days"></div>
             <div class="form-actions">
               <button class="button button-primary save-availability" type="submit">
@@ -2966,7 +2967,7 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
+                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}">
                   </div>
                 </div>
               </section>
@@ -2984,7 +2985,7 @@
                 <div class="availability-grid service-fields">
                   <div class="field">
                     <label>Début au plus tôt</label>
-                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
+                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}">
                   </div>
                 </div>
               </section>
@@ -3012,24 +3013,23 @@
           const middayEarliestInput=card.querySelector(".midday-earliest");
           const eveningEarliestInput=card.querySelector(".evening-earliest");
 
-          function validateServiceStart(input,limit,serviceLabel){
-            const value=input.value;
-            if(value && value>limit){
-              input.setCustomValidity(`Pour le ${serviceLabel}, l’heure de début au plus tôt doit être fixée au plus tard à ${limit}.`)
-            }else{
-              input.setCustomValidity("")
-            }
+          function clearServiceValidation(input){
+            input.setCustomValidity("");
+            input.closest(".service-availability")?.classList.remove("validation-target");
           }
 
-          middayCheckbox.addEventListener("change",updateAvailabilityCard);
-          eveningCheckbox.addEventListener("change",updateAvailabilityCard);
-          middayEarliestInput.addEventListener("input",()=>validateServiceStart(middayEarliestInput,"12:00","service de midi"));
-          eveningEarliestInput.addEventListener("input",()=>validateServiceStart(eveningEarliestInput,"19:00","service du soir"));
-          middayEarliestInput.addEventListener("change",()=>validateServiceStart(middayEarliestInput,"12:00","service de midi"));
-          eveningEarliestInput.addEventListener("change",()=>validateServiceStart(eveningEarliestInput,"19:00","service du soir"));
-
-          validateServiceStart(middayEarliestInput,"12:00","service de midi");
-          validateServiceStart(eveningEarliestInput,"19:00","service du soir");
+          middayCheckbox.addEventListener("change",()=>{
+            updateAvailabilityCard();
+            clearServiceValidation(middayEarliestInput);
+          });
+          eveningCheckbox.addEventListener("change",()=>{
+            updateAvailabilityCard();
+            clearServiceValidation(eveningEarliestInput);
+          });
+          middayEarliestInput.addEventListener("input",()=>clearServiceValidation(middayEarliestInput));
+          eveningEarliestInput.addEventListener("input",()=>clearServiceValidation(eveningEarliestInput));
+          middayEarliestInput.addEventListener("change",()=>clearServiceValidation(middayEarliestInput));
+          eveningEarliestInput.addEventListener("change",()=>clearServiceValidation(eveningEarliestInput));
 
           daysContainer.appendChild(card)
         });
@@ -3049,9 +3049,6 @@
             (section||input).scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"});
             window.setTimeout(()=>{
               input.focus({preventScroll:true});
-              if(typeof input.showPicker==="function"){
-                try{input.showPicker()}catch(error){}
-              }
             },450);
           });
 
