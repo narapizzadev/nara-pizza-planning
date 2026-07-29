@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f28c45">
   <title>Nara Pizza Planning</title>
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Nara Pizza">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="description" content="Planning et disponibilités des livreurs Nara Pizza.">
   <style>
     :root{--orange:#f28c45;--orange-dark:#d96f25;--text:#252525;--muted:#6f6f6f;--bg:#f5f5f5;--white:#fff;--border:#dedede;--soft:#fff7f0;--error:#b42318;--success:#18794e}
     *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
@@ -705,6 +714,206 @@
         font-size:14px!important;
       }
     }
+    /* ====================================================================
+       ESPACE LIVREUR — interface mobile
+       Bloc autonome, prefixe .dv- : ne modifie aucun style du manager.
+       ==================================================================== */
+    .dv-shell{
+      --dv-bg:#f4f4f6;--dv-card:#fff;--dv-sunk:#f0f0f3;
+      --dv-text:#16161a;--dv-muted:#6c6c76;--dv-line:#e5e5ea;
+      --dv-brand:#f28c45;--dv-brand-ink:#8a4a13;--dv-brand-soft:#fff1e4;--dv-brand-line:#f6d2b2;
+      --dv-warn-ink:#8a5a00;--dv-warn-soft:#fff6e2;--dv-warn-line:#f0d9a4;
+      --dv-ok-ink:#0f6b4a;--dv-ok-soft:#e8f7f0;--dv-ok-line:#b4e2cd;
+      --dv-bad-ink:#a12626;--dv-bad-soft:#fdeded;--dv-bad-line:#f1c5c5;
+      min-height:100vh;background:var(--dv-bg);color:var(--dv-text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));
+    }
+    @media(prefers-color-scheme:dark){
+      .dv-shell{
+        --dv-bg:#0f0f11;--dv-card:#1a1a1f;--dv-sunk:#232329;
+        --dv-text:#f2f2f5;--dv-muted:#9a9aa4;--dv-line:#2e2e36;
+        --dv-brand-ink:#f6b57c;--dv-brand-soft:#38240f;--dv-brand-line:#573818;
+        --dv-warn-ink:#f2c069;--dv-warn-soft:#36280c;--dv-warn-line:#523e19;
+        --dv-ok-ink:#6fd6ac;--dv-ok-soft:#0e2c22;--dv-ok-line:#1c4938;
+        --dv-bad-ink:#f09b9b;--dv-bad-soft:#341919;--dv-bad-line:#532929;
+      }
+    }
+    .dv-shell *{box-sizing:border-box}
+    .dv-shell h1,.dv-shell h2,.dv-shell h3,.dv-shell p{margin:0}
+
+    .dv-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;
+      padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;
+      background:var(--dv-card);border-bottom:1px solid var(--dv-line)}
+    .dv-mark{width:38px;height:38px;border-radius:11px;background:var(--dv-brand-soft);
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;overflow:hidden}
+    .dv-mark img{width:34px;height:auto;display:block}
+    .dv-who{flex:1;min-width:0}
+    .dv-who strong{display:block;font-size:15px;font-weight:600;line-height:1.25;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dv-who small{display:block;font-size:12px;color:var(--dv-muted);margin-top:1px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dv-iconbtn{width:40px;height:40px;flex:0 0 auto;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-text);border-radius:12px;
+      display:flex;align-items:center;justify-content:center;padding:0}
+    .dv-iconbtn:active{background:var(--dv-sunk)}
+    .dv-iconbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;
+      stroke-linecap:round;stroke-linejoin:round}
+
+    .dv-body{width:min(620px,100%);margin:0 auto;padding:16px 14px 8px}
+    .dv-panel{display:none}
+    .dv-panel.is-active{display:block}
+    .dv-secthead{margin:22px 2px 10px}
+    .dv-secthead:first-child{margin-top:4px}
+    .dv-secthead h2{font-size:19px;font-weight:600;letter-spacing:-.01em}
+    .dv-secthead h3{font-size:16px;font-weight:600}
+    .dv-sub{font-size:13px;color:var(--dv-muted);margin-top:3px;line-height:1.45}
+
+    /* Carte d'action prioritaire */
+    .dv-action{display:flex;align-items:flex-start;gap:12px;padding:15px;
+      border-radius:16px;border:1px solid var(--dv-line);background:var(--dv-card)}
+    .dv-action svg{width:22px;height:22px;flex:0 0 auto;margin-top:1px;
+      stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .dv-action-body{min-width:0;flex:1}
+    .dv-action strong{display:block;font-size:16px;font-weight:600;line-height:1.3}
+    .dv-action span{display:block;font-size:13px;margin-top:3px;line-height:1.45;opacity:.85}
+    .dv-action.is-todo{background:var(--dv-warn-soft);border-color:var(--dv-warn-line);color:var(--dv-warn-ink)}
+    .dv-action.is-send{background:var(--dv-brand-soft);border-color:var(--dv-brand-line);color:var(--dv-brand-ink)}
+    .dv-action.is-ok{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);color:var(--dv-ok-ink)}
+    .dv-action.is-idle{color:var(--dv-muted)}
+    .dv-action-link{margin-top:10px;font-size:13px;font-weight:600;text-decoration:underline;
+      background:none;border:none;padding:0;color:inherit;display:block}
+
+    /* Selecteur de semaine */
+    .dv-weekpills{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;
+      scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .dv-weekpills::-webkit-scrollbar{display:none}
+    .dv-pill{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
+      padding:9px 14px;border-radius:999px;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-muted);font-size:13px;font-weight:500;white-space:nowrap}
+    .dv-pill.is-active{background:var(--dv-text);border-color:var(--dv-text);color:var(--dv-bg);font-weight:600}
+    .dv-pill-dot,.dv-navdot{font-style:normal}
+    .dv-pill-dot{min-width:19px;height:19px;padding:0 5px;border-radius:999px;
+      background:var(--dv-brand);color:#fff;font-size:11px;font-weight:700;
+      display:inline-flex;align-items:center;justify-content:center}
+
+    /* Creneaux */
+    .dv-daylabel{font-size:12px;font-weight:600;color:var(--dv-muted);
+      text-transform:uppercase;letter-spacing:.05em;margin:18px 2px 8px}
+    .dv-daylabel.is-today{color:var(--dv-brand-ink)}
+    .dv-slot{background:var(--dv-card);border:1px solid var(--dv-line);
+      border-radius:16px;padding:14px;margin-bottom:10px}
+    .dv-slot.is-pending{border-color:var(--dv-warn-line)}
+    .dv-slot-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .dv-slot-time{font-size:26px;font-weight:600;line-height:1;letter-spacing:-.02em}
+    .dv-slot-service{font-size:13px;color:var(--dv-muted);margin-top:5px}
+    .dv-badge{flex:0 0 auto;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;
+      background:var(--dv-sunk);color:var(--dv-muted);white-space:nowrap}
+    .dv-badge.is-pending{background:var(--dv-warn-soft);color:var(--dv-warn-ink)}
+    .dv-badge.is-ok{background:var(--dv-ok-soft);color:var(--dv-ok-ink)}
+    .dv-badge.is-bad{background:var(--dv-bad-soft);color:var(--dv-bad-ink)}
+    .dv-slot-meta{display:flex;align-items:center;gap:7px;font-size:13px;
+      color:var(--dv-muted);margin-top:11px;line-height:1.4}
+    .dv-slot-meta svg{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;
+      stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .dv-slot-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+
+    /* Boutons */
+    .dv-btn{border:1px solid var(--dv-line);background:var(--dv-card);color:var(--dv-text);
+      border-radius:13px;padding:13px 14px;font-size:15px;font-weight:600;
+      min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+    .dv-btn:active{transform:scale(.985)}
+    .dv-btn-primary{background:var(--dv-brand);border-color:var(--dv-brand);color:#fff}
+    .dv-btn-quiet{background:var(--dv-sunk);border-color:transparent;color:var(--dv-muted)}
+    .dv-btn:disabled{opacity:.5}
+
+    /* Disponibilites */
+    .dv-deadline{display:flex;align-items:center;gap:11px;padding:14px;border-radius:16px;
+      background:var(--dv-brand-soft);border:1px solid var(--dv-brand-line);color:var(--dv-brand-ink)}
+    .dv-deadline svg{width:20px;height:20px;flex:0 0 auto;stroke:currentColor;fill:none;
+      stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .dv-deadline strong{display:block;font-size:15px;font-weight:600}
+    .dv-deadline small{display:block;font-size:12px;margin-top:2px;opacity:.85}
+    .dv-deadline.is-late{background:var(--dv-bad-soft);border-color:var(--dv-bad-line);color:var(--dv-bad-ink)}
+
+    .dv-chips{display:flex;gap:8px;flex-wrap:wrap}
+    .dv-chip{padding:9px 13px;border-radius:999px;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-text);font-size:13px;font-weight:500;min-height:38px}
+    .dv-chip:active{background:var(--dv-sunk)}
+    .dv-chip.is-on{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);
+      color:var(--dv-ok-ink);font-weight:600}
+
+    .dv-days{border:1px solid var(--dv-line);border-radius:16px;overflow:hidden;background:var(--dv-card)}
+    .dv-day{padding:13px 14px;border-bottom:1px solid var(--dv-line)}
+    .dv-day:last-child{border-bottom:none}
+    .dv-day-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .dv-day-name{font-size:14px;font-weight:600;min-width:74px}
+    .dv-svc-chip{padding:7px 12px;border-radius:999px;border:1px solid var(--dv-line);
+      background:var(--dv-sunk);color:var(--dv-muted);font-size:13px;font-weight:500;min-height:36px}
+    .dv-svc-chip.is-on{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);
+      color:var(--dv-ok-ink);font-weight:600}
+    .dv-times{display:none;gap:10px;margin-top:11px;grid-template-columns:1fr 1fr}
+    .dv-times.is-open{display:grid}
+    .dv-times label{display:block;font-size:11px;color:var(--dv-muted);margin-bottom:5px}
+    .dv-times input[type=time]{width:100%;padding:11px 10px;border:1px solid var(--dv-line);
+      border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:15px;min-height:46px}
+    .dv-times-title{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--dv-muted);margin-top:2px}
+    .dv-comment{display:none;margin-top:10px}
+    .dv-comment.is-open{display:block}
+    .dv-comment input{width:100%;padding:11px 12px;border:1px solid var(--dv-line);
+      border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:14px;min-height:44px}
+    .dv-methods{display:flex;gap:8px;flex-wrap:wrap}
+    .dv-savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));
+      padding-top:12px;margin-top:16px}
+
+    /* Reglement */
+    .dv-rule{background:var(--dv-card);border:1px solid var(--dv-line);border-radius:16px;
+      padding:14px;margin-bottom:10px}
+    .dv-rule h3{font-size:15px;font-weight:600;margin-bottom:7px}
+    .dv-rule ul{margin:0;padding-left:18px}
+    .dv-rule li{font-size:13.5px;color:var(--dv-muted);line-height:1.55;margin-bottom:4px}
+    .dv-rule li:last-child{margin-bottom:0}
+    .dv-callout{padding:14px;border-radius:16px;background:var(--dv-bad-soft);
+      border:1px solid var(--dv-bad-line);color:var(--dv-bad-ink);font-size:13.5px;line-height:1.55}
+    .dv-check{display:flex;gap:11px;align-items:flex-start;padding:14px;
+      border:1px solid var(--dv-line);border-radius:14px;background:var(--dv-card);margin-bottom:9px}
+    .dv-check input{width:22px;height:22px;flex:0 0 auto;margin:0;accent-color:var(--dv-brand)}
+    .dv-check span{font-size:13.5px;line-height:1.5}
+
+    .dv-empty{padding:26px 18px;border-radius:16px;border:1px dashed var(--dv-line);
+      text-align:center;color:var(--dv-muted);font-size:14px;line-height:1.55;background:var(--dv-card)}
+
+    /* Barre d'onglets */
+    .dv-tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
+      background:var(--dv-card);border-top:1px solid var(--dv-line);
+      padding:7px 4px calc(7px + env(safe-area-inset-bottom,0px))}
+    .dv-nav{flex:1;border:none;background:none;padding:6px 2px;color:var(--dv-muted);
+      display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;min-height:52px}
+    .dv-nav svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;
+      stroke-linecap:round;stroke-linejoin:round}
+    .dv-nav span{font-size:11px;font-weight:500}
+    .dv-nav.is-active{color:var(--dv-brand)}
+    .dv-nav.is-active span{font-weight:600}
+    .dv-navdot{position:absolute;top:2px;left:50%;margin-left:5px;min-width:17px;height:17px;
+      padding:0 4px;border-radius:999px;background:var(--dv-brand);color:#fff;font-size:10px;
+      font-weight:700;display:none;align-items:center;justify-content:center}
+    .dv-navdot.is-on{display:inline-flex}
+
+    .dv-toast{position:fixed;left:50%;transform:translateX(-50%) translateY(14px);
+      bottom:calc(94px + env(safe-area-inset-bottom,0px));z-index:60;max-width:calc(100% - 28px);
+      padding:12px 16px;border-radius:14px;background:#16161a;color:#fff;font-size:14px;
+      line-height:1.4;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+    .dv-toast.is-on{opacity:1;transform:translateX(-50%) translateY(0)}
+    .dv-toast.is-bad{background:#a12626}
+    .dv-toast.is-ok{background:#0f6b4a}
+
+    @media(min-width:640px){
+      .dv-body{padding:22px 16px 8px}
+      .dv-slot-actions{grid-template-columns:auto auto;justify-content:start}
+      .dv-slot-actions .dv-btn{min-width:170px}
+    }
+
 </style>
 </head>
 <body>
@@ -1144,175 +1353,213 @@
       </section>
 
 
-  <section id="driverView" class="driver-app-shell hidden">
-    <header class="topbar">
-      <div class="topbar-brand">
-        <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
-        <div class="topbar-title">
-          <strong>Nara Pizza Planning</strong>
-          <small id="driverTopbarUser">—</small>
-        </div>
+  <section id="driverView" class="driver-app-shell dv-shell hidden">
+
+    <header class="dv-top">
+      <div class="dv-mark"><img src="nara-pizza-logo-transparent.png" alt="Nara Pizza"></div>
+      <div class="dv-who">
+        <strong id="driverGreeting">Nara Pizza</strong>
+        <small id="driverTopbarUser">—</small>
       </div>
-      <div class="topbar-actions">
-        <button class="button button-ghost regulation-help-button open-regulation-modal" type="button">Règl. & aide</button>
-        <button class="button button-ghost install-help-button" type="button">Installer</button>
-        <button id="driverLogoutButton" class="button button-secondary" type="button">
-          Sortir
-        </button>
-      </div>
+      <button class="dv-iconbtn open-regulation-modal" type="button" aria-label="Ouvrir le règlement">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7.5h7M8 11.5h7"/></svg>
+      </button>
     </header>
 
-    <section id="driverRegulationGate" class="regulation-gate hidden">
-      <article class="regulation-card">
-        <div class="regulation-header">
-          <div>
-            <h2>Règlement interne des livreurs</h2>
-            <p class="muted">À lire et accepter avant d’envoyer vos disponibilités.</p>
-          </div>
-          <span class="regulation-version">Version 1.0</span>
-        </div>
+    <section id="driverRegulationGate" class="dv-body hidden">
+      <div class="dv-secthead">
+        <h2>Règlement interne des livreurs</h2>
+        <p class="dv-sub">Version 1.0 — à lire et accepter une seule fois, avant d’envoyer vos disponibilités.</p>
+      </div>
 
-        <div class="regulation-intro">
-          La sécurité des personnes passe toujours avant le délai, la commande et le véhicule.
-        </div>
-
-        <div class="regulation-points">
-          <section class="regulation-point">
-            <h3>📅 Planning</h3>
-            <ul>
-              <li>Une disponibilité n’est pas encore un horaire confirmé.</li>
-              <li>Le planning publié devient contraignant.</li>
-              <li>Tout échange ou remplacement doit être validé par le manager.</li>
-            </ul>
-          </section>
-
-          <section class="regulation-point">
-            <h3>🚗 Véhicules</h3>
-            <ul>
-              <li>Déclarez chaque semaine les moyens que vous pouvez réellement utiliser.</li>
-              <li>N’utilisez jamais un véhicule dangereux ou non autorisé.</li>
-              <li>Un véhicule personnel doit être assuré pour l’usage professionnel.</li>
-            </ul>
-          </section>
-
-          <section class="regulation-point">
-            <h3>🛡️ Sécurité</h3>
-            <ul>
-              <li>Aucun retard ne justifie une infraction ou une conduite dangereuse.</li>
-              <li>Le téléphone ne doit jamais être manipulé en mouvement.</li>
-              <li>Ceinture, casque et équipements de protection sont obligatoires.</li>
-            </ul>
-          </section>
-
-          <section class="regulation-point">
-            <h3>📦 Livraison</h3>
-            <ul>
-              <li>Vérifiez l’adresse, la commande, les boissons et le paiement avant le départ.</li>
-              <li>Respectez l’hygiène et protégez les commandes.</li>
-              <li>Signalez immédiatement retard, panne, accident, erreur ou client absent.</li>
-            </ul>
-          </section>
-
-          <section class="regulation-point">
-            <h3>💳 Paiements et données</h3>
-            <ul>
-              <li>Enregistrez chaque paiement immédiatement.</li>
-              <li>Gardez l’argent de l’entreprise séparé de l’argent personnel.</li>
-              <li>Les données clients sont strictement confidentielles.</li>
-            </ul>
-          </section>
-
-          <section class="regulation-point">
-            <h3>🤝 Comportement</h3>
-            <ul>
-              <li>Restez poli, discret et calme.</li>
-              <li>Évitez toute confrontation avec un client agressif.</li>
-              <li>Informez immédiatement le manager en cas de problème.</li>
-            </ul>
-          </section>
-        </div>
-
-        <div class="regulation-emergency">
-          <strong>En cas d’accident, de panne, d’agression ou de danger :</strong>
-          mettez-vous en sécurité, appelez les secours ou la police si nécessaire, puis informez le manager.
-        </div>
-
-        <div class="regulation-actions">
-          <button class="button button-secondary open-regulation-modal" type="button">Lire le règlement complet</button>
-        </div>
-
-        <div class="regulation-checks">
-          <label class="regulation-check">
-            <input id="regulationReadCheck" type="checkbox">
-            <span>J’ai lu et compris les règles principales de livraison de Nara Pizza.</span>
-          </label>
-          <label class="regulation-check">
-            <input id="regulationCommitmentCheck" type="checkbox">
-            <span>Je m’engage à respecter le règlement interne pendant mes services.</span>
-          </label>
-        </div>
-
-        <button id="acceptRegulationButton" class="button button-primary button-full" type="button" disabled>
-          J’accepte et je continue
-        </button>
-
-        <div id="regulationGateMessage" class="message"></div>
-      </article>
-    </section>
-
-    <main id="driverMainContent" class="driver-main">
-      <div class="driver-hero">
-        <div>
-          <h2 id="driverPageTitle">Mon planning</h2>
-          <p id="driverPageSubtitle" class="muted">Consultez vos affectations et vos prochaines demandes de disponibilités.</p>
-        </div>
-        <div class="profile-card">
-          <p>Bonjour <strong id="driverProfileName">—</strong></p>
-          <small id="driverProfileEmail">—</small>
+      <div class="dv-action is-send" style="margin-bottom:6px">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg>
+        <div class="dv-action-body">
+          <strong>La sécurité passe avant tout</strong>
+          <span>Avant le délai, avant la commande, avant le véhicule.</span>
         </div>
       </div>
 
-      <section class="driver-week-card">
-        <div class="panel-header">
-          <div>
-            <h3>Choisir la semaine</h3>
-            <p class="muted">Une seule semaine est affichée à la fois.</p>
-          </div>
-        </div>
+      <article class="dv-rule">
+        <h3>Planning</h3>
+        <ul>
+          <li>Une disponibilité n’est pas encore un horaire confirmé.</li>
+          <li>Le planning publié devient contraignant.</li>
+          <li>Tout échange ou remplacement doit être validé par le manager.</li>
+        </ul>
+      </article>
 
-        <div id="driverWeekTabs" class="driver-week-tabs">
-          <div class="empty-state">Chargement des semaines…</div>
-        </div>
+      <article class="dv-rule">
+        <h3>Véhicules</h3>
+        <ul>
+          <li>Déclarez chaque semaine les moyens que vous pouvez réellement utiliser.</li>
+          <li>N’utilisez jamais un véhicule dangereux ou non autorisé.</li>
+          <li>Un véhicule personnel doit être assuré pour l’usage professionnel.</li>
+        </ul>
+      </article>
 
-        <div class="panel-header">
-          <div>
-            <h3 id="driverAssignmentsTitle">Mes affectations</h3>
-            <p id="driverAssignmentsSubtitle" class="muted">Confirmez ou refusez les créneaux qui vous ont été attribués.</p>
-          </div>
-        </div>
-        <div id="driverAssignmentsContainer" class="assignment-list">
-          <div class="empty-state">Chargement de vos affectations…</div>
-        </div>
-      </section>
+      <article class="dv-rule">
+        <h3>Sécurité</h3>
+        <ul>
+          <li>Aucun retard ne justifie une infraction ou une conduite dangereuse.</li>
+          <li>Le téléphone ne doit jamais être manipulé en mouvement.</li>
+          <li>Ceinture, casque et équipements de protection sont obligatoires.</li>
+        </ul>
+      </article>
 
-      <section id="driverAvailabilityZone" class="driver-availability-zone">
-        <div class="panel-header">
-          <div>
-            <h3>Mes nouvelles disponibilités</h3>
-            <p class="muted">Cette zone apparaît lorsqu’une nouvelle semaine est ouverte.</p>
-          </div>
-        </div>
-        <div id="driverWeeksContainer">
-          <div class="empty-state">Chargement des semaines ouvertes…</div>
-        </div>
-      </section>
+      <article class="dv-rule">
+        <h3>Livraison</h3>
+        <ul>
+          <li>Vérifiez l’adresse, la commande, les boissons et le paiement avant le départ.</li>
+          <li>Respectez l’hygiène et protégez les commandes.</li>
+          <li>Signalez immédiatement retard, panne, accident, erreur ou client absent.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Paiements et données</h3>
+        <ul>
+          <li>Enregistrez chaque paiement immédiatement.</li>
+          <li>Gardez l’argent de l’entreprise séparé de l’argent personnel.</li>
+          <li>Les données clients sont strictement confidentielles.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Comportement</h3>
+        <ul>
+          <li>Restez poli, discret et calme.</li>
+          <li>Évitez toute confrontation avec un client agressif.</li>
+          <li>Informez immédiatement le manager en cas de problème.</li>
+        </ul>
+      </article>
+
+      <div class="dv-callout">
+        <strong>En cas d’accident, de panne, d’agression ou de danger :</strong>
+        mettez-vous en sécurité, appelez les secours ou la police si nécessaire, puis informez le manager.
+      </div>
+
+      <div style="margin:14px 0 18px">
+        <button class="dv-btn open-regulation-modal" type="button">Lire le règlement complet</button>
+      </div>
+
+      <label class="dv-check">
+        <input id="regulationReadCheck" type="checkbox">
+        <span>J’ai lu et compris les règles principales de livraison de Nara Pizza.</span>
+      </label>
+      <label class="dv-check">
+        <input id="regulationCommitmentCheck" type="checkbox">
+        <span>Je m’engage à respecter le règlement interne pendant mes services.</span>
+      </label>
+
+      <button id="acceptRegulationButton" class="dv-btn dv-btn-primary" type="button" disabled style="margin-top:6px">
+        J’accepte et je continue
+      </button>
+
+      <div id="regulationGateMessage" class="message"></div>
+    </section>
+
+    <main id="driverMainContent" class="dv-body hidden">
 
       <div id="driverMessage" class="message"></div>
 
-      <div class="footer">
-        Nara Pizza Planning — espace livreur
-      </div>
+      <section id="dvTabPlanning" class="dv-panel is-active">
+        <div id="driverActionCard" class="dv-action is-idle">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <div class="dv-action-body">
+            <strong>Chargement…</strong>
+            <span>Un instant, nous récupérons votre semaine.</span>
+          </div>
+        </div>
+
+        <div class="dv-secthead">
+          <h2 id="driverPageTitle">Mon planning</h2>
+          <p id="driverPageSubtitle" class="dv-sub">Choisissez une semaine, puis confirmez vos horaires.</p>
+        </div>
+
+        <div id="driverWeekTabs" class="dv-weekpills"></div>
+
+        <div class="dv-secthead">
+          <h3 id="driverAssignmentsTitle">Mes affectations</h3>
+          <p id="driverAssignmentsSubtitle" class="dv-sub">Confirmez ou refusez chaque horaire.</p>
+        </div>
+
+        <div id="driverAssignmentsContainer">
+          <div class="dv-empty">Chargement de vos affectations…</div>
+        </div>
+      </section>
+
+      <section id="dvTabAvailability" class="dv-panel">
+        <div class="dv-secthead">
+          <h2>Mes disponibilités</h2>
+          <p class="dv-sub">Indiquez quand vous pouvez travailler la semaine prochaine.</p>
+        </div>
+        <div id="driverAvailabilityZone">
+          <div id="driverWeeksContainer">
+            <div class="dv-empty">Chargement…</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dvTabHelp" class="dv-panel">
+        <div class="dv-secthead">
+          <h2>Aide et règlement</h2>
+          <p class="dv-sub">Consultable à tout moment, même pendant un service.</p>
+        </div>
+
+        <article class="dv-rule">
+          <h3>Règlement interne</h3>
+          <ul>
+            <li>Version 1.0 — résumé opérationnel et procédures rapides.</li>
+            <li>Retard, client absent, adresse incorrecte, panne, accident, agression, fin de service.</li>
+          </ul>
+          <div style="margin-top:12px">
+            <button class="dv-btn open-regulation-modal" type="button">Ouvrir le règlement</button>
+          </div>
+        </article>
+
+        <article class="dv-rule">
+          <h3>Installer l’application</h3>
+          <ul>
+            <li>Ajoutez Nara Pizza à l’écran d’accueil pour l’ouvrir comme une vraie application.</li>
+          </ul>
+          <div style="margin-top:12px">
+            <button class="dv-btn install-help-button" type="button">Comment installer</button>
+          </div>
+        </article>
+
+        <article class="dv-rule">
+          <h3>Mon compte</h3>
+          <ul>
+            <li id="driverProfileName">—</li>
+            <li id="driverProfileEmail">—</li>
+          </ul>
+          <div style="margin-top:12px">
+            <button id="driverLogoutButton" class="dv-btn dv-btn-quiet" type="button">Se déconnecter</button>
+          </div>
+        </article>
+      </section>
+
     </main>
+
+    <nav id="driverTabbar" class="dv-tabbar hidden">
+      <button id="dvNavPlanning" class="dv-nav is-active" type="button" data-dv-tab="planning">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+        <span>Planning</span>
+        <em id="dvBadgePlanning" class="dv-navdot"></em>
+      </button>
+      <button id="dvNavAvailability" class="dv-nav" type="button" data-dv-tab="availability">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>
+        <span>Mes dispos</span>
+        <em id="dvBadgeAvailability" class="dv-navdot"></em>
+      </button>
+      <button id="dvNavHelp" class="dv-nav" type="button" data-dv-tab="help">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <span>Aide</span>
+      </button>
+    </nav>
+
+    <div id="dvToast" class="dv-toast"></div>
   </section>
 
 
@@ -1524,6 +1771,22 @@
     const saveNeedButton = document.getElementById("saveNeedButton");
 
     const driverLogoutButton = document.getElementById("driverLogoutButton");
+    const driverGreeting = document.getElementById("driverGreeting");
+    const driverActionCard = document.getElementById("driverActionCard");
+    const driverTabbar = document.getElementById("driverTabbar");
+    const dvToast = document.getElementById("dvToast");
+    const dvBadgePlanning = document.getElementById("dvBadgePlanning");
+    const dvBadgeAvailability = document.getElementById("dvBadgeAvailability");
+    const dvPanels = {
+      planning: document.getElementById("dvTabPlanning"),
+      availability: document.getElementById("dvTabAvailability"),
+      help: document.getElementById("dvTabHelp")
+    };
+    const dvNavs = {
+      planning: document.getElementById("dvNavPlanning"),
+      availability: document.getElementById("dvNavAvailability"),
+      help: document.getElementById("dvNavHelp")
+    };
     const driverWeeksContainer = document.getElementById("driverWeeksContainer");
     const driverAssignmentsContainer = document.getElementById("driverAssignmentsContainer");
     const driverWeekTabs = document.getElementById("driverWeekTabs");
@@ -1686,9 +1949,12 @@
       loginView.classList.add("hidden");
       appView.classList.add("hidden");
       driverView.classList.remove("hidden");
+      const firstName=(profile.name||"Livreur").trim().split(" ")[0];
+      driverGreeting.textContent=`Bonjour ${firstName}`;
       document.getElementById("driverProfileName").textContent=profile.name||"Livreur";
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
-      document.getElementById("driverTopbarUser").textContent=`${profile.name||"Livreur"} · livreur`;
+      document.getElementById("driverTopbarUser").textContent="Espace livreur";
+      setDriverTab("planning");
       checkDriverRegulationAcceptance(user)
     }
 
@@ -2599,6 +2865,7 @@
     async function checkDriverRegulationAcceptance(user){
       driverMainContent.classList.add("hidden");
       driverRegulationGate.classList.add("hidden");
+      driverTabbar.classList.add("hidden");
 
       try{
         const acceptance=await getDoc(
@@ -2608,15 +2875,18 @@
         if(acceptance.exists()&&acceptance.data().version===REGULATION_VERSION){
           driverRegulationGate.classList.add("hidden");
           driverMainContent.classList.remove("hidden");
+          driverTabbar.classList.remove("hidden");
           subscribeToOpenDriverWeeks(user);
           subscribeToDriverAssignments(user)
         }else{
           driverMainContent.classList.add("hidden");
+          driverTabbar.classList.add("hidden");
           driverRegulationGate.classList.remove("hidden")
         }
       }catch(error){
         console.error(error);
         driverMainContent.classList.add("hidden");
+        driverTabbar.classList.add("hidden");
         driverRegulationGate.classList.remove("hidden");
         showMessage(regulationGateMessage,`Impossible de vérifier l’acceptation : ${error.code||error.message}`,"error")
       }
@@ -2678,235 +2948,325 @@
       loadRegulationAcceptances(true)
     }
 
-    function renderDriverWeek(week,existingData,user){
-      const closed=isDeadlinePassed(week);
-      const wrapper=document.createElement("section");
-      wrapper.className="driver-week-card";
+    /* Memoire locale du dernier remplissage : permet le raccourci
+       "comme la derniere fois" sans aucune lecture Firestore. */
+    function rememberAvailability(daysPayload,deliveryMethods){
+      try{
+        const pattern=daysPayload.map(day=>({
+          weekday:new Date(`${day.date}T12:00:00`).getDay(),
+          middayAvailable:day.middayAvailable,
+          middayEarliest:day.middayEarliest,
+          middayLatest:day.middayLatest,
+          eveningAvailable:day.eveningAvailable,
+          eveningEarliest:day.eveningEarliest,
+          eveningLatest:day.eveningLatest
+        }));
+        localStorage.setItem(LAST_AVAILABILITY_KEY,JSON.stringify({pattern,deliveryMethods}))
+      }catch(error){
+        console.warn("Mémoire locale indisponible.",error)
+      }
+    }
 
-      const existingDays=(existingData?.days||defaultAvailabilityDays(week)).map(normalizeAvailabilityDay);
+    function readRememberedAvailability(){
+      try{
+        const raw=localStorage.getItem(LAST_AVAILABILITY_KEY);
+        const parsed=raw?JSON.parse(raw):null;
+        return parsed&&Array.isArray(parsed.pattern)?parsed:null
+      }catch(error){
+        return null
+      }
+    }
+
+    function renderDriverWeek(week,existingData,user){
+      const wrapper=document.createElement("section");
+      wrapper.dataset.driverWeekId=week.id;
+
+      if(isDeadlinePassed(week)){
+        wrapper.innerHTML=`
+          <div class="dv-deadline is-late">
+            ${dvSvg("glass")}
+            <div>
+              <strong>Délai dépassé</strong>
+              <small>Semaine du ${formatDate(week.startDate)}. Contactez le manager pour toute modification.</small>
+            </div>
+          </div>
+        `;
+        return wrapper
+      }
+
+      const state=(existingData?.days||defaultAvailabilityDays(week)).map(normalizeAvailabilityDay);
+      const allowedMethods=(week.deliveryMethods&&week.deliveryMethods.length)
+        ? week.deliveryMethods
+        : DELIVERY_METHODS.map(item=>item.id);
+      const chosenMethods=new Set(existingData?.deliveryMethods||[]);
+      const remaining=deadlineRemaining(week);
+      const remembered=readRememberedAvailability();
 
       wrapper.innerHTML=`
-        <div class="panel-header">
+        <div class="dv-deadline${remaining!==null&&remaining<86400000?" is-late":""}">
+          ${dvSvg("glass")}
           <div>
-            <h3>${formatDate(week.startDate)} → ${formatDate(week.endDate)}</h3>
-            <p class="muted">${escapeHtml(week.message||"Merci d’indiquer vos disponibilités.")}</p>
-            <div class="deadline-warning">Réponse avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"—"}</div>
+            <strong>${remaining!==null&&remaining>0?`Il reste ${formatCountdown(remaining)}`:"Réponse attendue"}</strong>
+            <small>Semaine du ${formatDate(week.startDate)} au ${formatDate(week.endDate)} · avant le ${formatDate(week.deadlineDate)} à ${escapeHtml(week.deadlineTime||"—")}</small>
           </div>
-          <span class="status-badge ${existingData?"status-open":"status-draft"}">${existingData?"Réponse enregistrée":"À compléter"}</span>
         </div>
 
-        ${closed?`
-          <div class="availability-closed">
-            La date limite est dépassée. Contactez le manager pour toute modification.
-          </div>
-        `:`
-          <form class="availability-form" data-week-id="${week.id}">
-            <section class="delivery-methods-box">
-              <h3>Mes moyens de livraison cette semaine</h3>
-              <p class="muted">Cochez uniquement les moyens que vous pourrez réellement utiliser.</p>
-              <div class="delivery-methods-grid driver-delivery-methods">
-                ${(week.deliveryMethods||DELIVERY_METHODS.map(item=>item.id)).map(methodId=>{
-                  const selected=(existingData?.deliveryMethods||[]).includes(methodId);
-                  return `
-                    <label class="delivery-method-option">
-                      <input type="checkbox" value="${methodId}" ${selected?"checked":""}>
-                      ${escapeHtml(deliveryMethodLabel(methodId))}
-                    </label>
-                  `
-                }).join("")}
-              </div>
-            </section>
+        ${week.message?`
+          <article class="dv-rule" style="margin-top:12px">
+            <h3>Message du manager</h3>
+            <ul><li>${escapeHtml(week.message)}</li></ul>
+          </article>
+        `:""}
 
-            <div class="availability-days"></div>
-            <div class="form-actions">
-              <button class="button button-primary save-availability" type="submit">
-                ${existingData?"Mettre à jour mes disponibilités":"Envoyer mes disponibilités"}
-              </button>
-            </div>
-            <div class="message availability-message"></div>
-          </form>
-        `}
+        <div class="dv-secthead">
+          <h3>Remplissage rapide</h3>
+          <p class="dv-sub">Un seul geste, vous ajustez ensuite jour par jour.</p>
+        </div>
+        <div class="dv-chips dv-presets"></div>
+
+        <div class="dv-secthead">
+          <h3>Jour par jour</h3>
+          <p class="dv-sub">Touchez « Midi » ou « Soir » pour vous rendre disponible.</p>
+        </div>
+        <div class="dv-days"></div>
+
+        <div class="dv-secthead">
+          <h3>Mes moyens de livraison</h3>
+          <p class="dv-sub">Uniquement ceux que vous pourrez réellement utiliser cette semaine.</p>
+        </div>
+        <div class="dv-methods"></div>
+
+        <div class="dv-savebar">
+          <button class="dv-btn dv-btn-primary save-availability" type="button">
+            ${existingData?"Mettre à jour mes disponibilités":"Envoyer mes disponibilités"}
+          </button>
+        </div>
+        <div class="message availability-message"></div>
       `;
 
-      if(!closed){
-        const daysContainer=wrapper.querySelector(".availability-days");
+      const painters=[];
+      const daysBox=wrapper.querySelector(".dv-days");
 
-        existingDays.forEach(day=>{
-          const card=document.createElement("div");
-          const anyAvailable=day.middayAvailable||day.eveningAvailable;
-          card.className=`availability-day ${anyAvailable?"":"is-unavailable"}`;
-          card.dataset.date=day.date;
-          card.innerHTML=`
-            <div class="availability-day-header">
-              <h3>${formatDay(day.date)}</h3>
-              <span class="status-badge ${anyAvailable?"status-open":"status-draft"}">
-                ${anyAvailable?"Disponible":"Indisponible"}
-              </span>
-            </div>
+      state.forEach(day=>{
+        const row=document.createElement("div");
+        row.className="dv-day";
+        row.innerHTML=`
+          <div class="dv-day-top">
+            <span class="dv-day-name">${escapeHtml(driverShortDay(day.date))}</span>
+            <button class="dv-svc-chip toggle-midday" type="button">Midi</button>
+            <button class="dv-svc-chip toggle-evening" type="button">Soir</button>
+          </div>
+          <div class="dv-times midday-times">
+            <div class="dv-times-title">Service de midi — arrivée au plus tard 12:00</div>
+            <div><label>Au plus tôt</label><input class="midday-earliest" type="time" max="12:00"></div>
+            <div><label>Au plus tard</label><input class="midday-latest" type="time" max="12:00"></div>
+          </div>
+          <div class="dv-times evening-times">
+            <div class="dv-times-title">Service du soir — arrivée au plus tard 19:00</div>
+            <div><label>Au plus tôt</label><input class="evening-earliest" type="time" max="19:00"></div>
+            <div><label>Au plus tard</label><input class="evening-latest" type="time" max="19:00"></div>
+          </div>
+          <div class="dv-comment">
+            <input class="day-comment" type="text" placeholder="Commentaire facultatif">
+          </div>
+        `;
 
-            <div class="availability-details">
-              <section class="service-availability midday-service ${day.middayAvailable?"":"is-disabled"}">
-                <div class="service-availability-header">
-                  <strong>Service de midi</strong><small class="muted">Arrivée au plus tard 12:00</small>
-                  <label class="availability-state">
-                    <input class="midday-available" type="checkbox" ${day.middayAvailable?"checked":""}>
-                    <span>Disponible</span>
-                  </label>
-                </div>
-                <div class="availability-grid service-fields">
-                  <div class="field">
-                    <label>Début au plus tôt</label>
-                    <input class="midday-earliest" type="time" value="${day.middayEarliest||"11:30"}" max="12:00">
-                  </div>
-                  <div class="field">
-                    <label>Début au plus tard</label>
-                    <input class="midday-latest" type="time" value="${day.middayLatest||"12:00"}" max="12:00">
-                  </div>
-                </div>
-              </section>
+        function paint(){
+          row.querySelector(".toggle-midday").classList.toggle("is-on",day.middayAvailable===true);
+          row.querySelector(".toggle-evening").classList.toggle("is-on",day.eveningAvailable===true);
+          row.querySelector(".midday-times").classList.toggle("is-open",day.middayAvailable===true);
+          row.querySelector(".evening-times").classList.toggle("is-open",day.eveningAvailable===true);
+          row.querySelector(".dv-comment").classList.toggle("is-open",day.middayAvailable===true||day.eveningAvailable===true);
+          row.querySelector(".midday-earliest").value=day.middayEarliest||"11:30";
+          row.querySelector(".midday-latest").value=day.middayLatest||"12:00";
+          row.querySelector(".evening-earliest").value=day.eveningEarliest||"17:30";
+          row.querySelector(".evening-latest").value=day.eveningLatest||"19:00";
+          row.querySelector(".day-comment").value=day.comment||""
+        }
 
-              <section class="service-availability evening-service ${day.eveningAvailable?"":"is-disabled"}">
-                <div class="service-availability-header">
-                  <strong>Service du soir</strong><small class="muted">Arrivée au plus tard 19:00</small>
-                  <label class="availability-state">
-                    <input class="evening-available" type="checkbox" ${day.eveningAvailable?"checked":""}>
-                    <span>Disponible</span>
-                  </label>
-                </div>
-                <div class="availability-grid service-fields">
-                  <div class="field">
-                    <label>Début au plus tôt</label>
-                    <input class="evening-earliest" type="time" value="${day.eveningEarliest||"17:30"}" max="19:00">
-                  </div>
-                  <div class="field">
-                    <label>Début au plus tard</label>
-                    <input class="evening-latest" type="time" value="${day.eveningLatest||"19:00"}" max="19:00">
-                  </div>
-                </div>
-              </section>
+        row.querySelector(".toggle-midday").addEventListener("click",()=>{
+          day.middayAvailable=!day.middayAvailable;
+          paint()
+        });
+        row.querySelector(".toggle-evening").addEventListener("click",()=>{
+          day.eveningAvailable=!day.eveningAvailable;
+          paint()
+        });
+        row.querySelector(".midday-earliest").addEventListener("input",event=>{day.middayEarliest=event.target.value});
+        row.querySelector(".midday-latest").addEventListener("input",event=>{day.middayLatest=event.target.value});
+        row.querySelector(".evening-earliest").addEventListener("input",event=>{day.eveningEarliest=event.target.value});
+        row.querySelector(".evening-latest").addEventListener("input",event=>{day.eveningLatest=event.target.value});
+        row.querySelector(".day-comment").addEventListener("input",event=>{day.comment=event.target.value});
 
-              <div class="field">
-                <label>Commentaire facultatif</label>
-                <input class="day-comment" type="text" value="${escapeHtml(day.comment||"")}" placeholder="Exemple : prévenir suffisamment tôt">
-              </div>
-            </div>
-          `;
+        paint();
+        painters.push(paint);
+        daysBox.appendChild(row)
+      });
 
-          const middayCheckbox=card.querySelector(".midday-available");
-          const eveningCheckbox=card.querySelector(".evening-available");
+      function applyPreset(kind){
+        state.forEach(day=>{
+          const weekday=new Date(`${day.date}T12:00:00`).getDay();
 
-          function updateAvailabilityCard(){
-            card.querySelector(".midday-service").classList.toggle("is-disabled",!middayCheckbox.checked);
-            card.querySelector(".evening-service").classList.toggle("is-disabled",!eveningCheckbox.checked);
-            const available=middayCheckbox.checked||eveningCheckbox.checked;
-            card.classList.toggle("is-unavailable",!available);
-            const badge=card.querySelector(".status-badge");
-            badge.textContent=available?"Disponible":"Indisponible";
-            badge.className=`status-badge ${available?"status-open":"status-draft"}`
+          if(kind==="clear"){
+            day.middayAvailable=false;
+            day.eveningAvailable=false
+          }else if(kind==="evenings"){
+            day.eveningAvailable=true;
+            day.eveningEarliest=day.eveningEarliest||"17:30";
+            day.eveningLatest=day.eveningLatest||"19:00"
+          }else if(kind==="middays"){
+            day.middayAvailable=true;
+            day.middayEarliest=day.middayEarliest||"11:30";
+            day.middayLatest=day.middayLatest||"12:00"
+          }else if(kind==="weekend"){
+            const isWeekend=weekday===5||weekday===6||weekday===0;
+            day.middayAvailable=false;
+            day.eveningAvailable=isWeekend;
+            day.eveningEarliest=day.eveningEarliest||"17:30";
+            day.eveningLatest=day.eveningLatest||"19:00"
+          }else if(kind==="last"&&remembered){
+            const model=remembered.pattern.find(item=>item.weekday===weekday);
+            if(model){
+              day.middayAvailable=model.middayAvailable===true;
+              day.middayEarliest=model.middayEarliest||"11:30";
+              day.middayLatest=model.middayLatest||"12:00";
+              day.eveningAvailable=model.eveningAvailable===true;
+              day.eveningEarliest=model.eveningEarliest||"17:30";
+              day.eveningLatest=model.eveningLatest||"19:00"
+            }
           }
-
-          middayCheckbox.addEventListener("change",updateAvailabilityCard);
-          eveningCheckbox.addEventListener("change",updateAvailabilityCard);
-
-          daysContainer.appendChild(card)
         });
 
-        const form=wrapper.querySelector(".availability-form");
-        form.addEventListener("submit",async event=>{
-          event.preventDefault();
-          const messageEl=form.querySelector(".availability-message");
-          const button=form.querySelector(".save-availability");
-          clearMessage(messageEl);
+        if(kind==="last"&&remembered&&Array.isArray(remembered.deliveryMethods)){
+          chosenMethods.clear();
+          remembered.deliveryMethods
+            .filter(methodId=>allowedMethods.includes(methodId))
+            .forEach(methodId=>chosenMethods.add(methodId));
+          paintMethods()
+        }
 
-          const deliveryMethods=[...form.querySelectorAll(".driver-delivery-methods input:checked")]
-            .map(input=>input.value);
+        painters.forEach(paint=>paint())
+      }
 
-          const days=[...form.querySelectorAll(".availability-day")].map(card=>{
-            const middayAvailable=card.querySelector(".midday-available").checked;
-            const eveningAvailable=card.querySelector(".evening-available").checked;
+      const presets=[
+        {key:"evenings",label:"Tous les soirs"},
+        {key:"middays",label:"Tous les midis"},
+        {key:"weekend",label:"Week-end"}
+      ];
+      if(remembered)presets.push({key:"last",label:"Comme la dernière fois"});
+      presets.push({key:"clear",label:"Tout effacer"});
 
-            return {
-              date:card.dataset.date,
-              middayAvailable,
-              middayEarliest:middayAvailable?card.querySelector(".midday-earliest").value:"",
-              middayLatest:middayAvailable?card.querySelector(".midday-latest").value:"",
-              eveningAvailable,
-              eveningEarliest:eveningAvailable?card.querySelector(".evening-earliest").value:"",
-              eveningLatest:eveningAvailable?card.querySelector(".evening-latest").value:"",
-              comment:(middayAvailable||eveningAvailable)
-                ? card.querySelector(".day-comment").value.trim()
-                : ""
-            }
-          });
+      const presetsBox=wrapper.querySelector(".dv-presets");
+      presets.forEach(preset=>{
+        const chip=document.createElement("button");
+        chip.type="button";
+        chip.className="dv-chip";
+        chip.textContent=preset.label;
+        chip.addEventListener("click",()=>applyPreset(preset.key));
+        presetsBox.appendChild(chip)
+      });
 
-          const hasAvailability=days.some(day=>day.middayAvailable||day.eveningAvailable);
+      const methodsBox=wrapper.querySelector(".dv-methods");
+      const methodChips=new Map();
 
-          if(hasAvailability&&deliveryMethods.length===0){
-            showMessage(
-              messageEl,
-              "Sélectionnez au moins un moyen de livraison disponible pour cette semaine.",
-              "error"
-            );
-            return
-          }
-
-          const invalidDay=days.find(day=>
-            (day.middayAvailable && (
-              !day.middayEarliest
-              || !day.middayLatest
-              || day.middayEarliest>day.middayLatest
-              || day.middayLatest>"12:00"
-            ))
-            || (day.eveningAvailable && (
-              !day.eveningEarliest
-              || !day.eveningLatest
-              || day.eveningEarliest>day.eveningLatest
-              || day.eveningLatest>"19:00"
-            ))
-          );
-
-          if(invalidDay){
-            showMessage(
-              messageEl,
-              "Vérifiez les horaires : arrivée au plus tard à 12:00 pour midi et à 19:00 pour le soir.",
-              "error"
-            );
-            return
-          }
-
-          button.disabled=true;
-          button.textContent="Enregistrement…";
-
-          try{
-            await setDoc(
-              doc(db,"weeks",week.id,"availabilities",user.uid),
-              {
-                weekId:week.id,
-                weekStartDate:week.startDate,
-                userId:user.uid,
-                driverName:currentProfile.name||"",
-                driverEmail:currentProfile.email||user.email||"",
-                deliveryMethods,
-                days,
-                submittedAt:serverTimestamp(),
-                updatedAt:serverTimestamp()
-              },
-              {merge:true}
-            );
-
-            availabilityCache.delete(week.id);
-            showMessage(messageEl,"Vos disponibilités ont été enregistrées.","success")
-          }catch(error){
-            console.error(error);
-            showMessage(messageEl,`Impossible d’enregistrer : ${error.code||error.message}`,"error")
-          }finally{
-            button.disabled=false;
-            button.textContent="Mettre à jour mes disponibilités"
-          }
+      function paintMethods(){
+        methodChips.forEach((chip,methodId)=>{
+          chip.classList.toggle("is-on",chosenMethods.has(methodId))
         })
       }
 
-      wrapper.dataset.driverWeekId=week.id;
+      allowedMethods.forEach(methodId=>{
+        const chip=document.createElement("button");
+        chip.type="button";
+        chip.className="dv-chip";
+        chip.textContent=deliveryMethodLabel(methodId);
+        chip.addEventListener("click",()=>{
+          if(chosenMethods.has(methodId))chosenMethods.delete(methodId);
+          else chosenMethods.add(methodId);
+          paintMethods()
+        });
+        methodChips.set(methodId,chip);
+        methodsBox.appendChild(chip)
+      });
+      paintMethods();
+
+      const saveButton=wrapper.querySelector(".save-availability");
+
+      saveButton.addEventListener("click",async()=>{
+        const deliveryMethods=[...chosenMethods];
+
+        const daysPayload=state.map(day=>({
+          date:day.date,
+          middayAvailable:day.middayAvailable===true,
+          middayEarliest:day.middayAvailable?(day.middayEarliest||"11:30"):"",
+          middayLatest:day.middayAvailable?(day.middayLatest||"12:00"):"",
+          eveningAvailable:day.eveningAvailable===true,
+          eveningEarliest:day.eveningAvailable?(day.eveningEarliest||"17:30"):"",
+          eveningLatest:day.eveningAvailable?(day.eveningLatest||"19:00"):"",
+          comment:(day.middayAvailable||day.eveningAvailable)?(day.comment||"").trim():""
+        }));
+
+        const hasAvailability=daysPayload.some(day=>day.middayAvailable||day.eveningAvailable);
+
+        if(hasAvailability&&deliveryMethods.length===0){
+          driverToast("Choisissez au moins un moyen de livraison.","bad");
+          return
+        }
+
+        const invalidDay=daysPayload.find(day=>
+          (day.middayAvailable && (
+            !day.middayEarliest || !day.middayLatest
+            || day.middayEarliest>day.middayLatest
+            || day.middayLatest>"12:00"
+          ))
+          || (day.eveningAvailable && (
+            !day.eveningEarliest || !day.eveningLatest
+            || day.eveningEarliest>day.eveningLatest
+            || day.eveningLatest>"19:00"
+          ))
+        );
+
+        if(invalidDay){
+          driverToast(`${driverShortDay(invalidDay.date)} : arrivée au plus tard 12:00 le midi et 19:00 le soir.`,"bad");
+          return
+        }
+
+        saveButton.disabled=true;
+        const originalLabel=saveButton.textContent;
+        saveButton.textContent="Enregistrement…";
+
+        try{
+          await setDoc(
+            doc(db,"weeks",week.id,"availabilities",user.uid),
+            {
+              weekId:week.id,
+              weekStartDate:week.startDate,
+              userId:user.uid,
+              driverName:currentProfile.name||"",
+              driverEmail:currentProfile.email||user.email||"",
+              deliveryMethods,
+              days:daysPayload,
+              submittedAt:serverTimestamp(),
+              updatedAt:serverTimestamp()
+            },
+            {merge:true}
+          );
+
+          availabilityCache.delete(week.id);
+          driverAvailabilityByWeek.set(week.id,true);
+          rememberAvailability(daysPayload,deliveryMethods);
+          saveButton.textContent="Mettre à jour mes disponibilités";
+          driverToast("Disponibilités enregistrées.","ok");
+          updateDriverPresentation()
+        }catch(error){
+          console.error(error);
+          saveButton.textContent=originalLabel;
+          driverToast(`Impossible d’enregistrer : ${error.code||error.message}`,"bad")
+        }finally{
+          saveButton.disabled=false
+        }
+      });
+
       return wrapper
     }
 
@@ -2928,7 +3288,7 @@
           currentDriverOpenWeeksCount=openWeeks.length;
 
           if(openWeeks.length===0){
-            driverWeeksContainer.innerHTML='<div class="empty-state">Aucune demande de disponibilités pour cette semaine.</div>';
+            driverWeeksContainer.innerHTML='<div class="dv-empty">Aucune demande de disponibilités en cours.<br>Vous serez prévenu dès que le manager ouvrira une semaine.</div>';
             refreshDriverScreen();
             return
           }
@@ -2942,6 +3302,8 @@
                 doc(db,"weeks",week.id,"availabilities",user.uid)
               );
 
+              driverAvailabilityByWeek.set(week.id,availabilitySnap.exists());
+
               driverWeeksContainer.appendChild(
                 renderDriverWeek(
                   week,
@@ -2952,6 +3314,8 @@
             }catch(error){
               console.error(error);
 
+              driverAvailabilityByWeek.set(week.id,false);
+
               // En cas de blocage de lecture d'une réponse encore inexistante,
               // afficher tout de même un formulaire vide. L'enregistrement
               // créera ensuite le document personnel du livreur.
@@ -2959,11 +3323,7 @@
                 renderDriverWeek(week,null,user)
               );
 
-              showMessage(
-                driverMessage,
-                "La semaine est chargée. Vous pouvez saisir et enregistrer vos disponibilités.",
-                "success"
-              );
+              driverToast("Semaine chargée. Vous pouvez saisir vos disponibilités.","ok");
             }
           }
 
@@ -2971,13 +3331,103 @@
         },
         error=>{
           console.error(error);
-          driverWeeksContainer.innerHTML='<div class="empty-state">Impossible de charger les semaines ouvertes.</div>';
+          driverWeeksContainer.innerHTML='<div class="dv-empty">Impossible de charger les semaines ouvertes.</div>';
           showMessage(driverMessage,`Erreur Firestore : ${error.code||error.message}`,"error")
         }
       )
     }
 
 
+
+    /* ===================================================================
+       ESPACE LIVREUR — navigation, retours visuels et outils d'affichage
+       =================================================================== */
+    let currentDriverTab = "planning";
+    let driverToastTimer = null;
+    const driverAvailabilityByWeek = new Map();
+    const LAST_AVAILABILITY_KEY = "naraLastAvailability";
+
+    const DV_ICONS = {
+      bell:'<path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/>',
+      send:'<path d="M12 3v13M8 12l4 4 4-4"/><path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"/>',
+      check:'<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+      calm:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+      glass:'<path d="M7 3h10M7 21h10M8 3v4l4 4 4-4V3M8 21v-4l4-4 4 4v4"/>',
+      car:'<path d="M5 11l1.5-4A2 2 0 0 1 8.4 6h7.2a2 2 0 0 1 1.9 1.4L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17.5" r="1.4"/><circle cx="16.5" cy="17.5" r="1.4"/>'
+    };
+
+    function dvSvg(name){
+      return `<svg viewBox="0 0 24 24" aria-hidden="true">${DV_ICONS[name]||DV_ICONS.calm}</svg>`
+    }
+
+    function driverToast(text,type){
+      if(!dvToast)return;
+      dvToast.textContent=text;
+      dvToast.className=`dv-toast is-on${type?` is-${type}`:""}`;
+      if(driverToastTimer)clearTimeout(driverToastTimer);
+      driverToastTimer=setTimeout(()=>{dvToast.className="dv-toast"},3200)
+    }
+
+    function setDriverTab(name){
+      if(!dvPanels[name])return;
+      currentDriverTab=name;
+      Object.entries(dvPanels).forEach(([key,panel])=>{
+        panel.classList.toggle("is-active",key===name)
+      });
+      Object.entries(dvNavs).forEach(([key,nav])=>{
+        nav.classList.toggle("is-active",key===name)
+      });
+      window.scrollTo({top:0,behavior:"smooth"})
+    }
+
+    Object.entries(dvNavs).forEach(([key,nav])=>{
+      nav?.addEventListener("click",()=>setDriverTab(key))
+    });
+
+    /* Jour court : "Vendredi 7 août" */
+    function driverDayLabel(dateString){
+      if(!dateString)return "—";
+      const date=new Date(`${dateString}T12:00:00`);
+      const text=new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"numeric",month:"long"}).format(date);
+      return text.charAt(0).toUpperCase()+text.slice(1)
+    }
+
+    function driverShortDay(dateString){
+      if(!dateString)return "—";
+      const date=new Date(`${dateString}T12:00:00`);
+      const text=new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"numeric"}).format(date);
+      return text.charAt(0).toUpperCase()+text.slice(1)
+    }
+
+    function driverTodayIso(){
+      const d=new Date();
+      d.setHours(12,0,0,0);
+      return d.toISOString().slice(0,10)
+    }
+
+    /* "dans 3 jours", "demain", "aujourd'hui" */
+    function driverRelativeDay(dateString){
+      if(!dateString)return "";
+      const target=new Date(`${dateString}T12:00:00`);
+      const today=new Date();
+      today.setHours(12,0,0,0);
+      const days=Math.round((target-today)/86400000);
+      if(days===0)return "aujourd’hui";
+      if(days===1)return "demain";
+      if(days===-1)return "hier";
+      if(days>1)return `dans ${days} jours`;
+      return `il y a ${Math.abs(days)} jours`
+    }
+
+    function serviceLabelForTime(time){
+      return servicePeriod(time)==="midi"?"service de midi":"service du soir"
+    }
+
+    function deadlineRemaining(week){
+      if(!week||!week.deadlineDate)return null;
+      const deadline=new Date(`${week.deadlineDate}T${week.deadlineTime||"23:59"}:00`);
+      return deadline.getTime()-Date.now()
+    }
 
     function assignmentDocId(weekId,date,time,userId){
       return `${weekId}_${date}_${String(time||"").replace(":","-")}_${userId}`
@@ -3052,26 +3502,23 @@
       chooseDefaultDriverWeek(weeks);
 
       if(weeks.length===0){
-        driverWeekTabs.innerHTML='<div class="empty-state">Aucune semaine disponible.</div>';
+        driverWeekTabs.innerHTML='<div class="dv-empty">Aucune semaine disponible pour le moment.</div>';
         return
       }
 
       driverWeekTabs.innerHTML="";
 
       weeks.forEach(week=>{
-        const pendingCount=currentDriverAssignments.filter(
-          assignment=>
-            assignment.weekId===week.id
-            && (assignment.status||"pending")==="pending"
+        const pendingCount=currentDriverAssignments.filter(assignment=>
+          assignment.weekId===week.id
+          && (assignment.status||"pending")==="pending"
+          && assignment.active!==false
         ).length;
 
         const button=document.createElement("button");
         button.type="button";
-        button.className=`driver-week-tab${week.id===currentDriverWeekId?" active":""}`;
-        button.innerHTML=`
-          ${driverWeekLabel(week)}
-          ${pendingCount?`<span class="week-alert">${pendingCount}</span>`:""}
-        `;
+        button.className=`dv-pill${week.id===currentDriverWeekId?" is-active":""}`;
+        button.innerHTML=`<span>${escapeHtml(driverWeekLabel(week))}</span>${pendingCount?`<em class="dv-pill-dot">${pendingCount}</em>`:""}`;
 
         button.addEventListener("click",()=>{
           currentDriverWeekId=week.id;
@@ -3080,6 +3527,73 @@
 
         driverWeekTabs.appendChild(button)
       })
+    }
+
+    /* Carte d'action : repond a "qu'est-ce que je dois faire maintenant ?" */
+    function renderDriverActionCard(){
+      if(!driverActionCard)return;
+
+      const pending=currentDriverAssignments
+        .filter(item=>(item.status||"pending")==="pending"&&item.active!==false)
+        .sort((a,b)=>`${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+
+      const toAnswer=currentDriverOpenWeeks
+        .filter(week=>driverAvailabilityByWeek.get(week.id)!==true&&!isDeadlinePassed(week))
+        .sort((a,b)=>(a.deadlineDate||"").localeCompare(b.deadlineDate||""));
+
+      const today=driverTodayIso();
+      const upcoming=currentDriverAssignments
+        .filter(item=>item.status==="confirmed"&&item.active!==false&&(item.date||"")>=today)
+        .sort((a,b)=>`${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+
+      let tone="is-idle";
+      let icon="calm";
+      let title="Rien à faire pour le moment";
+      let text="Vous serez prévenu ici dès qu’un horaire ou une demande de disponibilités arrive.";
+      let link=null;
+
+      if(pending.length){
+        const next=pending[0];
+        tone="is-todo";
+        icon="bell";
+        title=`${pending.length} horaire${pending.length>1?"s":""} à confirmer`;
+        text=`Le plus proche : ${driverShortDay(next.date)} à ${next.time}, ${driverRelativeDay(next.date)}.`;
+        link={label:"Voir les horaires",weekId:next.weekId,tab:"planning"}
+      }else if(toAnswer.length){
+        const week=toAnswer[0];
+        const remaining=deadlineRemaining(week);
+        tone="is-send";
+        icon="send";
+        title="Disponibilités à envoyer";
+        text=remaining!==null&&remaining>0
+          ? `Semaine du ${formatDate(week.startDate)} — il reste ${formatCountdown(remaining)}.`
+          : `Semaine du ${formatDate(week.startDate)}.`;
+        link={label:"Remplir mes disponibilités",weekId:week.id,tab:"availability"}
+      }else if(upcoming.length){
+        const next=upcoming[0];
+        tone="is-ok";
+        icon="check";
+        title="Tout est à jour";
+        text=`Prochain service : ${driverShortDay(next.date)} à ${next.time}, ${driverRelativeDay(next.date)}.`
+      }
+
+      driverActionCard.className=`dv-action ${tone}`;
+      driverActionCard.innerHTML=`
+        ${dvSvg(icon)}
+        <div class="dv-action-body">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${escapeHtml(text)}</span>
+          ${link?`<button class="dv-action-link" type="button">${escapeHtml(link.label)}</button>`:""}
+        </div>
+      `;
+
+      if(link){
+        driverActionCard.querySelector(".dv-action-link").addEventListener("click",()=>{
+          if(link.weekId)currentDriverWeekId=link.weekId;
+          setDriverTab(link.tab);
+          refreshDriverScreen()
+        })
+      }
     }
 
     function updateDriverPresentation(){
@@ -3098,26 +3612,44 @@
 
       if(!selectedWeekIsOpen && confirmedAssignments.length>0 && pendingAssignments.length===0){
         driverPageTitle.textContent="Mon planning final";
-        driverPageSubtitle.textContent="Voici vos horaires confirmés et publiés pour la semaine sélectionnée.";
+        driverPageSubtitle.textContent="Vos horaires confirmés et publiés pour cette semaine.";
         driverAssignmentsTitle.textContent="Mes horaires confirmés";
-        driverAssignmentsSubtitle.textContent="Les horaires sont regroupés par jour.";
+        driverAssignmentsSubtitle.textContent="Regroupés par jour."
       }else{
         driverPageTitle.textContent="Mon planning";
-        driverPageSubtitle.textContent="Choisissez une semaine, puis confirmez uniquement les horaires affichés.";
+        driverPageSubtitle.textContent="Choisissez une semaine, puis confirmez vos horaires.";
         driverAssignmentsTitle.textContent=pendingAssignments.length
-          ? `Horaires à confirmer (${pendingAssignments.length})`
+          ? `À confirmer (${pendingAssignments.length})`
           : "Mes affectations";
         driverAssignmentsSubtitle.textContent=pendingAssignments.length
           ? "Confirmez ou refusez chaque horaire de cette semaine."
           : "Aucun horaire n’attend votre réponse pour cette semaine."
       }
 
-      driverAvailabilityZone.classList.toggle("hidden",!selectedWeekIsOpen)
+      const allPending=currentDriverAssignments.filter(assignment=>
+        (assignment.status||"pending")==="pending" && assignment.active!==false
+      ).length;
+
+      const weeksToAnswer=currentDriverOpenWeeks.filter(week=>
+        driverAvailabilityByWeek.get(week.id)!==true && !isDeadlinePassed(week)
+      ).length;
+
+      if(dvBadgePlanning){
+        dvBadgePlanning.textContent=allPending?String(allPending):"";
+        dvBadgePlanning.classList.toggle("is-on",allPending>0)
+      }
+
+      if(dvBadgeAvailability){
+        dvBadgeAvailability.textContent=weeksToAnswer?String(weeksToAnswer):"";
+        dvBadgeAvailability.classList.toggle("is-on",weeksToAnswer>0)
+      }
+
+      renderDriverActionCard()
     }
 
     function renderCurrentDriverAssignments(){
       const assignments=currentDriverAssignments
-        .filter(assignment=>assignment.weekId===currentDriverWeekId)
+        .filter(assignment=>assignment.weekId===currentDriverWeekId&&assignment.active!==false)
         .sort((a,b)=>{
           const dateCompare=(a.date||"").localeCompare(b.date||"");
           return dateCompare!==0?dateCompare:(a.time||"").localeCompare(b.time||"")
@@ -3126,11 +3658,12 @@
       updateDriverPresentation();
 
       if(assignments.length===0){
-        driverAssignmentsContainer.innerHTML='<div class="empty-state">Aucune affectation pour cette semaine.</div>';
+        driverAssignmentsContainer.innerHTML='<div class="dv-empty">Aucun horaire pour cette semaine.</div>';
         return
       }
 
       driverAssignmentsContainer.innerHTML="";
+      const today=driverTodayIso();
       const byDate=new Map();
 
       assignments.forEach(assignment=>{
@@ -3138,57 +3671,73 @@
         byDate.get(assignment.date).push(assignment)
       });
 
-      [...byDate.entries()].forEach(([date,dayAssignments])=>{
-        const dayGroup=document.createElement("section");
-        const today=new Date().toISOString().slice(0,10);
-        dayGroup.className=`assignment-day-group${date===today?" today":""}`;
-        dayGroup.innerHTML=`
-          <h3 class="assignment-day-title">
-            <span>${formatDay(date)}</span>
-            ${date===today?'<small>Aujourd’hui</small>':""}
-          </h3>
-        `;
+      byDate.forEach((dayAssignments,date)=>{
+        const label=document.createElement("div");
+        label.className=`dv-daylabel${date===today?" is-today":""}`;
+        label.textContent=date===today
+          ? `${driverDayLabel(date)} · aujourd’hui`
+          : driverDayLabel(date);
+        driverAssignmentsContainer.appendChild(label);
 
         dayAssignments.forEach(assignment=>{
-          const card=document.createElement("article");
-          card.className="assignment-card";
           const status=assignment.status||"pending";
+          const card=document.createElement("article");
+          card.className=`dv-slot${status==="pending"?" is-pending":""}`;
+
+          const badgeClass=status==="confirmed"?"is-ok":status==="refused"?"is-bad":"is-pending";
           const actions=status==="pending"
-            ? `<div class="assignment-actions">
-                 <button class="button button-primary confirm-assignment" type="button">Je confirme</button>
-                 <button class="button button-ghost refuse-assignment" type="button">Je refuse</button>
+            ? `<div class="dv-slot-actions">
+                 <button class="dv-btn dv-btn-primary confirm-assignment" type="button">Je confirme</button>
+                 <button class="dv-btn refuse-assignment" type="button">Je refuse</button>
                </div>`
             : "";
 
           card.innerHTML=`
-            <span class="assignment-status ${assignmentStatusClass(status)}">${assignmentStatusLabel(status)}</span>
-            <h3>${escapeHtml(assignment.time||"—")}</h3>
-            <p class="assignment-meta">
-              ${escapeHtml(assignment.vehicleRequirement||"Aucune exigence de véhicule")}
-            </p>
+            <div class="dv-slot-top">
+              <div>
+                <div class="dv-slot-time">${escapeHtml(assignment.time||"—")}</div>
+                <div class="dv-slot-service">${escapeHtml(serviceLabelForTime(assignment.time||"18:00"))}</div>
+              </div>
+              <span class="dv-badge ${badgeClass}">${assignmentStatusLabel(status)}</span>
+            </div>
+            <div class="dv-slot-meta">
+              ${dvSvg("car")}
+              <span>${escapeHtml(assignment.vehicleRequirement||"Aucune exigence de véhicule")}</span>
+            </div>
             ${actions}
-            <div class="message assignment-message"></div>
           `;
 
-          const messageEl=card.querySelector(".assignment-message");
+          const confirmButton=card.querySelector(".confirm-assignment");
+          const refuseButton=card.querySelector(".refuse-assignment");
 
-          card.querySelector(".confirm-assignment")?.addEventListener("click",async()=>{
+          confirmButton?.addEventListener("click",async()=>{
+            confirmButton.disabled=true;
+            refuseButton.disabled=true;
+            confirmButton.textContent="Enregistrement…";
+
             try{
               await updateDoc(doc(db,"driverAssignments",assignment.id),{
                 status:"confirmed",
                 respondedAt:serverTimestamp(),
                 updatedAt:serverTimestamp()
               });
-              showMessage(messageEl,"Votre présence est confirmée.","success")
+              driverToast("Présence confirmée.","ok")
             }catch(error){
               console.error(error);
-              showMessage(messageEl,`Impossible de confirmer : ${error.code||error.message}`,"error")
+              confirmButton.disabled=false;
+              refuseButton.disabled=false;
+              confirmButton.textContent="Je confirme";
+              driverToast(`Impossible de confirmer : ${error.code||error.message}`,"bad")
             }
           });
 
-          card.querySelector(".refuse-assignment")?.addEventListener("click",async()=>{
-            const confirmed=window.confirm("Refuser cette affectation ?");
-            if(!confirmed)return;
+          refuseButton?.addEventListener("click",async()=>{
+            const question=`Refuser le service du ${driverShortDay(assignment.date)} à ${assignment.time} ?`;
+            if(!window.confirm(question))return;
+
+            confirmButton.disabled=true;
+            refuseButton.disabled=true;
+            refuseButton.textContent="Enregistrement…";
 
             try{
               await updateDoc(doc(db,"driverAssignments",assignment.id),{
@@ -3196,29 +3745,35 @@
                 respondedAt:serverTimestamp(),
                 updatedAt:serverTimestamp()
               });
-              showMessage(
-                messageEl,
-                "Votre refus est enregistré. Le manager pourra proposer un remplacement.",
-                "success"
-              )
+              driverToast("Refus enregistré. Le manager proposera un remplacement.","ok")
             }catch(error){
               console.error(error);
-              showMessage(messageEl,`Impossible d’enregistrer le refus : ${error.code||error.message}`,"error")
+              confirmButton.disabled=false;
+              refuseButton.disabled=false;
+              refuseButton.textContent="Je refuse";
+              driverToast(`Impossible d’enregistrer le refus : ${error.code||error.message}`,"bad")
             }
           });
 
-          dayGroup.appendChild(card)
-        });
-
-        driverAssignmentsContainer.appendChild(dayGroup)
+          driverAssignmentsContainer.appendChild(card)
+        })
       })
     }
 
     function renderSelectedAvailabilityWeek(){
       const cards=[...driverWeeksContainer.querySelectorAll("[data-driver-week-id]")];
+      if(cards.length===0)return;
+
+      let visible=0;
       cards.forEach(card=>{
-        card.classList.toggle("hidden",card.dataset.driverWeekId!==currentDriverWeekId)
-      })
+        const match=card.dataset.driverWeekId===currentDriverWeekId;
+        card.classList.toggle("hidden",!match);
+        if(match)visible+=1
+      });
+
+      // La semaine choisie dans le planning n'a pas toujours de formulaire ouvert :
+      // dans ce cas on affiche la premiere semaine reellement ouverte.
+      if(visible===0)cards[0].classList.remove("hidden")
     }
 
     function refreshDriverScreen(){
@@ -3272,7 +3827,7 @@
             return
           }
 
-          driverAssignmentsContainer.innerHTML='<div class="empty-state">Impossible de charger vos affectations.</div>';
+          driverAssignmentsContainer.innerHTML='<div class="dv-empty">Impossible de charger vos affectations.</div>';
           showMessage(driverMessage,`Erreur affectations : ${error.code||error.message}`,"error")
         }
       )
@@ -4067,6 +4622,8 @@
 
         driverRegulationGate.classList.add("hidden");
         driverMainContent.classList.remove("hidden");
+        driverTabbar.classList.remove("hidden");
+        setDriverTab("planning");
         subscribeToOpenDriverWeeks(auth.currentUser);
         subscribeToDriverAssignments(auth.currentUser)
       }catch(error){
@@ -4528,6 +5085,19 @@
       }
     });
 
+    /* -------------------------------------------------------------------
+       APPLICATION INSTALLABLE
+       Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
+       plein ecran et la consultation du planning sans reseau.
+       ------------------------------------------------------------------- */
+    if("serviceWorker" in navigator){
+      window.addEventListener("load",()=>{
+        navigator.serviceWorker.register("sw.js").catch(error=>{
+          console.warn("Service worker non enregistré.",error)
+        })
+      })
+    }
+
     onAuthStateChanged(auth,async user=>{
       clearMessage(loginMessage);clearMessage(appMessage);clearMessage(driverMessage);
 
@@ -4540,6 +5110,8 @@
         currentDriverWeekId="";
         driverRegulationGate.classList.add("hidden");
         driverMainContent.classList.add("hidden");
+        driverTabbar.classList.add("hidden");
+        driverAvailabilityByWeek.clear();
         regulationReadCheck.checked=false;
         regulationCommitmentCheck.checked=false;
         updateRegulationAcceptButton();
