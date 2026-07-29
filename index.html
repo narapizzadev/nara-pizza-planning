@@ -857,9 +857,11 @@
     .dv-times{display:none;margin-top:12px}
     .dv-times.is-open{display:block}
     .dv-times label{display:block;font-size:12px;font-weight:600;color:var(--dv-muted);margin-bottom:7px}
-    .dv-slotrow{display:flex;gap:7px;flex-wrap:wrap}
-    .dv-slot-btn{padding:9px 13px;border-radius:11px;border:1px solid var(--dv-line);
-      background:var(--dv-card);color:var(--dv-muted);font-size:14px;font-weight:500;min-height:42px;min-width:64px}
+    .dv-slotrow{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;
+      padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .dv-slotrow::-webkit-scrollbar{display:none}
+    .dv-slot-btn{flex:0 0 auto;padding:9px 11px;border-radius:11px;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-muted);font-size:14px;font-weight:500;min-height:42px}
     .dv-slot-btn.is-on{background:var(--dv-text);border-color:var(--dv-text);color:var(--dv-bg);font-weight:600}
     .dv-times input[type=time]{width:100%;padding:11px 10px;border:1px solid var(--dv-line);
       border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:15px;min-height:46px}
@@ -3047,7 +3049,7 @@
             ${dvSvg("glass")}
             <div>
               <strong>Délai dépassé</strong>
-              <small>Semaine du ${formatDate(week.startDate)}. Contactez le manager pour toute modification.</small>
+              <small>Semaine du ${escapeHtml(driverRangeLabel(week.startDate,week.endDate))}. Contactez le manager pour toute modification.</small>
             </div>
           </div>
         `;
@@ -3067,7 +3069,7 @@
           ${dvSvg("glass")}
           <div>
             <strong>${remaining!==null&&remaining>0?`Il reste ${formatCountdown(remaining)}`:"Réponse attendue"}</strong>
-            <small>Semaine du ${formatDate(week.startDate)} au ${formatDate(week.endDate)} · avant le ${formatDate(week.deadlineDate)} à ${escapeHtml(week.deadlineTime||"—")}</small>
+            <small>Semaine du ${escapeHtml(driverRangeLabel(week.startDate,week.endDate))} · réponse avant ${escapeHtml(driverDeadlineLabel(week))}</small>
           </div>
         </div>
 
@@ -3492,6 +3494,29 @@
       return `il y a ${Math.abs(days)} jours`
     }
 
+    /* "17 au 23 août", ou "28 juillet au 3 août" a cheval sur deux mois. */
+    function driverRangeLabel(startDate,endDate){
+      if(!startDate)return "";
+      const start=new Date(`${startDate}T12:00:00`);
+      const dayOnly=new Intl.DateTimeFormat("fr-CH",{day:"numeric"});
+      const dayMonth=new Intl.DateTimeFormat("fr-CH",{day:"numeric",month:"long"});
+
+      if(!endDate)return dayMonth.format(start);
+
+      const end=new Date(`${endDate}T12:00:00`);
+      return start.getMonth()===end.getMonth()
+        ? `${dayOnly.format(start)} au ${dayMonth.format(end)}`
+        : `${dayMonth.format(start)} au ${dayMonth.format(end)}`
+    }
+
+    /* "lundi 3 août, 18:00" */
+    function driverDeadlineLabel(week){
+      if(!week||!week.deadlineDate)return "";
+      const date=new Date(`${week.deadlineDate}T12:00:00`);
+      const text=new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"numeric",month:"long"}).format(date);
+      return `${text}, ${week.deadlineTime||"—"}`
+    }
+
     function serviceLabelForTime(time){
       return servicePeriod(time)==="midi"?"service de midi":"service du soir"
     }
@@ -3639,8 +3664,8 @@
         icon="send";
         title="Disponibilités à envoyer";
         text=remaining!==null&&remaining>0
-          ? `Semaine du ${formatDate(week.startDate)} — il reste ${formatCountdown(remaining)}.`
-          : `Semaine du ${formatDate(week.startDate)}.`;
+          ? `Semaine du ${driverRangeLabel(week.startDate,week.endDate)} — il reste ${formatCountdown(remaining)}.`
+          : `Semaine du ${driverRangeLabel(week.startDate,week.endDate)}.`;
         link={label:"Remplir mes disponibilités",weekId:week.id,tab:"availability"}
       }else if(upcoming.length){
         const next=upcoming[0];
