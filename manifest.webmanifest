@@ -1,29 +1,19 @@
 {
-  "name": "Horaires Bossa Nova Café",
-  "short_name": "Horaires Bossa",
-  "description": "Planning de l'équipe du Bossa Nova Café",
+  "name": "Nara Pizza Planning",
+  "short_name": "Nara Pizza",
+  "description": "Planning et disponibilités des livreurs Nara Pizza.",
+  "lang": "fr",
+  "dir": "ltr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#1565C0",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
+  "background_color": "#f4f4f6",
+  "theme_color": "#f28c45",
+  "categories": ["business", "productivity"],
   "icons": [
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
