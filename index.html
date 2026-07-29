@@ -364,6 +364,7 @@
     .deadline-card.warning{background:#fff8e1;color:#8a5b00}
     .deadline-card.success{background:#ecfdf3;color:var(--success)}
     .deadline-card.danger{background:#fff1f0;color:var(--error)}
+    .need-warning{margin-top:7px;padding:9px 11px;border-radius:9px;background:#fff1f0;color:var(--error);font-size:13px;line-height:1.45}
     .missing-drivers{margin:14px 0;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
     .missing-driver-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .missing-driver-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#fff1f0;color:var(--error);font-weight:700;text-decoration:none}
@@ -853,12 +854,17 @@
       background:var(--dv-sunk);color:var(--dv-muted);font-size:13px;font-weight:500;min-height:36px}
     .dv-svc-chip.is-on{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);
       color:var(--dv-ok-ink);font-weight:600}
-    .dv-times{display:none;gap:10px;margin-top:11px;grid-template-columns:1fr 1fr}
-    .dv-times.is-open{display:grid}
-    .dv-times label{display:block;font-size:11px;color:var(--dv-muted);margin-bottom:5px}
+    .dv-times{display:none;margin-top:12px}
+    .dv-times.is-open{display:block}
+    .dv-times label{display:block;font-size:12px;font-weight:600;color:var(--dv-muted);margin-bottom:7px}
+    .dv-slotrow{display:flex;gap:7px;flex-wrap:wrap}
+    .dv-slot-btn{padding:9px 13px;border-radius:11px;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-muted);font-size:14px;font-weight:500;min-height:42px;min-width:64px}
+    .dv-slot-btn.is-on{background:var(--dv-text);border-color:var(--dv-text);color:var(--dv-bg);font-weight:600}
     .dv-times input[type=time]{width:100%;padding:11px 10px;border:1px solid var(--dv-line);
       border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:15px;min-height:46px}
     .dv-times-title{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--dv-muted);margin-top:2px}
+    .dv-times-note{display:flex;align-items:flex-end;padding-bottom:13px;font-size:12px;color:var(--dv-muted);line-height:1.4}
     .dv-comment{display:none;margin-top:10px}
     .dv-comment.is-open{display:block}
     .dv-comment input{width:100%;padding:11px 12px;border:1px solid var(--dv-line);
@@ -1159,7 +1165,20 @@
                 <div class="form-grid">
                   <div class="field">
                     <label for="needTime">Heure d’arrivée</label>
-                    <input id="needTime" type="time" value="17:30" required>
+                    <select id="needTime" required>
+                      <optgroup label="Service de midi">
+                        <option value="11:30">11:30</option>
+                        <option value="11:45">11:45</option>
+                        <option value="12:00">12:00</option>
+                      </optgroup>
+                      <optgroup label="Service du soir">
+                        <option value="18:00" selected>18:00</option>
+                        <option value="18:15">18:15</option>
+                        <option value="18:30">18:30</option>
+                        <option value="18:45">18:45</option>
+                        <option value="19:00">19:00</option>
+                      </optgroup>
+                    </select>
                   </div>
 
                   <div class="field">
@@ -1885,6 +1904,43 @@
     let currentPlan = null;
     let currentAssignmentStatuses = new Map();
 
+    /* ===================================================================
+       CRENEAUX DE SERVICE
+       Meme liste pour les besoins saisis par le manager et pour les
+       disponibilites declarees par les livreurs : un besoin ne peut donc
+       jamais tomber en dehors de ce qu'un livreur peut cocher.
+       =================================================================== */
+    const MIDDAY_SLOTS = ["11:30","11:45","12:00"];
+    const EVENING_SLOTS = ["18:00","18:15","18:30","18:45","19:00"];
+    const DEFAULT_MIDDAY_SLOT = MIDDAY_SLOTS[0];
+    const DEFAULT_EVENING_SLOT = EVENING_SLOTS[0];
+
+    function isNeedTimeAllowed(time){
+      return MIDDAY_SLOTS.includes(time)||EVENING_SLOTS.includes(time)
+    }
+
+    function serviceSlots(service){
+      return service==="midi"?MIDDAY_SLOTS:EVENING_SLOTS
+    }
+
+    /* Ramene une heure quelconque au creneau autorise le plus proche.
+       Sert a rattraper les anciennes donnees (besoins ou modeles a 17:30). */
+    function snapToServiceSlot(time,service){
+      const list=serviceSlots(service||servicePeriod(time||"18:00"));
+      if(!time)return list[0];
+      if(list.includes(time))return time;
+
+      const toMinutes=value=>{
+        const [h,m]=String(value).split(":").map(Number);
+        return (h||0)*60+(m||0)
+      };
+      const target=toMinutes(time);
+
+      return list.reduce((best,slot)=>
+        Math.abs(toMinutes(slot)-target)<Math.abs(toMinutes(best)-target)?slot:best
+      ,list[0])
+    }
+
     const DELIVERY_METHODS=[
       {id:"company_car",label:"Voiture pizzeria",icon:"🚗"},
       {id:"personal_car",label:"Voiture personnelle",icon:"🚙"},
@@ -2568,6 +2624,10 @@
           <div>
             <h3>${escapeHtml(formatDay(need.date))} à ${escapeHtml(need.time||"—")}</h3>
             <p class="need-meta">${need.notes?escapeHtml(need.notes):"Aucune note interne"}</p>
+            ${isNeedTimeAllowed(need.time)?"":`
+              <p class="need-warning">Heure hors des créneaux déclarables par les livreurs.
+              Aucun livreur ne pourra être affecté. Recréez ce besoin à ${escapeHtml(snapToServiceSlot(need.time))}.</p>
+            `}
           </div>
           <div class="need-actions">
             <span class="need-count">${Number(need.quantity)||0} livreur${Number(need.quantity)>1?"s":""}</span>
@@ -2769,7 +2829,7 @@
             weekId:week.id,
             weekStartDate:week.startDate,
             date:addDays(week.startDate,Number(item.dayIndex||0)),
-            time:item.time||"17:30",
+            time:snapToServiceSlot(item.time)||DEFAULT_EVENING_SLOT,
             quantity:Number(item.quantity||1),
             notes:item.notes||"",
             templateId:template.id,
@@ -3057,19 +3117,40 @@
             <button class="dv-svc-chip toggle-evening" type="button">Soir</button>
           </div>
           <div class="dv-times midday-times">
-            <div class="dv-times-title">Service de midi — arrivée au plus tard 12:00</div>
-            <div><label>Au plus tôt</label><input class="midday-earliest" type="time" max="12:00"></div>
-            <div><label>Au plus tard</label><input class="midday-latest" type="time" max="12:00"></div>
+            <label>Service de midi — je peux arriver dès</label>
+            <div class="dv-slotrow midday-slots"></div>
           </div>
           <div class="dv-times evening-times">
-            <div class="dv-times-title">Service du soir — arrivée au plus tard 19:00</div>
-            <div><label>Au plus tôt</label><input class="evening-earliest" type="time" max="19:00"></div>
-            <div><label>Au plus tard</label><input class="evening-latest" type="time" max="19:00"></div>
+            <label>Service du soir — je peux arriver dès</label>
+            <div class="dv-slotrow evening-slots"></div>
           </div>
           <div class="dv-comment">
             <input class="day-comment" type="text" placeholder="Commentaire facultatif">
           </div>
         `;
+
+        // Les anciennes saisies libres sont ramenees au creneau autorise le plus proche.
+        day.middayEarliest=snapToServiceSlot(day.middayEarliest,"midi");
+        day.eveningEarliest=snapToServiceSlot(day.eveningEarliest,"soir");
+
+        const slotButtons={midi:new Map(),soir:new Map()};
+
+        [["midi",".midday-slots"],["soir",".evening-slots"]].forEach(([service,selector])=>{
+          const box=row.querySelector(selector);
+          serviceSlots(service).forEach(slot=>{
+            const button=document.createElement("button");
+            button.type="button";
+            button.className="dv-slot-btn";
+            button.textContent=slot;
+            button.addEventListener("click",()=>{
+              if(service==="midi")day.middayEarliest=slot;
+              else day.eveningEarliest=slot;
+              paint()
+            });
+            slotButtons[service].set(slot,button);
+            box.appendChild(button)
+          })
+        });
 
         function paint(){
           row.querySelector(".toggle-midday").classList.toggle("is-on",day.middayAvailable===true);
@@ -3077,10 +3158,14 @@
           row.querySelector(".midday-times").classList.toggle("is-open",day.middayAvailable===true);
           row.querySelector(".evening-times").classList.toggle("is-open",day.eveningAvailable===true);
           row.querySelector(".dv-comment").classList.toggle("is-open",day.middayAvailable===true||day.eveningAvailable===true);
-          row.querySelector(".midday-earliest").value=day.middayEarliest||"11:30";
-          row.querySelector(".midday-latest").value=day.middayLatest||"12:00";
-          row.querySelector(".evening-earliest").value=day.eveningEarliest||"17:30";
-          row.querySelector(".evening-latest").value=day.eveningLatest||"19:00";
+
+          slotButtons.midi.forEach((button,slot)=>{
+            button.classList.toggle("is-on",slot===day.middayEarliest)
+          });
+          slotButtons.soir.forEach((button,slot)=>{
+            button.classList.toggle("is-on",slot===day.eveningEarliest)
+          });
+
           row.querySelector(".day-comment").value=day.comment||""
         }
 
@@ -3092,10 +3177,6 @@
           day.eveningAvailable=!day.eveningAvailable;
           paint()
         });
-        row.querySelector(".midday-earliest").addEventListener("input",event=>{day.middayEarliest=event.target.value});
-        row.querySelector(".midday-latest").addEventListener("input",event=>{day.middayLatest=event.target.value});
-        row.querySelector(".evening-earliest").addEventListener("input",event=>{day.eveningEarliest=event.target.value});
-        row.querySelector(".evening-latest").addEventListener("input",event=>{day.eveningLatest=event.target.value});
         row.querySelector(".day-comment").addEventListener("input",event=>{day.comment=event.target.value});
 
         paint();
@@ -3112,27 +3193,22 @@
             day.eveningAvailable=false
           }else if(kind==="evenings"){
             day.eveningAvailable=true;
-            day.eveningEarliest=day.eveningEarliest||"17:30";
-            day.eveningLatest=day.eveningLatest||"19:00"
+            day.eveningEarliest=day.eveningEarliest||DEFAULT_EVENING_SLOT
           }else if(kind==="middays"){
             day.middayAvailable=true;
-            day.middayEarliest=day.middayEarliest||"11:30";
-            day.middayLatest=day.middayLatest||"12:00"
+            day.middayEarliest=day.middayEarliest||DEFAULT_MIDDAY_SLOT
           }else if(kind==="weekend"){
             const isWeekend=weekday===5||weekday===6||weekday===0;
             day.middayAvailable=false;
             day.eveningAvailable=isWeekend;
-            day.eveningEarliest=day.eveningEarliest||"17:30";
-            day.eveningLatest=day.eveningLatest||"19:00"
+            day.eveningEarliest=day.eveningEarliest||DEFAULT_EVENING_SLOT
           }else if(kind==="last"&&remembered){
             const model=remembered.pattern.find(item=>item.weekday===weekday);
             if(model){
               day.middayAvailable=model.middayAvailable===true;
-              day.middayEarliest=model.middayEarliest||"11:30";
-              day.middayLatest=model.middayLatest||"12:00";
+              day.middayEarliest=snapToServiceSlot(model.middayEarliest,"midi");
               day.eveningAvailable=model.eveningAvailable===true;
-              day.eveningEarliest=model.eveningEarliest||"17:30";
-              day.eveningLatest=model.eveningLatest||"19:00"
+              day.eveningEarliest=snapToServiceSlot(model.eveningEarliest,"soir")
             }
           }
         });
@@ -3198,11 +3274,11 @@
         const daysPayload=state.map(day=>({
           date:day.date,
           middayAvailable:day.middayAvailable===true,
-          middayEarliest:day.middayAvailable?(day.middayEarliest||"11:30"):"",
-          middayLatest:day.middayAvailable?(day.middayLatest||"12:00"):"",
+          middayEarliest:day.middayAvailable?snapToServiceSlot(day.middayEarliest,"midi"):"",
+          middayLatest:day.middayAvailable?MIDDAY_LATEST:"",
           eveningAvailable:day.eveningAvailable===true,
-          eveningEarliest:day.eveningAvailable?(day.eveningEarliest||"17:30"):"",
-          eveningLatest:day.eveningAvailable?(day.eveningLatest||"19:00"):"",
+          eveningEarliest:day.eveningAvailable?snapToServiceSlot(day.eveningEarliest,"soir"):"",
+          eveningLatest:day.eveningAvailable?EVENING_LATEST:"",
           comment:(day.middayAvailable||day.eveningAvailable)?(day.comment||"").trim():""
         }));
 
@@ -3214,20 +3290,12 @@
         }
 
         const invalidDay=daysPayload.find(day=>
-          (day.middayAvailable && (
-            !day.middayEarliest || !day.middayLatest
-            || day.middayEarliest>day.middayLatest
-            || day.middayLatest>"12:00"
-          ))
-          || (day.eveningAvailable && (
-            !day.eveningEarliest || !day.eveningLatest
-            || day.eveningEarliest>day.eveningLatest
-            || day.eveningLatest>"19:00"
-          ))
+          (day.middayAvailable && (!day.middayEarliest || day.middayEarliest>MIDDAY_LATEST))
+          || (day.eveningAvailable && (!day.eveningEarliest || day.eveningEarliest>EVENING_LATEST))
         );
 
         if(invalidDay){
-          driverToast(`${driverShortDay(invalidDay.date)} : arrivée au plus tard 12:00 le midi et 19:00 le soir.`,"bad");
+          driverToast(`${driverShortDay(invalidDay.date)} : arrivée au plus tard ${MIDDAY_LATEST} le midi et ${EVENING_LATEST} le soir.`,"bad");
           return
         }
 
@@ -3346,6 +3414,11 @@
     let driverToastTimer = null;
     const driverAvailabilityByWeek = new Map();
     const LAST_AVAILABILITY_KEY = "naraLastAvailability";
+
+    /* Heures d'arrivee maximales. Le livreur ne saisit que l'heure a partir
+       de laquelle il peut venir ; la borne haute est fixee ici. */
+    const MIDDAY_LATEST = "12:00";
+    const EVENING_LATEST = "19:00";
 
     const DV_ICONS = {
       bell:'<path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/>',
@@ -4990,7 +5063,7 @@
 
         showMessage(needFormMessage,"Le besoin a été ajouté.","success");
         availabilityCache.delete(week.id);
-        needTime.value="17:30";
+        needTime.value=DEFAULT_EVENING_SLOT;
         needQuantity.value="1";
         needNotes.value=""
       }catch(error){
