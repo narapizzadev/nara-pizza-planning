@@ -4,16 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f28c45">
-  <title>Nara Pizza Planning</title>
+  <title>Equipo — planning des équipes</title>
 
+  <!-- Le fichier nara-pizza-logo-transparent.png porte le logo de l'établissement.
+       Pour un nouveau client, il suffit de remplacer cette image. -->
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Nara Pizza">
+  <meta name="apple-mobile-web-app-title" content="Equipo">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="description" content="Planning et disponibilités des livreurs Nara Pizza.">
+  <meta name="description" content="Equipo — disponibilités et planning des équipes en restauration.">
   <style>
     :root{--orange:#f28c45;--orange-dark:#d96f25;--text:#252525;--muted:#6f6f6f;--bg:#f5f5f5;--white:#fff;--border:#dedede;--soft:#fff7f0;--error:#b42318;--success:#18794e}
     *{box-sizing:border-box} body{margin:0;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
@@ -24,7 +26,7 @@
       font-size:14px;font-weight:700;text-decoration:underline;min-height:36px}
     .link-button:disabled{opacity:.6}
     .auth-card{width:100%;max-width:460px;background:var(--white);border-radius:22px;padding:32px;box-shadow:0 12px 35px rgba(0,0,0,.1)}
-    .brand{text-align:center;margin-bottom:28px}.brand-logo{display:block;width:150px;max-width:55%;height:auto;margin:0 auto 18px}
+    .brand{text-align:center;margin-bottom:28px}.brand-logo{display:block;width:78px;max-width:34%;height:auto;margin:0 auto 16px}
     h1,h2,h3,p{margin-top:0}h1{margin-bottom:6px;font-size:30px}h2{margin-bottom:8px;font-size:26px}h3{margin-bottom:6px;font-size:18px}
     .subtitle,.muted{color:var(--muted);line-height:1.45}.field{margin-bottom:18px}label{display:block;margin-bottom:7px;font-weight:700}
     input,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white);color:var(--text)}
@@ -893,6 +895,11 @@
     .dv-check input{width:22px;height:22px;flex:0 0 auto;margin:0;accent-color:var(--dv-brand)}
     .dv-check span{font-size:13.5px;line-height:1.5}
 
+    .dv-input{width:100%;padding:13px 14px;border:1px solid var(--dv-line);border-radius:12px;
+      background:var(--dv-card);color:var(--dv-text);font-size:16px;min-height:50px}
+    .dv-field{margin-bottom:12px}
+    .dv-field label{display:block;font-size:12px;font-weight:600;color:var(--dv-muted);margin-bottom:6px}
+    .dv-hint{font-size:12px;color:var(--dv-muted);line-height:1.5;margin-top:8px}
     .dv-empty{padding:26px 18px;border-radius:16px;border:1px dashed var(--dv-line);
       text-align:center;color:var(--dv-muted);font-size:14px;line-height:1.55;background:var(--dv-card)}
 
@@ -932,9 +939,9 @@
   <section id="loginView" class="auth-shell">
     <main class="auth-card">
       <div class="brand">
-        <img class="brand-logo" src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
-        <h1>Nara Pizza</h1>
-        <div class="subtitle">Gestion des disponibilités et du planning des livreurs</div>
+        <img class="brand-logo" src="logo-equipo.png" alt="Equipo">
+        <h1>Equipo</h1>
+        <div class="subtitle">Gestion des disponibilités et du planning des équipes</div>
       </div>
       <form id="loginForm">
         <div class="field"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="email" required></div>
@@ -945,7 +952,7 @@
         <button id="forgotPasswordButton" class="link-button" type="button">Mot de passe oublié ?</button>
       </div>
       <div id="loginMessage" class="message"></div>
-      <div class="footer">Nara Pizza Planning — version pilote</div>
+      <div class="footer">Equipo — version pilote</div>
     </main>
   </section>
 
@@ -953,7 +960,7 @@
     <header class="topbar">
       <div class="topbar-brand">
         <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
-        <div class="topbar-title"><strong>Nara Pizza Planning</strong><small id="topbarUser">—</small></div>
+        <div class="topbar-title"><strong>Equipo</strong><small id="topbarUser">—</small></div>
       </div>
       <div class="topbar-actions">
         <button class="button button-ghost install-help-button" type="button">Installer</button>
@@ -1287,7 +1294,7 @@
       </section>
 
       <div id="appMessage" class="message"></div>
-      <div class="footer">Nara Pizza Planning — version pilote</div>
+      <div class="footer">Equipo — version pilote</div>
     </main>
   </section>
 
@@ -1386,13 +1393,35 @@
     <header class="dv-top">
       <div class="dv-mark"><img src="nara-pizza-logo-transparent.png" alt="Nara Pizza"></div>
       <div class="dv-who">
-        <strong id="driverGreeting">Nara Pizza</strong>
+        <strong id="driverGreeting">Equipo</strong>
         <small id="driverTopbarUser">—</small>
       </div>
       <button class="dv-iconbtn open-regulation-modal" type="button" aria-label="Ouvrir le règlement">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2z"/><path d="M8 7.5h7M8 11.5h7"/></svg>
       </button>
     </header>
+
+    <section id="driverPasswordGate" class="dv-body hidden">
+      <div class="dv-secthead">
+        <h2>Choisissez votre mot de passe</h2>
+        <p class="dv-sub">Le mot de passe qui vous a été communiqué est provisoire. Choisissez-en un que vous seul connaissez avant de continuer.</p>
+      </div>
+
+      <div class="dv-rule">
+        <div class="dv-field">
+          <label for="newPasswordInput">Nouveau mot de passe</label>
+          <input id="newPasswordInput" class="dv-input" type="password" autocomplete="new-password" minlength="8">
+        </div>
+        <div class="dv-field">
+          <label for="newPasswordConfirm">Confirmez le nouveau mot de passe</label>
+          <input id="newPasswordConfirm" class="dv-input" type="password" autocomplete="new-password" minlength="8">
+        </div>
+        <p class="dv-hint">Au moins huit caractères. Évitez votre date de naissance ou votre prénom.</p>
+      </div>
+
+      <button id="savePasswordButton" class="dv-btn dv-btn-primary" type="button">Enregistrer et continuer</button>
+      <div id="passwordGateMessage" class="message"></div>
+    </section>
 
     <section id="driverRegulationGate" class="dv-body hidden">
       <div class="dv-secthead">
@@ -1549,10 +1578,36 @@
         <article class="dv-rule">
           <h3>Installer l’application</h3>
           <ul>
-            <li>Ajoutez Nara Pizza à l’écran d’accueil pour l’ouvrir comme une vraie application.</li>
+            <li>Ajoutez Equipo à l’écran d’accueil pour l’ouvrir comme une vraie application.</li>
           </ul>
           <div style="margin-top:12px">
             <button class="dv-btn install-help-button" type="button">Comment installer</button>
+          </div>
+        </article>
+
+        <article class="dv-rule">
+          <h3>Mon mot de passe</h3>
+          <ul>
+            <li>Vous pouvez le modifier à tout moment, personne d’autre n’y a accès.</li>
+          </ul>
+          <div style="margin-top:12px">
+            <button id="openPasswordFormButton" class="dv-btn" type="button">Changer mon mot de passe</button>
+          </div>
+          <div id="passwordFormWrap" class="hidden" style="margin-top:14px">
+            <div class="dv-field">
+              <label for="currentPasswordInput">Mot de passe actuel</label>
+              <input id="currentPasswordInput" class="dv-input" type="password" autocomplete="current-password">
+            </div>
+            <div class="dv-field">
+              <label for="changePasswordNew">Nouveau mot de passe</label>
+              <input id="changePasswordNew" class="dv-input" type="password" autocomplete="new-password" minlength="8">
+            </div>
+            <div class="dv-field">
+              <label for="changePasswordConfirm">Confirmez le nouveau mot de passe</label>
+              <input id="changePasswordConfirm" class="dv-input" type="password" autocomplete="new-password" minlength="8">
+            </div>
+            <button id="changePasswordButton" class="dv-btn dv-btn-primary" type="button">Enregistrer</button>
+            <div id="changePasswordMessage" class="message"></div>
           </div>
         </article>
 
@@ -1655,7 +1710,7 @@
     <section class="install-modal">
       <div class="install-modal-header">
         <div>
-          <h2 id="installModalTitle">Ajouter Nara Pizza Planning à l’écran d’accueil</h2>
+          <h2 id="installModalTitle">Ajouter Equipo à l’écran d’accueil</h2>
           <p class="muted">L’application s’ouvrira ensuite comme une app, sans devoir rechercher le lien.</p>
         </div>
         <button id="closeInstallModal" class="install-close" type="button" aria-label="Fermer">×</button>
@@ -1665,7 +1720,7 @@
         <article class="install-device">
           <h3>🍎 iPhone / iPad</h3>
           <ol class="install-steps">
-            <li>Ouvrez Nara Pizza Planning dans <strong>Safari</strong>.</li>
+            <li>Ouvrez Equipo dans <strong>Safari</strong>.</li>
             <li>Appuyez sur le bouton <strong>Partager</strong> : le carré avec une flèche vers le haut.</li>
             <li>Faites défiler le menu et choisissez <strong>Sur l’écran d’accueil</strong>.</li>
             <li>Conservez le nom proposé, puis appuyez sur <strong>Ajouter</strong>.</li>
@@ -1675,7 +1730,7 @@
         <article class="install-device">
           <h3>🤖 Android</h3>
           <ol class="install-steps">
-            <li>Ouvrez Nara Pizza Planning dans <strong>Google Chrome</strong>.</li>
+            <li>Ouvrez Equipo dans <strong>Google Chrome</strong>.</li>
             <li>Appuyez sur le menu <strong>⋮</strong> en haut à droite.</li>
             <li>Choisissez <strong>Ajouter à l’écran d’accueil</strong> ou <strong>Installer l’application</strong>.</li>
             <li>Confirmez avec <strong>Ajouter</strong> ou <strong>Installer</strong>.</li>
@@ -1690,14 +1745,14 @@
       </div>
 
       <p class="install-tip">
-        <strong>Conseil :</strong> restez connecté après l’installation. L’icône Nara Pizza apparaîtra avec les autres applications du téléphone.
+        <strong>Conseil :</strong> restez connecté après l’installation. L’icône Equipo apparaîtra avec les autres applications du téléphone.
       </p>
     </section>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
     import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getDocs, collection, addDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1801,6 +1856,18 @@
 
     const driverLogoutButton = document.getElementById("driverLogoutButton");
     const driverGreeting = document.getElementById("driverGreeting");
+    const driverPasswordGate = document.getElementById("driverPasswordGate");
+    const newPasswordInput = document.getElementById("newPasswordInput");
+    const newPasswordConfirm = document.getElementById("newPasswordConfirm");
+    const savePasswordButton = document.getElementById("savePasswordButton");
+    const passwordGateMessage = document.getElementById("passwordGateMessage");
+    const openPasswordFormButton = document.getElementById("openPasswordFormButton");
+    const passwordFormWrap = document.getElementById("passwordFormWrap");
+    const currentPasswordInput = document.getElementById("currentPasswordInput");
+    const changePasswordNew = document.getElementById("changePasswordNew");
+    const changePasswordConfirm = document.getElementById("changePasswordConfirm");
+    const changePasswordButton = document.getElementById("changePasswordButton");
+    const changePasswordMessage = document.getElementById("changePasswordMessage");
     const driverActionCard = document.getElementById("driverActionCard");
     const driverTabbar = document.getElementById("driverTabbar");
     const dvToast = document.getElementById("dvToast");
@@ -2021,7 +2088,44 @@
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
       document.getElementById("driverTopbarUser").textContent="Espace livreur";
       setDriverTab("planning");
+
+      // Mot de passe provisoire : rien d'autre n'est accessible tant qu'il n'a pas été changé.
+      if(profile.mustChangePassword===true){
+        showPasswordGate();
+        return
+      }
+
       checkDriverRegulationAcceptance(user)
+    }
+
+    function showPasswordGate(){
+      driverPasswordGate.classList.remove("hidden");
+      driverRegulationGate.classList.add("hidden");
+      driverMainContent.classList.add("hidden");
+      driverTabbar.classList.add("hidden");
+      clearMessage(passwordGateMessage);
+      newPasswordInput.value="";
+      newPasswordConfirm.value=""
+    }
+
+    function checkPasswordPair(a,b,messageEl){
+      if(a.length<8){
+        showMessage(messageEl,"Le mot de passe doit contenir au moins huit caractères.","error");
+        return false
+      }
+      if(a!==b){
+        showMessage(messageEl,"Les deux mots de passe ne sont pas identiques.","error");
+        return false
+      }
+      return true
+    }
+
+    function passwordErrorText(error){
+      if(error.code==="auth/weak-password")return "Ce mot de passe est trop simple. Choisissez-en un plus long.";
+      if(error.code==="auth/requires-recent-login")return "Votre session est trop ancienne. Déconnectez-vous, reconnectez-vous, puis réessayez.";
+      if(error.code==="auth/wrong-password"||error.code==="auth/invalid-credential")return "Le mot de passe actuel est incorrect.";
+      if(error.code==="auth/too-many-requests")return "Trop de tentatives. Patientez quelques minutes.";
+      return `Impossible d’enregistrer : ${error.code||error.message}`
     }
 
     function formatDate(value){if(!value)return"—";const d=new Date(`${value}T12:00:00`);return new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).format(d)}
@@ -4164,7 +4268,7 @@
         link.className="missing-driver-chip";
         const subject=encodeURIComponent(`Rappel disponibilités — semaine du ${formatDate(week.startDate)}`);
         const body=encodeURIComponent(
-          `Bonjour ${driver.name||""},\n\nMerci d’envoyer vos disponibilités dans Nara Pizza Planning avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}.\n\nMerci.`
+          `Bonjour ${driver.name||""},\n\nMerci d’envoyer vos disponibilités dans Equipo avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}.\n\nMerci.`
         );
         link.href=`mailto:${driver.email||""}?subject=${subject}&body=${body}`;
         link.textContent=`✉ ${driver.name||"Livreur"}`;
@@ -4712,6 +4816,85 @@
       forgotPasswordButton.textContent="Mot de passe oublié ?"
     });
 
+    /* Passage obligatoire à la première connexion. */
+    savePasswordButton.addEventListener("click",async()=>{
+      clearMessage(passwordGateMessage);
+
+      const next=newPasswordInput.value;
+      if(!checkPasswordPair(next,newPasswordConfirm.value,passwordGateMessage))return;
+
+      savePasswordButton.disabled=true;
+      savePasswordButton.textContent="Enregistrement…";
+
+      try{
+        await updatePassword(auth.currentUser,next);
+
+        // L'indicateur est effacé sur la fiche du livreur : c'est le seul champ
+        // qu'il a le droit de modifier lui-même.
+        await updateDoc(doc(db,"users",auth.currentUser.uid),{
+          mustChangePassword:false,
+          passwordChangedAt:serverTimestamp()
+        });
+
+        currentProfile={...currentProfile,mustChangePassword:false};
+        driverPasswordGate.classList.add("hidden");
+        driverToast("Mot de passe enregistré.","ok");
+        checkDriverRegulationAcceptance(auth.currentUser)
+      }catch(error){
+        console.error(error);
+        showMessage(passwordGateMessage,passwordErrorText(error),"error")
+      }finally{
+        savePasswordButton.disabled=false;
+        savePasswordButton.textContent="Enregistrer et continuer"
+      }
+    });
+
+    /* Changement volontaire depuis l'onglet Aide. */
+    openPasswordFormButton.addEventListener("click",()=>{
+      const opening=passwordFormWrap.classList.contains("hidden");
+      passwordFormWrap.classList.toggle("hidden",!opening);
+      openPasswordFormButton.textContent=opening?"Annuler":"Changer mon mot de passe";
+      clearMessage(changePasswordMessage);
+      if(opening)currentPasswordInput.focus()
+    });
+
+    changePasswordButton.addEventListener("click",async()=>{
+      clearMessage(changePasswordMessage);
+
+      const current=currentPasswordInput.value;
+      const next=changePasswordNew.value;
+
+      if(!current){
+        showMessage(changePasswordMessage,"Saisissez d’abord votre mot de passe actuel.","error");
+        return
+      }
+
+      if(!checkPasswordPair(next,changePasswordConfirm.value,changePasswordMessage))return;
+
+      changePasswordButton.disabled=true;
+      changePasswordButton.textContent="Enregistrement…";
+
+      try{
+        // On vérifie l'identité avant de changer : la session peut être ancienne.
+        const credential=EmailAuthProvider.credential(auth.currentUser.email,current);
+        await reauthenticateWithCredential(auth.currentUser,credential);
+        await updatePassword(auth.currentUser,next);
+
+        currentPasswordInput.value="";
+        changePasswordNew.value="";
+        changePasswordConfirm.value="";
+        passwordFormWrap.classList.add("hidden");
+        openPasswordFormButton.textContent="Changer mon mot de passe";
+        driverToast("Mot de passe modifié.","ok")
+      }catch(error){
+        console.error(error);
+        showMessage(changePasswordMessage,passwordErrorText(error),"error")
+      }finally{
+        changePasswordButton.disabled=false;
+        changePasswordButton.textContent="Enregistrer"
+      }
+    });
+
     driverLogoutButton.addEventListener("click",async()=>{
       clearMessage(driverMessage);
 
@@ -5192,6 +5375,7 @@
           await setDoc(doc(db,"users",userId),{
             name,email,phone,vehicle,active,
             role:"driver",
+            mustChangePassword:true,
             createdAt:serverTimestamp(),
             createdBy:auth.currentUser.uid,
             updatedAt:serverTimestamp()
@@ -5218,7 +5402,9 @@
 
         showMessage(
           driverFormMessage,
-          existingId?"Le livreur a été modifié avec succès.":"Le livreur a été créé avec succès.",
+          existingId
+            ? "Le livreur a été modifié avec succès."
+            : "Le livreur a été créé. Communiquez-lui le mot de passe provisoire : il devra en choisir un nouveau à sa première connexion.",
           "success"
         );
 
@@ -5264,9 +5450,12 @@
         currentDriverOpenWeeks=[];
         currentDriverOpenWeeksCount=0;
         currentDriverWeekId="";
+        driverPasswordGate.classList.add("hidden");
         driverRegulationGate.classList.add("hidden");
         driverMainContent.classList.add("hidden");
         driverTabbar.classList.add("hidden");
+        passwordFormWrap.classList.add("hidden");
+        openPasswordFormButton.textContent="Changer mon mot de passe";
         driverAvailabilityByWeek.clear();
         regulationReadCheck.checked=false;
         regulationCommitmentCheck.checked=false;
