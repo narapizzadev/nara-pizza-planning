@@ -360,6 +360,13 @@
     .availability-closed{padding:20px;border-radius:12px;background:#f4f4f4;color:var(--muted);text-align:center}
 
   
+    .opening-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+    .opening-day{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
+    .opening-day strong{display:block;margin-bottom:8px;font-size:15px}
+    .opening-day label{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-weight:400}
+    .opening-day label:last-child{margin-bottom:0}
+    .opening-day input{width:auto;margin:0}
+    .opening-day.is-closed{background:#fafafa;border-style:dashed}
     .planning-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:18px}
     .availability-admin-summary{margin:16px 0 18px}
     .deadline-dashboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
@@ -824,6 +831,13 @@
       color:var(--dv-muted);margin-top:11px;line-height:1.4}
     .dv-slot-meta svg{width:16px;height:16px;flex:0 0 auto;stroke:currentColor;fill:none;
       stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    .dv-vehicle{margin-top:13px;padding-top:13px;border-top:1px dashed var(--dv-line)}
+    .dv-vehicle-label{font-size:12px;font-weight:600;color:var(--dv-muted);margin-bottom:8px}
+    .dv-vehicle-row{display:flex;gap:7px;flex-wrap:wrap}
+    .dv-vehicle-chip{padding:9px 12px;border-radius:11px;border:1px solid var(--dv-line);
+      background:var(--dv-card);color:var(--dv-muted);font-size:13.5px;font-weight:500;min-height:42px}
+    .dv-vehicle-chip.is-on{background:var(--dv-text);border-color:var(--dv-text);
+      color:var(--dv-bg);font-weight:600}
     .dv-slot-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
 
     /* Boutons */
@@ -982,6 +996,7 @@
           <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Comparer besoins, disponibilités et classement</small></span></button>
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
           <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
+          <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
         </div>
 
         <section class="panel">
@@ -1006,13 +1021,7 @@
             <section class="delivery-methods-box">
               <h3>Moyens de livraison autorisés cette semaine</h3>
               <p class="muted">Le livreur choisira ensuite ceux qu’il peut réellement utiliser pendant cette semaine.</p>
-              <div id="weekDeliveryMethods" class="delivery-methods-grid">
-                <label class="delivery-method-option"><input type="checkbox" value="company_car" checked>🚗 Voiture pizzeria</label>
-                <label class="delivery-method-option"><input type="checkbox" value="personal_car" checked>🚙 Voiture personnelle</label>
-                <label class="delivery-method-option"><input type="checkbox" value="company_scooter" checked>🛵 Scooter pizzeria</label>
-                <label class="delivery-method-option"><input type="checkbox" value="personal_motorcycle" checked>🏍️ Moto personnelle</label>
-                <label class="delivery-method-option"><input type="checkbox" value="personal_bicycle" checked>🚲 Vélo personnel</label>
-              </div>
+              <div id="weekDeliveryMethods" class="delivery-methods-grid"></div>
             </section>
 
             <label class="checkbox-row"><input id="openImmediately" type="checkbox" checked><span>Ouvrir immédiatement cette semaine aux livreurs. Sinon, elle restera en brouillon.</span></label>
@@ -1181,20 +1190,7 @@
                 <div class="form-grid">
                   <div class="field">
                     <label for="needTime">Heure d’arrivée</label>
-                    <select id="needTime" required>
-                      <optgroup label="Service de midi">
-                        <option value="11:30">11:30</option>
-                        <option value="11:45">11:45</option>
-                        <option value="12:00">12:00</option>
-                      </optgroup>
-                      <optgroup label="Service du soir">
-                        <option value="18:00" selected>18:00</option>
-                        <option value="18:15">18:15</option>
-                        <option value="18:30">18:30</option>
-                        <option value="18:45">18:45</option>
-                        <option value="19:00">19:00</option>
-                      </optgroup>
-                    </select>
+                    <select id="needTime" required></select>
                   </div>
 
                   <div class="field">
@@ -1227,6 +1223,87 @@
               </div>
             </div>
           </div>
+        </section>
+      </section>
+
+      <section id="establishmentSection" class="section-view">
+        <div class="back-row"><button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button></div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Fiche de l’établissement</h2>
+              <p class="muted">Ces réglages adaptent l’application à votre organisation. Ils s’appliquent aux semaines créées ensuite.</p>
+            </div>
+          </div>
+
+          <div id="establishmentSetupNotice" class="deadline-warning hidden">
+            Première utilisation : complétez cette fiche avant de créer votre première semaine.
+          </div>
+
+          <div class="field">
+            <label for="establishmentName">Nom de l’établissement</label>
+            <input id="establishmentName" type="text" placeholder="Exemple : Pizzeria du Lac" maxlength="80">
+          </div>
+
+          <div class="panel-header" style="margin-top:22px">
+            <div>
+              <h3>Jours d’ouverture</h3>
+              <p class="muted">Cochez les services réellement assurés. Les jours décochés disparaissent des disponibilités et ne peuvent plus recevoir de besoin.</p>
+            </div>
+          </div>
+          <div id="openingDaysGrid" class="opening-grid"></div>
+
+          <div class="panel-header" style="margin-top:22px">
+            <div>
+              <h3>Heures d’arrivée des livreurs</h3>
+              <p class="muted">Le livreur choisit une heure dans cette plage. Vous saisissez vos besoins dans la même liste.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field"><label for="middayStart">Midi — première arrivée</label><input id="middayStart" type="time"></div>
+            <div class="field"><label for="middayEnd">Midi — dernière arrivée</label><input id="middayEnd" type="time"></div>
+            <div class="field">
+              <label for="middayStep">Midi — pas</label>
+              <select id="middayStep"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 heure</option></select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field"><label for="eveningStart">Soir — première arrivée</label><input id="eveningStart" type="time"></div>
+            <div class="field"><label for="eveningEnd">Soir — dernière arrivée</label><input id="eveningEnd" type="time"></div>
+            <div class="field">
+              <label for="eveningStep">Soir — pas</label>
+              <select id="eveningStep"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 heure</option></select>
+            </div>
+          </div>
+
+          <p id="slotsPreview" class="muted"></p>
+
+          <div class="panel-header" style="margin-top:22px">
+            <div>
+              <h3>Moyens de livraison disponibles</h3>
+              <p class="muted">Seuls ceux cochés ici pourront être proposés lors de la création d’une semaine.</p>
+            </div>
+          </div>
+          <div id="establishmentMethods" class="delivery-methods-grid"></div>
+
+          <div class="form-grid" style="margin-top:22px">
+            <div class="field">
+              <label for="maxDaysInput">Maximum de jours travaillés par semaine</label>
+              <input id="maxDaysInput" type="number" min="1" max="7" step="1">
+            </div>
+            <div class="field">
+              <label for="defaultDeadlineInput">Heure limite de réponse par défaut</label>
+              <input id="defaultDeadlineInput" type="time">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button id="saveEstablishmentButton" class="button button-primary" type="button">Enregistrer la fiche</button>
+          </div>
+          <div id="establishmentMessage" class="message"></div>
         </section>
       </section>
 
@@ -1816,7 +1893,8 @@
       needs: document.getElementById("needsSection"),
       planning: document.getElementById("planningSection"),
       kitchen: document.getElementById("kitchenSection"),
-      regulationAdmin: document.getElementById("regulationAdminSection")
+      regulationAdmin: document.getElementById("regulationAdminSection"),
+      establishment: document.getElementById("establishmentSection")
     };
 
     const weekForm = document.getElementById("weekForm");
@@ -1987,17 +2065,120 @@
        disponibilites declarees par les livreurs : un besoin ne peut donc
        jamais tomber en dehors de ce qu'un livreur peut cocher.
        =================================================================== */
-    const MIDDAY_SLOTS = ["11:30","11:45","12:00"];
-    const EVENING_SLOTS = ["18:00","18:15","18:30","18:45","19:00"];
-    const DEFAULT_MIDDAY_SLOT = MIDDAY_SLOTS[0];
-    const DEFAULT_EVENING_SLOT = EVENING_SLOTS[0];
+    /* ===================================================================
+       FICHE TECHNIQUE DE L'ETABLISSEMENT
+       Tout ce qui change d'un client a l'autre est stocke dans le document
+       Firestore config/establishment. Le code ne contient plus que des
+       valeurs de repli, utilisees tant que la fiche n'a pas ete remplie.
+       =================================================================== */
+    const WEEKDAY_NAMES = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
 
-    function isNeedTimeAllowed(time){
-      return MIDDAY_SLOTS.includes(time)||EVENING_SLOTS.includes(time)
+    const DEFAULT_CONFIG = {
+      name: "",
+      openingDays: [0,1,2,3,4,5,6].map(()=>({midday:true, evening:true})),
+      midday: { start:"11:30", end:"12:00", step:15 },
+      evening:{ start:"18:00", end:"19:00", step:15 },
+      deliveryMethods: ["company_car","personal_car","company_scooter","personal_motorcycle","personal_bicycle"],
+      maxDaysPerWeek: 6,
+      defaultDeadlineTime: "18:00"
+    };
+
+    let establishmentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+    let establishmentConfigExists = false;
+
+    function minutesOf(value){
+      const [h,m]=String(value||"0:0").split(":").map(Number);
+      return (h||0)*60+(m||0)
+    }
+
+    function timeOf(minutes){
+      const h=Math.floor(minutes/60), m=minutes%60;
+      return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`
+    }
+
+    /* "11:30" a "12:00" par pas de 15 -> 11:30, 11:45, 12:00 */
+    function buildSlots(start,end,step){
+      const from=minutesOf(start), to=minutesOf(end);
+      const jump=Math.max(5,Number(step)||15);
+      if(to<from)return [start];
+      const list=[];
+      for(let m=from;m<=to;m+=jump)list.push(timeOf(m));
+      if(list[list.length-1]!==timeOf(to))list.push(timeOf(to));
+      return list
+    }
+
+    function serviceConfig(service){
+      return service==="midi"?establishmentConfig.midday:establishmentConfig.evening
     }
 
     function serviceSlots(service){
-      return service==="midi"?MIDDAY_SLOTS:EVENING_SLOTS
+      const cfg=serviceConfig(service);
+      return buildSlots(cfg.start,cfg.end,cfg.step)
+    }
+
+    function serviceLatest(service){
+      return serviceConfig(service).end
+    }
+
+    function defaultSlot(service){
+      return serviceSlots(service)[0]
+    }
+
+    /* Jours et services reellement ouverts */
+    function weekdayOf(dateString){
+      return new Date(`${dateString}T12:00:00`).getDay()
+    }
+
+    function isServiceOpen(dateString,service){
+      const day=establishmentConfig.openingDays[weekdayOf(dateString)];
+      if(!day)return true;
+      return service==="midi"?day.midday===true:day.evening===true
+    }
+
+    function isDayOpen(dateString){
+      return isServiceOpen(dateString,"midi")||isServiceOpen(dateString,"soir")
+    }
+
+    function availableDeliveryMethods(){
+      const allowed=establishmentConfig.deliveryMethods||[];
+      const list=DELIVERY_METHODS.filter(item=>allowed.includes(item.id));
+      return list.length?list:DELIVERY_METHODS
+    }
+
+    function maxDaysPerWeek(){
+      const value=Number(establishmentConfig.maxDaysPerWeek);
+      return value>=1&&value<=7?value:6
+    }
+
+    async function loadEstablishmentConfig(){
+      try{
+        const snap=await getDoc(doc(db,"config","establishment"));
+        if(snap.exists()){
+          const data=snap.data();
+          establishmentConfig={
+            ...DEFAULT_CONFIG,
+            ...data,
+            midday:{...DEFAULT_CONFIG.midday,...(data.midday||{})},
+            evening:{...DEFAULT_CONFIG.evening,...(data.evening||{})},
+            openingDays:Array.isArray(data.openingDays)&&data.openingDays.length===7
+              ? data.openingDays.map(day=>({midday:day?.midday===true,evening:day?.evening===true}))
+              : DEFAULT_CONFIG.openingDays
+          };
+          establishmentConfigExists=true
+        }else{
+          establishmentConfig=JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+          establishmentConfigExists=false
+        }
+      }catch(error){
+        console.error(error);
+        establishmentConfig=JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        establishmentConfigExists=false
+      }
+      return establishmentConfig
+    }
+
+    function isNeedTimeAllowed(time){
+      return serviceSlots("midi").includes(time)||serviceSlots("soir").includes(time)
     }
 
     /* Ramene une heure quelconque au creneau autorise le plus proche.
@@ -2019,11 +2200,11 @@
     }
 
     const DELIVERY_METHODS=[
-      {id:"company_car",label:"Voiture pizzeria",icon:"🚗"},
-      {id:"personal_car",label:"Voiture personnelle",icon:"🚙"},
-      {id:"company_scooter",label:"Scooter pizzeria",icon:"🛵"},
-      {id:"personal_motorcycle",label:"Moto personnelle",icon:"🏍️"},
-      {id:"personal_bicycle",label:"Vélo personnel",icon:"🚲"}
+      {id:"company_car",label:"Voiture de l’établissement",icon:"🚗"},
+      {id:"personal_car",label:"Voiture privée",icon:"🚙"},
+      {id:"company_scooter",label:"Scooter de l’établissement",icon:"🛵"},
+      {id:"personal_motorcycle",label:"Moto privée",icon:"🏍️"},
+      {id:"personal_bicycle",label:"Vélo privé",icon:"🚲"}
     ];
 
     function deliveryMethodLabel(id){
@@ -2050,6 +2231,7 @@
       if(name==="planning")preparePlanningSection();
       if(name==="kitchen")prepareKitchenSection();
       if(name==="regulationAdmin")loadRegulationAcceptances();
+      if(name==="establishment")prepareEstablishmentSection();
       window.scrollTo({top:0,behavior:"smooth"})
     }
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
@@ -2065,7 +2247,14 @@
       // Modeles de besoins, acceptations du reglement et statistiques livreurs
       // sont charges uniquement a l'ouverture de leur ecran.
       subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();
-      showSection("dashboard")
+
+      // Première utilisation : on amène directement le responsable sur la fiche.
+      if(!establishmentConfigExists){
+        showSection("establishment");
+        showMessage(appMessage,"Complétez la fiche de l’établissement avant de créer votre première semaine.","error")
+      }else{
+        showSection("dashboard")
+      }
     }
 
     async function loadUserProfile(user){
@@ -2131,7 +2320,31 @@
     function formatDate(value){if(!value)return"—";const d=new Date(`${value}T12:00:00`);return new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).format(d)}
     function addDays(value,days){const d=new Date(`${value}T12:00:00`);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10)}
     function getNextMonday(){const d=new Date();const day=d.getDay();d.setDate(d.getDate()+(day===0?1:8-day));return d.toISOString().slice(0,10)}
-    function prepareWeekForm(){clearMessage(weekFormMessage);if(!weekStart.value)weekStart.value=getNextMonday();weekEnd.value=addDays(weekStart.value,6);if(!deadlineDate.value)deadlineDate.value=weekStart.value}
+    function prepareWeekForm(){
+      clearMessage(weekFormMessage);
+      renderWeekDeliveryMethods();
+      if(!weekStart.value)weekStart.value=getNextMonday();
+      weekEnd.value=addDays(weekStart.value,6);
+      if(!deadlineDate.value)deadlineDate.value=weekStart.value;
+      if(!deadlineTime.value)deadlineTime.value=establishmentConfig.defaultDeadlineTime||"18:00"
+    }
+
+    /* Les moyens proposés ici sont ceux de la fiche de l'établissement. */
+    function renderWeekDeliveryMethods(){
+      const previous=new Set(
+        [...weekDeliveryMethods.querySelectorAll("input")].map(input=>input.checked?input.value:null).filter(Boolean)
+      );
+      const first=weekDeliveryMethods.children.length===0;
+      weekDeliveryMethods.innerHTML="";
+
+      availableDeliveryMethods().forEach(method=>{
+        const label=document.createElement("label");
+        label.className="delivery-method-option";
+        const checked=first||previous.has(method.id);
+        label.innerHTML=`<input type="checkbox" value="${method.id}" ${checked?"checked":""}> ${escapeHtml(deliveryMethodLabel(method.id))}`;
+        weekDeliveryMethods.appendChild(label)
+      })
+    }
     function escapeHtml(value){const div=document.createElement("div");div.textContent=value;return div.innerHTML}
 
     async function deleteWeekCompletely(week){
@@ -2446,10 +2659,152 @@
       }
     }
 
+    /* ===================================================================
+       ECRAN DE LA FICHE TECHNIQUE
+       =================================================================== */
+    function renderEstablishmentForm(){
+      document.getElementById("establishmentName").value=establishmentConfig.name||"";
+      document.getElementById("middayStart").value=establishmentConfig.midday.start;
+      document.getElementById("middayEnd").value=establishmentConfig.midday.end;
+      document.getElementById("middayStep").value=String(establishmentConfig.midday.step||15);
+      document.getElementById("eveningStart").value=establishmentConfig.evening.start;
+      document.getElementById("eveningEnd").value=establishmentConfig.evening.end;
+      document.getElementById("eveningStep").value=String(establishmentConfig.evening.step||15);
+      document.getElementById("maxDaysInput").value=String(maxDaysPerWeek());
+      document.getElementById("defaultDeadlineInput").value=establishmentConfig.defaultDeadlineTime||"18:00";
+
+      const grid=document.getElementById("openingDaysGrid");
+      grid.innerHTML="";
+      // La semaine est affichee du lundi au dimanche, plus naturel qu'un ordre 0-6.
+      [1,2,3,4,5,6,0].forEach(index=>{
+        const day=establishmentConfig.openingDays[index]||{midday:true,evening:true};
+        const card=document.createElement("div");
+        card.className=`opening-day${!day.midday&&!day.evening?" is-closed":""}`;
+        card.dataset.weekday=String(index);
+        card.innerHTML=`
+          <strong>${WEEKDAY_NAMES[index]}</strong>
+          <label><input type="checkbox" class="open-midday" ${day.midday?"checked":""}> Service de midi</label>
+          <label><input type="checkbox" class="open-evening" ${day.evening?"checked":""}> Service du soir</label>
+        `;
+        card.querySelectorAll("input").forEach(input=>{
+          input.addEventListener("change",()=>{
+            const closed=!card.querySelector(".open-midday").checked&&!card.querySelector(".open-evening").checked;
+            card.classList.toggle("is-closed",closed)
+          })
+        });
+        grid.appendChild(card)
+      });
+
+      const methods=document.getElementById("establishmentMethods");
+      methods.innerHTML="";
+      DELIVERY_METHODS.forEach(method=>{
+        const checked=(establishmentConfig.deliveryMethods||[]).includes(method.id);
+        const label=document.createElement("label");
+        label.className="delivery-method-option";
+        label.innerHTML=`<input type="checkbox" value="${method.id}" ${checked?"checked":""}> ${escapeHtml(deliveryMethodLabel(method.id))}`;
+        methods.appendChild(label)
+      });
+
+      updateSlotsPreview();
+      document.getElementById("establishmentSetupNotice").classList.toggle("hidden",establishmentConfigExists)
+    }
+
+    function readEstablishmentForm(){
+      const openingDays=[0,1,2,3,4,5,6].map(()=>({midday:false,evening:false}));
+      document.querySelectorAll("#openingDaysGrid .opening-day").forEach(card=>{
+        const index=Number(card.dataset.weekday);
+        openingDays[index]={
+          midday:card.querySelector(".open-midday").checked,
+          evening:card.querySelector(".open-evening").checked
+        }
+      });
+
+      return {
+        name:document.getElementById("establishmentName").value.trim(),
+        openingDays,
+        midday:{
+          start:document.getElementById("middayStart").value,
+          end:document.getElementById("middayEnd").value,
+          step:Number(document.getElementById("middayStep").value)
+        },
+        evening:{
+          start:document.getElementById("eveningStart").value,
+          end:document.getElementById("eveningEnd").value,
+          step:Number(document.getElementById("eveningStep").value)
+        },
+        deliveryMethods:[...document.querySelectorAll('#establishmentMethods input:checked')].map(input=>input.value),
+        maxDaysPerWeek:Number(document.getElementById("maxDaysInput").value),
+        defaultDeadlineTime:document.getElementById("defaultDeadlineInput").value
+      }
+    }
+
+    function updateSlotsPreview(){
+      const draft=readEstablishmentForm();
+      const midi=buildSlots(draft.midday.start,draft.midday.end,draft.midday.step);
+      const soir=buildSlots(draft.evening.start,draft.evening.end,draft.evening.step);
+      document.getElementById("slotsPreview").textContent=
+        `Heures proposées — midi : ${midi.join(", ")} · soir : ${soir.join(", ")}`
+    }
+
+    function prepareEstablishmentSection(){
+      clearMessage(document.getElementById("establishmentMessage"));
+      renderEstablishmentForm()
+    }
+
     async function prepareDriversSection(){
       await loadDriverPrivateData();
       await loadDriverAssignmentStats();
       renderDrivers()
+    }
+
+    async function saveEstablishmentConfig(){
+      const messageEl=document.getElementById("establishmentMessage");
+      clearMessage(messageEl);
+      const draft=readEstablishmentForm();
+
+      if(!draft.name){
+        showMessage(messageEl,"Indiquez le nom de l’établissement.","error");
+        return
+      }
+      if(!draft.openingDays.some(day=>day.midday||day.evening)){
+        showMessage(messageEl,"Ouvrez au moins un service dans la semaine.","error");
+        return
+      }
+      if(!draft.deliveryMethods.length){
+        showMessage(messageEl,"Cochez au moins un moyen de livraison.","error");
+        return
+      }
+      if(minutesOf(draft.midday.end)<minutesOf(draft.midday.start)
+        ||minutesOf(draft.evening.end)<minutesOf(draft.evening.start)){
+        showMessage(messageEl,"La dernière arrivée doit être postérieure à la première.","error");
+        return
+      }
+      if(minutesOf(draft.midday.end)>=minutesOf(draft.evening.start)){
+        showMessage(messageEl,"Le service du soir doit commencer après la fin du service de midi.","error");
+        return
+      }
+
+      const button=document.getElementById("saveEstablishmentButton");
+      button.disabled=true;
+      button.textContent="Enregistrement…";
+
+      try{
+        await setDoc(doc(db,"config","establishment"),{
+          ...draft,
+          updatedAt:serverTimestamp(),
+          updatedBy:auth.currentUser.uid
+        },{merge:true});
+
+        await loadEstablishmentConfig();
+        renderEstablishmentForm();
+        showMessage(messageEl,"La fiche a été enregistrée.","success")
+      }catch(error){
+        console.error(error);
+        showMessage(messageEl,`Impossible d’enregistrer : ${error.code||error.message}`,"error")
+      }finally{
+        button.disabled=false;
+        button.textContent="Enregistrer la fiche"
+      }
     }
 
     function subscribeToDrivers(){
@@ -2674,9 +3029,43 @@
       return currentWeeks.find(week=>week.id===needsWeekSelect.value)||null
     }
 
+    /* Les heures proposées suivent la fiche de l'établissement, et seuls les
+       services ouverts le jour choisi restent sélectionnables. */
+    function renderNeedTimeOptions(){
+      const previous=needTime.value;
+      const date=needDate.value;
+      needTime.innerHTML="";
+
+      [["midi","Service de midi"],["soir","Service du soir"]].forEach(([service,title])=>{
+        const open=!date||isServiceOpen(date,service);
+        const group=document.createElement("optgroup");
+        group.label=open?title:`${title} — fermé ce jour-là`;
+        group.disabled=!open;
+
+        serviceSlots(service).forEach(slot=>{
+          const option=document.createElement("option");
+          option.value=slot;
+          option.textContent=slot;
+          option.disabled=!open;
+          group.appendChild(option)
+        });
+
+        needTime.appendChild(group)
+      });
+
+      const stillThere=[...needTime.options].some(option=>option.value===previous&&!option.disabled);
+      if(stillThere){
+        needTime.value=previous
+      }else{
+        const firstOpen=[...needTime.options].find(option=>!option.disabled);
+        needTime.value=firstOpen?firstOpen.value:""
+      }
+    }
+
     function prepareNeedsSection(){
       clearMessage(needFormMessage);
       subscribeToNeedTemplates();   // charge uniquement a la 1re ouverture de l'ecran
+      renderNeedTimeOptions();
       const week=getSelectedWeek();
 
       if(!week){
@@ -2741,6 +3130,10 @@
             ${isNeedTimeAllowed(need.time)?"":`
               <p class="need-warning">Heure hors des créneaux déclarables par les livreurs.
               Aucun livreur ne pourra être affecté. Recréez ce besoin à ${escapeHtml(snapToServiceSlot(need.time))}.</p>
+            `}
+            ${isServiceOpen(need.date,servicePeriod(need.time))?"":`
+              <p class="need-warning">L’établissement est désormais fermé ce jour-là pour ce service.
+              Aucun livreur ne pourra déclarer de disponibilité.</p>
             `}
           </div>
           <div class="need-actions">
@@ -2943,7 +3336,7 @@
             weekId:week.id,
             weekStartDate:week.startDate,
             date:addDays(week.startDate,Number(item.dayIndex||0)),
-            time:snapToServiceSlot(item.time)||DEFAULT_EVENING_SLOT,
+            time:snapToServiceSlot(item.time)||defaultSlot("soir"),
             quantity:Number(item.quantity||1),
             notes:item.notes||"",
             templateId:template.id,
@@ -3169,6 +3562,13 @@
       }
 
       const state=(existingData?.days||defaultAvailabilityDays(week)).map(normalizeAvailabilityDay);
+
+      // Un service fermé ne peut pas être déclaré disponible, même si une
+      // ancienne réponse le contenait.
+      state.forEach(day=>{
+        if(!isServiceOpen(day.date,"midi"))day.middayAvailable=false;
+        if(!isServiceOpen(day.date,"soir"))day.eveningAvailable=false
+      });
       const allowedMethods=(week.deliveryMethods&&week.deliveryMethods.length)
         ? week.deliveryMethods
         : DELIVERY_METHODS.map(item=>item.id);
@@ -3222,22 +3622,30 @@
       const daysBox=wrapper.querySelector(".dv-days");
 
       state.forEach(day=>{
+        // Les jours de fermeture ne sont tout simplement pas proposés.
+        if(!isDayOpen(day.date))return;
+
+        const middayOpen=isServiceOpen(day.date,"midi");
+        const eveningOpen=isServiceOpen(day.date,"soir");
+
         const row=document.createElement("div");
         row.className="dv-day";
         row.innerHTML=`
           <div class="dv-day-top">
             <span class="dv-day-name">${escapeHtml(driverShortDay(day.date))}</span>
-            <button class="dv-svc-chip toggle-midday" type="button">Midi</button>
-            <button class="dv-svc-chip toggle-evening" type="button">Soir</button>
+            ${middayOpen?'<button class="dv-svc-chip toggle-midday" type="button">Midi</button>':""}
+            ${eveningOpen?'<button class="dv-svc-chip toggle-evening" type="button">Soir</button>':""}
           </div>
-          <div class="dv-times midday-times">
-            <label>Service de midi — je peux arriver dès</label>
-            <div class="dv-slotrow midday-slots"></div>
-          </div>
-          <div class="dv-times evening-times">
-            <label>Service du soir — je peux arriver dès</label>
-            <div class="dv-slotrow evening-slots"></div>
-          </div>
+          ${middayOpen?`
+            <div class="dv-times midday-times">
+              <label>Service de midi — je peux arriver dès</label>
+              <div class="dv-slotrow midday-slots"></div>
+            </div>`:""}
+          ${eveningOpen?`
+            <div class="dv-times evening-times">
+              <label>Service du soir — je peux arriver dès</label>
+              <div class="dv-slotrow evening-slots"></div>
+            </div>`:""}
           <div class="dv-comment">
             <input class="day-comment" type="text" placeholder="Commentaire facultatif">
           </div>
@@ -3251,6 +3659,7 @@
 
         [["midi",".midday-slots"],["soir",".evening-slots"]].forEach(([service,selector])=>{
           const box=row.querySelector(selector);
+          if(!box)return;
           serviceSlots(service).forEach(slot=>{
             const button=document.createElement("button");
             button.type="button";
@@ -3267,10 +3676,10 @@
         });
 
         function paint(){
-          row.querySelector(".toggle-midday").classList.toggle("is-on",day.middayAvailable===true);
-          row.querySelector(".toggle-evening").classList.toggle("is-on",day.eveningAvailable===true);
-          row.querySelector(".midday-times").classList.toggle("is-open",day.middayAvailable===true);
-          row.querySelector(".evening-times").classList.toggle("is-open",day.eveningAvailable===true);
+          row.querySelector(".toggle-midday")?.classList.toggle("is-on",day.middayAvailable===true);
+          row.querySelector(".toggle-evening")?.classList.toggle("is-on",day.eveningAvailable===true);
+          row.querySelector(".midday-times")?.classList.toggle("is-open",day.middayAvailable===true);
+          row.querySelector(".evening-times")?.classList.toggle("is-open",day.eveningAvailable===true);
           row.querySelector(".dv-comment").classList.toggle("is-open",day.middayAvailable===true||day.eveningAvailable===true);
 
           slotButtons.midi.forEach((button,slot)=>{
@@ -3283,11 +3692,11 @@
           row.querySelector(".day-comment").value=day.comment||""
         }
 
-        row.querySelector(".toggle-midday").addEventListener("click",()=>{
+        row.querySelector(".toggle-midday")?.addEventListener("click",()=>{
           day.middayAvailable=!day.middayAvailable;
           paint()
         });
-        row.querySelector(".toggle-evening").addEventListener("click",()=>{
+        row.querySelector(".toggle-evening")?.addEventListener("click",()=>{
           day.eveningAvailable=!day.eveningAvailable;
           paint()
         });
@@ -3301,27 +3710,29 @@
       function applyPreset(kind){
         state.forEach(day=>{
           const weekday=new Date(`${day.date}T12:00:00`).getDay();
+          const middayOpen=isServiceOpen(day.date,"midi");
+          const eveningOpen=isServiceOpen(day.date,"soir");
 
           if(kind==="clear"){
             day.middayAvailable=false;
             day.eveningAvailable=false
           }else if(kind==="evenings"){
-            day.eveningAvailable=true;
-            day.eveningEarliest=day.eveningEarliest||DEFAULT_EVENING_SLOT
+            day.eveningAvailable=eveningOpen;
+            day.eveningEarliest=day.eveningEarliest||defaultSlot("soir")
           }else if(kind==="middays"){
-            day.middayAvailable=true;
-            day.middayEarliest=day.middayEarliest||DEFAULT_MIDDAY_SLOT
+            day.middayAvailable=middayOpen;
+            day.middayEarliest=day.middayEarliest||defaultSlot("midi")
           }else if(kind==="weekend"){
             const isWeekend=weekday===5||weekday===6||weekday===0;
             day.middayAvailable=false;
-            day.eveningAvailable=isWeekend;
-            day.eveningEarliest=day.eveningEarliest||DEFAULT_EVENING_SLOT
+            day.eveningAvailable=isWeekend&&eveningOpen;
+            day.eveningEarliest=day.eveningEarliest||defaultSlot("soir")
           }else if(kind==="last"&&remembered){
             const model=remembered.pattern.find(item=>item.weekday===weekday);
             if(model){
-              day.middayAvailable=model.middayAvailable===true;
+              day.middayAvailable=model.middayAvailable===true&&middayOpen;
               day.middayEarliest=snapToServiceSlot(model.middayEarliest,"midi");
-              day.eveningAvailable=model.eveningAvailable===true;
+              day.eveningAvailable=model.eveningAvailable===true&&eveningOpen;
               day.eveningEarliest=snapToServiceSlot(model.eveningEarliest,"soir")
             }
           }
@@ -3387,12 +3798,12 @@
 
         const daysPayload=state.map(day=>({
           date:day.date,
-          middayAvailable:day.middayAvailable===true,
+          middayAvailable:day.middayAvailable===true&&isServiceOpen(day.date,"midi"),
           middayEarliest:day.middayAvailable?snapToServiceSlot(day.middayEarliest,"midi"):"",
-          middayLatest:day.middayAvailable?MIDDAY_LATEST:"",
-          eveningAvailable:day.eveningAvailable===true,
+          middayLatest:day.middayAvailable?serviceLatest("midi"):"",
+          eveningAvailable:day.eveningAvailable===true&&isServiceOpen(day.date,"soir"),
           eveningEarliest:day.eveningAvailable?snapToServiceSlot(day.eveningEarliest,"soir"):"",
-          eveningLatest:day.eveningAvailable?EVENING_LATEST:"",
+          eveningLatest:day.eveningAvailable?serviceLatest("soir"):"",
           comment:(day.middayAvailable||day.eveningAvailable)?(day.comment||"").trim():""
         }));
 
@@ -3404,12 +3815,12 @@
         }
 
         const invalidDay=daysPayload.find(day=>
-          (day.middayAvailable && (!day.middayEarliest || day.middayEarliest>MIDDAY_LATEST))
-          || (day.eveningAvailable && (!day.eveningEarliest || day.eveningEarliest>EVENING_LATEST))
+          (day.middayAvailable && (!day.middayEarliest || day.middayEarliest>serviceLatest("midi")))
+          || (day.eveningAvailable && (!day.eveningEarliest || day.eveningEarliest>serviceLatest("soir")))
         );
 
         if(invalidDay){
-          driverToast(`${driverShortDay(invalidDay.date)} : arrivée au plus tard ${MIDDAY_LATEST} le midi et ${EVENING_LATEST} le soir.`,"bad");
+          driverToast(`${driverShortDay(invalidDay.date)} : arrivée au plus tard ${serviceLatest("midi")} le midi et ${serviceLatest("soir")} le soir.`,"bad");
           return
         }
 
@@ -3529,10 +3940,7 @@
     const driverAvailabilityByWeek = new Map();
     const LAST_AVAILABILITY_KEY = "naraLastAvailability";
 
-    /* Heures d'arrivee maximales. Le livreur ne saisit que l'heure a partir
-       de laquelle il peut venir ; la borne haute est fixee ici. */
-    const MIDDAY_LATEST = "12:00";
-    const EVENING_LATEST = "19:00";
+    /* Les bornes hautes viennent desormais de la fiche technique. */
 
     const DV_ICONS = {
       bell:'<path d="M18 8a6 6 0 1 0-12 0c0 6-3 7-3 7h18s-3-1-3-7"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/>',
@@ -3895,6 +4303,27 @@
           card.className=`dv-slot${status==="pending"?" is-pending":""}`;
 
           const badgeClass=status==="confirmed"?"is-ok":status==="refused"?"is-bad":"is-pending";
+
+          // Véhicules réellement possibles pour ce service : ceux que le livreur
+          // a déclarés, et qui sont donc déjà limités aux moyens autorisés.
+          const options=Array.isArray(assignment.deliveryMethods)?assignment.deliveryMethods:[];
+          let chosenVehicle=assignment.vehicleChoice||(options.length===1?options[0]:"");
+
+          const vehicleBlock=status==="pending"&&options.length>1
+            ? `<div class="dv-vehicle">
+                 <div class="dv-vehicle-label">Quel véhicule prenez-vous ?</div>
+                 <div class="dv-vehicle-row">
+                   ${options.map(id=>`<button class="dv-vehicle-chip" data-vehicle="${escapeHtml(id)}" type="button">${escapeHtml(deliveryMethodLabel(id))}</button>`).join("")}
+                 </div>
+               </div>`
+            : "";
+
+          const metaText=chosenVehicle
+            ? deliveryMethodLabel(chosenVehicle)
+            : (options.length>1
+                ? "Véhicule à choisir ci-dessous"
+                : (assignment.vehicleRequirement||"Aucun véhicule indiqué"));
+
           const actions=status==="pending"
             ? `<div class="dv-slot-actions">
                  <button class="dv-btn dv-btn-primary confirm-assignment" type="button">Je confirme</button>
@@ -3912,15 +4341,31 @@
             </div>
             <div class="dv-slot-meta">
               ${dvSvg("car")}
-              <span>${escapeHtml(assignment.vehicleRequirement||"Aucune exigence de véhicule")}</span>
+              <span class="slot-vehicle-text">${escapeHtml(metaText)}</span>
             </div>
+            ${vehicleBlock}
             ${actions}
           `;
+
+          card.querySelectorAll(".dv-vehicle-chip").forEach(chip=>{
+            chip.addEventListener("click",()=>{
+              chosenVehicle=chip.dataset.vehicle;
+              card.querySelectorAll(".dv-vehicle-chip").forEach(other=>{
+                other.classList.toggle("is-on",other===chip)
+              });
+              card.querySelector(".slot-vehicle-text").textContent=deliveryMethodLabel(chosenVehicle)
+            })
+          });
 
           const confirmButton=card.querySelector(".confirm-assignment");
           const refuseButton=card.querySelector(".refuse-assignment");
 
           confirmButton?.addEventListener("click",async()=>{
+            if(options.length>1&&!chosenVehicle){
+              driverToast("Choisissez d’abord le véhicule que vous prenez.","bad");
+              return
+            }
+
             confirmButton.disabled=true;
             refuseButton.disabled=true;
             confirmButton.textContent="Enregistrement…";
@@ -3928,6 +4373,7 @@
             try{
               await updateDoc(doc(db,"driverAssignments",assignment.id),{
                 status:"confirmed",
+                vehicleChoice:chosenVehicle||"",
                 respondedAt:serverTimestamp(),
                 updatedAt:serverTimestamp()
               });
@@ -4049,6 +4495,8 @@
     function assignmentIsUpToDate(existing,desired){
       if(!existing)return false;
 
+      // vehicleChoice appartient au livreur : il n'entre pas dans la comparaison,
+      // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
                   "userId","driverName","driverEmail","vehicleRequirement","active"];
 
@@ -4448,7 +4896,7 @@
             const day=availability?.days?.find(item=>item.date===need.date);
             const workedDates=workedDatesByDriver.get(driver.userId)||new Set();
             const alreadyWorksThisDate=workedDates.has(need.date);
-            const respectsSixDayLimit=alreadyWorksThisDate||workedDates.size<6;
+            const respectsSixDayLimit=alreadyWorksThisDate||workedDates.size<maxDaysPerWeek();
 
             const weeklyDeliveryMethods=Array.isArray(availability?.deliveryMethods)
               ? availability.deliveryMethods
@@ -4635,7 +5083,12 @@
               <div class="plan-person selected">
                 <div class="person-info">
                   <strong>${escapeHtml(driver.name)}</strong>
-                  <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}${driver.availabilityComment?` · ${escapeHtml(driver.availabilityComment)}`:""}</small>
+                  <small>${(()=>{
+                    const chosen=currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.vehicleChoice;
+                    return chosen
+                      ? `<strong>${escapeHtml(deliveryMethodLabel(chosen))}</strong>`
+                      : escapeHtml(driver.vehicle||"Véhicule non renseigné")
+                  })()}${driver.availabilityComment?` · ${escapeHtml(driver.availabilityComment)}`:""}</small>
                 </div>
                 <div>
                   <span class="plan-score">Score ${driver.score}</span>
@@ -5032,6 +5485,11 @@
     document.getElementById("openPlanning").addEventListener("click",()=>showSection("planning"));
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
+    document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    document.getElementById("saveEstablishmentButton").addEventListener("click",saveEstablishmentConfig);
+    ["middayStart","middayEnd","middayStep","eveningStart","eveningEnd","eveningStep"].forEach(id=>{
+      document.getElementById(id).addEventListener("change",updateSlotsPreview)
+    });
     document.querySelectorAll(".backToDashboard").forEach(b=>b.addEventListener("click",()=>showSection("dashboard")));
     document.getElementById("openDriverForm").addEventListener("click",openNewDriverForm);
     document.getElementById("cancelDriverForm").addEventListener("click",()=>{
@@ -5040,6 +5498,7 @@
     });
 
     needsWeekSelect.addEventListener("change",prepareNeedsSection);
+    needDate.addEventListener("change",renderNeedTimeOptions);
     saveNeedTemplateButton.addEventListener("click",saveCurrentNeedsAsTemplate);
     applyNeedTemplateButton.addEventListener("click",applySelectedNeedTemplate);
 
@@ -5271,7 +5730,7 @@
         weekForm.reset();
         deadlineTime.value="18:00";
         openImmediately.checked=true;
-        weekDeliveryMethods.querySelectorAll('input[type="checkbox"]').forEach(input=>input.checked=true);
+        renderWeekDeliveryMethods();
         prepareWeekForm();
         setTimeout(()=>showSection("dashboard"),900)
       }catch(error){console.error(error);showMessage(weekFormMessage,`Impossible d’enregistrer la semaine : ${error.code||error.message}`,"error")}
@@ -5298,6 +5757,15 @@
 
       if(needDate.value<week.startDate||needDate.value>week.endDate){
         showMessage(needFormMessage,"Le jour doit être compris dans la semaine sélectionnée.","error");
+        return
+      }
+
+      if(!isServiceOpen(needDate.value,servicePeriod(needTime.value))){
+        showMessage(
+          needFormMessage,
+          `L’établissement est fermé ce ${WEEKDAY_NAMES[weekdayOf(needDate.value)].toLowerCase()} pour ce service. Modifiez la fiche de l’établissement si ce n’est plus le cas.`,
+          "error"
+        );
         return
       }
 
@@ -5329,7 +5797,7 @@
 
         showMessage(needFormMessage,"Le besoin a été ajouté.","success");
         availabilityCache.delete(week.id);
-        needTime.value=DEFAULT_EVENING_SLOT;
+        needTime.value=defaultSlot("soir");
         needQuantity.value="1";
         needNotes.value=""
       }catch(error){
@@ -5482,6 +5950,7 @@
 
       try{
         const profile=await loadUserProfile(user);
+        await loadEstablishmentConfig();
 
         if(["admin","manager"].includes(profile.role)){
           showApp(profile)
