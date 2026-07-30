@@ -1,7 +1,7 @@
 {
-  "name": "Nara Pizza Planning",
-  "short_name": "Nara Pizza",
-  "description": "Planning et disponibilités des livreurs Nara Pizza.",
+  "name": "Journia — planning des équipes",
+  "short_name": "Journia",
+  "description": "Disponibilités et planning des équipes en restauration.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "./",
