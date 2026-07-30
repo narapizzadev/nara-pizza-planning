@@ -2085,6 +2085,7 @@
 
     let establishmentConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
     let establishmentConfigExists = false;
+    let unsubscribeConfig = null;
 
     function minutesOf(value){
       const [h,m]=String(value||"0:0").split(":").map(Number);
@@ -2150,31 +2151,63 @@
       return value>=1&&value<=7?value:6
     }
 
-    async function loadEstablishmentConfig(){
-      try{
-        const snap=await getDoc(doc(db,"config","establishment"));
-        if(snap.exists()){
-          const data=snap.data();
-          establishmentConfig={
-            ...DEFAULT_CONFIG,
-            ...data,
-            midday:{...DEFAULT_CONFIG.midday,...(data.midday||{})},
-            evening:{...DEFAULT_CONFIG.evening,...(data.evening||{})},
-            openingDays:Array.isArray(data.openingDays)&&data.openingDays.length===7
-              ? data.openingDays.map(day=>({midday:day?.midday===true,evening:day?.evening===true}))
-              : DEFAULT_CONFIG.openingDays
-          };
-          establishmentConfigExists=true
-        }else{
-          establishmentConfig=JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-          establishmentConfigExists=false
-        }
-      }catch(error){
-        console.error(error);
+    function applyConfigSnapshot(snap){
+      if(snap&&snap.exists()){
+        const data=snap.data();
+        establishmentConfig={
+          ...DEFAULT_CONFIG,
+          ...data,
+          midday:{...DEFAULT_CONFIG.midday,...(data.midday||{})},
+          evening:{...DEFAULT_CONFIG.evening,...(data.evening||{})},
+          openingDays:Array.isArray(data.openingDays)&&data.openingDays.length===7
+            ? data.openingDays.map(day=>({midday:day?.midday===true,evening:day?.evening===true}))
+            : DEFAULT_CONFIG.openingDays
+        };
+        establishmentConfigExists=true
+      }else{
         establishmentConfig=JSON.parse(JSON.stringify(DEFAULT_CONFIG));
         establishmentConfigExists=false
       }
+    }
+
+    async function loadEstablishmentConfig(){
+      try{
+        applyConfigSnapshot(await getDoc(doc(db,"config","establishment")))
+      }catch(error){
+        console.error(error);
+        applyConfigSnapshot(null)
+      }
       return establishmentConfig
+    }
+
+    /* La fiche est suivie en direct : si le responsable ferme le lundi,
+       l'écran des livreurs déjà connectés se met à jour sans rechargement.
+       Un seul document surveillé, le coût est négligeable. */
+    function subscribeToEstablishmentConfig(){
+      if(unsubscribeConfig)unsubscribeConfig();
+
+      unsubscribeConfig=onSnapshot(
+        doc(db,"config","establishment"),
+        snap=>{
+          applyConfigSnapshot(snap);
+          onEstablishmentConfigChanged()
+        },
+        error=>console.error("Suivi de la fiche impossible.",error)
+      )
+    }
+
+    function onEstablishmentConfigChanged(){
+      if(currentDriverUser){
+        renderDriverAvailabilityForms();
+        refreshDriverScreen();
+        return
+      }
+
+      if(!currentProfile)return;
+      if(currentSectionName==="createWeek")renderWeekDeliveryMethods();
+      if(currentSectionName==="needs"){renderNeedTimeOptions();renderNeeds()}
+      if(currentSectionName==="planning")loadPlanningAvailabilities(planningWeekSelect.value);
+      if(currentSectionName==="establishment")renderEstablishmentForm()
     }
 
     function isNeedTimeAllowed(time){
@@ -3863,6 +3896,22 @@
       return wrapper
     }
 
+    /* Reconstruit les formulaires a partir des donnees deja en memoire,
+       sans aucune lecture Firestore supplementaire. */
+    function renderDriverAvailabilityForms(){
+      if(!currentDriverUser||!currentDriverOpenWeeks.length)return;
+
+      driverWeeksContainer.innerHTML="";
+      currentDriverOpenWeeks
+        .slice()
+        .sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""))
+        .forEach(week=>{
+          driverWeeksContainer.appendChild(
+            renderDriverWeek(week,driverAvailabilityData.get(week.id)||null,currentDriverUser)
+          )
+        })
+    }
+
     function subscribeToOpenDriverWeeks(user){
       if(unsubscribeDriverWeeks)unsubscribeDriverWeeks();
 
@@ -3896,6 +3945,7 @@
               );
 
               driverAvailabilityByWeek.set(week.id,availabilitySnap.exists());
+              driverAvailabilityData.set(week.id,availabilitySnap.exists()?availabilitySnap.data():null);
 
               driverWeeksContainer.appendChild(
                 renderDriverWeek(
@@ -3908,6 +3958,7 @@
               console.error(error);
 
               driverAvailabilityByWeek.set(week.id,false);
+              driverAvailabilityData.set(week.id,null);
 
               // En cas de blocage de lecture d'une réponse encore inexistante,
               // afficher tout de même un formulaire vide. L'enregistrement
@@ -3938,6 +3989,7 @@
     let currentDriverTab = "planning";
     let driverToastTimer = null;
     const driverAvailabilityByWeek = new Map();
+    const driverAvailabilityData = new Map();
     const LAST_AVAILABILITY_KEY = "naraLastAvailability";
 
     /* Les bornes hautes viennent desormais de la fiche technique. */
@@ -4656,6 +4708,10 @@
       if(!day)return false;
       const normalized=normalizeAvailabilityDay(day);
 
+      // Un service fermé dans la fiche ne peut plus être pourvu, même si une
+      // ancienne réponse le déclarait disponible.
+      if(!isServiceOpen(normalized.date,servicePeriod(time)))return false;
+
       if(servicePeriod(time)==="midi"){
         return normalized.middayAvailable===true
           && normalized.middayEarliest<=time
@@ -4742,12 +4798,21 @@
       const normalized=normalizeAvailabilityDay(day);
       const labels=[];
 
+      // Une réponse enregistrée avant un changement de la fiche peut porter
+      // sur un service désormais fermé : on le signale au lieu de le masquer.
+      const middayOpen=isServiceOpen(normalized.date,"midi");
+      const eveningOpen=isServiceOpen(normalized.date,"soir");
+
       if(normalized.middayAvailable){
-        labels.push(`<span class="availability-chip">Midi ${normalized.middayEarliest}–${normalized.middayLatest}</span>`)
+        labels.push(middayOpen
+          ? `<span class="availability-chip">Midi ${normalized.middayEarliest}–${normalized.middayLatest}</span>`
+          : `<span class="availability-chip off">Midi — service fermé</span>`)
       }
 
       if(normalized.eveningAvailable){
-        labels.push(`<span class="availability-chip">Soir ${normalized.eveningEarliest}–${normalized.eveningLatest}</span>`)
+        labels.push(eveningOpen
+          ? `<span class="availability-chip">Soir ${normalized.eveningEarliest}–${normalized.eveningLatest}</span>`
+          : `<span class="availability-chip off">Soir — service fermé</span>`)
       }
 
       if(labels.length===0){
@@ -5928,6 +5993,8 @@
         regulationReadCheck.checked=false;
         regulationCommitmentCheck.checked=false;
         updateRegulationAcceptButton();
+        if(unsubscribeConfig){unsubscribeConfig();unsubscribeConfig=null}
+        driverAvailabilityData.clear();
         if(unsubscribeWeeks){unsubscribeWeeks();unsubscribeWeeks=null}
         if(unsubscribeDrivers){unsubscribeDrivers();unsubscribeDrivers=null}
         if(unsubscribeNeeds){unsubscribeNeeds();unsubscribeNeeds=null}
@@ -5951,6 +6018,7 @@
       try{
         const profile=await loadUserProfile(user);
         await loadEstablishmentConfig();
+        subscribeToEstablishmentConfig();
 
         if(["admin","manager"].includes(profile.role)){
           showApp(profile)
