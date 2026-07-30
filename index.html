@@ -966,7 +966,7 @@
         <button id="forgotPasswordButton" class="link-button" type="button">Mot de passe oublié ?</button>
       </div>
       <div id="loginMessage" class="message"></div>
-      <div class="footer">Journia — version pilote</div>
+      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
     </main>
   </section>
 
@@ -1371,7 +1371,7 @@
       </section>
 
       <div id="appMessage" class="message"></div>
-      <div class="footer">Journia — version pilote</div>
+      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
     </main>
   </section>
 
@@ -1693,6 +1693,7 @@
           <ul>
             <li id="driverProfileName">—</li>
             <li id="driverProfileEmail">—</li>
+            <li>Version de l’application : <span id="driverAppVersion">—</span></li>
           </ul>
           <div style="margin-top:12px">
             <button id="driverLogoutButton" class="dv-btn dv-btn-quiet" type="button">Se déconnecter</button>
@@ -5965,11 +5966,32 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
+    const APP_VERSION = "2026-07-30-a";
+    document.getElementById("driverAppVersion").textContent=APP_VERSION;
+    document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
+
     if("serviceWorker" in navigator){
+      // Si une version tournait déjà, on rechargera dès que la nouvelle
+      // prendra la main. Sans cela, un téléphone peut servir indéfiniment
+      // une version périmée depuis son cache.
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloading = false;
+
+      navigator.serviceWorker.addEventListener("controllerchange",()=>{
+        if(!hadController||reloading)return;
+        reloading=true;
+        window.location.reload()
+      });
+
       window.addEventListener("load",()=>{
-        navigator.serviceWorker.register("sw.js").catch(error=>{
-          console.warn("Service worker non enregistré.",error)
-        })
+        navigator.serviceWorker.register("sw.js")
+          .then(registration=>{
+            // On demande explicitement au navigateur de vérifier s'il existe
+            // une nouvelle version, à chaque ouverture de l'application.
+            registration.update().catch(()=>{});
+            setInterval(()=>registration.update().catch(()=>{}),60*60*1000)
+          })
+          .catch(error=>console.warn("Service worker non enregistré.",error))
       })
     }
 

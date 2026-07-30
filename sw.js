@@ -1,14 +1,20 @@
-/* Service worker Nara Pizza Planning
-   Role : permettre l'installation sur l'ecran d'accueil et la consultation
-   hors ligne. Aucune donnee Firestore n'est mise en cache ici : les requetes
-   vers Google passent toujours par le reseau. */
+/* Service worker Journia
+   Role : installation sur l'ecran d'accueil et consultation hors ligne.
+   Aucune donnee Firestore n'est mise en cache : les requetes vers Google
+   passent toujours par le reseau.
 
-const CACHE = "nara-pizza-v1";
+   IMPORTANT : a chaque nouvelle livraison de index.html, incrementer
+   CACHE_VERSION. C'est ce qui force les telephones a prendre la nouvelle
+   version au lieu de servir l'ancienne indefiniment. */
+
+const CACHE_VERSION = "2026-07-30-a";
+const CACHE = `journia-${CACHE_VERSION}`;
 
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./logo-journia.png",
   "./nara-pizza-logo-transparent.png",
   "./icon-192.png",
   "./icon-512.png",
@@ -33,10 +39,11 @@ self.addEventListener("activate", event => {
 });
 
 /* Domaines qui ne doivent jamais etre interceptes : authentification,
-   base de donnees et modules Firebase doivent rester temps reel. */
+   base de donnees et modules Firebase restent en temps reel. */
 function isLiveRequest(url) {
   return url.hostname.endsWith("googleapis.com")
     || url.hostname.endsWith("google.com")
+    || url.hostname.endsWith("gstatic.com")
     || url.hostname.endsWith("firebaseio.com")
     || url.hostname.endsWith("firebaseapp.com");
 }
@@ -48,11 +55,15 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (isLiveRequest(url)) return;
 
-  /* Navigation : on privilegie le reseau pour recevoir les mises a jour,
-     avec repli sur la version en cache si le telephone est hors ligne. */
-  if (request.mode === "navigate") {
+  /* La page elle-meme est toujours demandee au reseau en premier, avec repli
+     sur la copie locale si le telephone n'a pas de connexion. */
+  const isPage = request.mode === "navigate"
+    || url.pathname.endsWith("/")
+    || url.pathname.endsWith("/index.html");
+
+  if (isPage) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .then(response => {
           const copy = response.clone();
           caches.open(CACHE).then(cache => cache.put("./index.html", copy)).catch(() => {});
