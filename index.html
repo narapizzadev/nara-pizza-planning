@@ -379,6 +379,17 @@
     .deadline-card.danger{background:#fff1f0;color:var(--error)}
     .need-warning{margin-top:7px;padding:9px 11px;border-radius:9px;background:#fff1f0;color:var(--error);font-size:13px;line-height:1.45}
     .missing-drivers{margin:14px 0;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
+    .relance-list{display:grid;gap:8px;margin-top:12px}
+    .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
+      border:1px solid var(--border);border-radius:12px;background:#fff}
+    .relance-name{font-weight:700;flex:1;min-width:120px}
+    .relance-actions{display:flex;gap:7px;flex-wrap:wrap}
+    .relance-link{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
+      text-decoration:none;font-weight:700;font-size:13px;border:1px solid var(--border);background:#fafafa;color:var(--text)}
+    .relance-link.whatsapp{background:#e8f8ee;border-color:#bfe8cf;color:#0f6b4a}
+    .relance-link.sms{background:#e9f1fd;border-color:#c6dcf7;color:#1a4f8a}
+    .relance-link.mail{background:#fff1f0;border-color:#f4cdc9;color:var(--error)}
+    .relance-none{font-size:13px;color:var(--muted)}
     .missing-driver-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .missing-driver-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#fff1f0;color:var(--error);font-weight:700;text-decoration:none}
     @media(max-width:760px){.deadline-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1008,7 +1019,7 @@
       <section id="createWeekSection" class="section-view">
         <div class="back-row"><button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button></div>
         <section class="panel">
-          <div class="panel-header"><div><h2>Créer une semaine</h2><p class="muted">Définissez la période et la date limite de réponse.</p></div></div>
+          <div class="panel-header"><div><h2 id="weekFormTitle">Créer une semaine</h2><p id="weekFormSubtitle" class="muted">Définissez la période et la date limite de réponse.</p></div></div>
           <form id="weekForm">
             <div class="form-grid">
               <div class="field"><label for="weekStart">Début de la semaine</label><input id="weekStart" type="date" required></div>
@@ -1024,7 +1035,21 @@
               <div id="weekDeliveryMethods" class="delivery-methods-grid"></div>
             </section>
 
-            <label class="checkbox-row"><input id="openImmediately" type="checkbox" checked><span>Ouvrir immédiatement cette semaine aux livreurs. Sinon, elle restera en brouillon.</span></label>
+            <label id="openImmediatelyRow" class="checkbox-row"><input id="openImmediately" type="checkbox" checked><span>Ouvrir immédiatement cette semaine aux livreurs. Sinon, elle restera en brouillon.</span></label>
+
+            <div id="weekStatusField" class="field hidden" style="margin-top:16px">
+              <label for="weekStatusSelect">État de la semaine</label>
+              <select id="weekStatusSelect">
+                <option value="draft">Brouillon — invisible pour les livreurs</option>
+                <option value="open">Ouverte — les livreurs peuvent répondre</option>
+                <option value="closed">Clôturée — planning publié, plus de réponse possible</option>
+              </select>
+            </div>
+
+            <div id="weekEditNotice" class="deadline-warning hidden">
+              Les dates de la semaine ne sont pas modifiables : les besoins et les disponibilités déjà saisis y sont rattachés.
+              Pour rouvrir les réponses, repoussez la date limite et repassez l’état sur « Ouverte ».
+            </div>
             <div class="form-actions"><button class="button button-ghost backToDashboard" type="button">Annuler</button><button id="saveWeekButton" class="button button-primary" type="submit">Enregistrer la semaine</button></div>
           </form>
           <div id="weekFormMessage" class="message"></div>
@@ -1392,11 +1417,7 @@
             </div>
           </div>
 
-          <div class="form-note">
-            Classement utilisé : priorité × 3, fiabilité × 2 et expérience × 1.
-            Un livreur peut travailler une fois au service de midi et une fois au service du soir le même jour,
-            avec un maximum de 6 jours de travail par semaine.
-          </div>
+          <div id="planningRuleNote" class="form-note"></div>
 
           <div class="planning-controls">
             <div class="field">
@@ -1442,9 +1463,15 @@
             </div>
 
             <div id="missingDriversContainer" class="missing-drivers hidden">
-              <strong>Livreurs à relancer</strong>
-              <p class="muted">Cliquez sur un nom pour préparer un e-mail de rappel.</p>
-              <div id="missingDriversList" class="missing-driver-list"></div>
+              <strong>Disponibilités manquantes</strong>
+              <p class="muted">Un appui prépare le message, il ne part que si vous l’envoyez.</p>
+              <div id="missingDriversList" class="relance-list"></div>
+            </div>
+
+            <div id="pendingConfirmContainer" class="missing-drivers hidden">
+              <strong>Horaires non confirmés</strong>
+              <p class="muted">Ces livreurs ont reçu leurs horaires mais n’ont pas encore répondu.</p>
+              <div id="pendingConfirmList" class="relance-list"></div>
             </div>
 
             <div class="panel-header">
@@ -1909,6 +1936,13 @@
     const openImmediately = document.getElementById("openImmediately");
     const weekDeliveryMethods = document.getElementById("weekDeliveryMethods");
     const weekList = document.getElementById("weekList");
+    const weekFormTitle = document.getElementById("weekFormTitle");
+    const weekFormSubtitle = document.getElementById("weekFormSubtitle");
+    const openImmediatelyRow = document.getElementById("openImmediatelyRow");
+    const weekStatusField = document.getElementById("weekStatusField");
+    const weekStatusSelect = document.getElementById("weekStatusSelect");
+    const weekEditNotice = document.getElementById("weekEditNotice");
+    let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
     const driverFormWrap = document.getElementById("driverFormWrap");
@@ -1986,6 +2020,8 @@
     const planningDeadlineDashboard = document.getElementById("planningDeadlineDashboard");
     const missingDriversContainer = document.getElementById("missingDriversContainer");
     const missingDriversList = document.getElementById("missingDriversList");
+    const pendingConfirmContainer = document.getElementById("pendingConfirmContainer");
+    const pendingConfirmList = document.getElementById("pendingConfirmList");
 
     const kitchenWeekSelect = document.getElementById("kitchenWeekSelect");
     const loadKitchenButton = document.getElementById("loadKitchenButton");
@@ -2207,7 +2243,7 @@
       if(!currentProfile)return;
       if(currentSectionName==="createWeek")renderWeekDeliveryMethods();
       if(currentSectionName==="needs"){renderNeedTimeOptions();renderNeeds()}
-      if(currentSectionName==="planning")loadPlanningAvailabilities(planningWeekSelect.value);
+      if(currentSectionName==="planning"){renderPlanningRuleNote();loadPlanningAvailabilities(planningWeekSelect.value)}
       if(currentSectionName==="establishment")renderEstablishmentForm()
     }
 
@@ -2354,8 +2390,51 @@
     function formatDate(value){if(!value)return"—";const d=new Date(`${value}T12:00:00`);return new Intl.DateTimeFormat("fr-CH",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"}).format(d)}
     function addDays(value,days){const d=new Date(`${value}T12:00:00`);d.setDate(d.getDate()+days);return d.toISOString().slice(0,10)}
     function getNextMonday(){const d=new Date();const day=d.getDay();d.setDate(d.getDate()+(day===0?1:8-day));return d.toISOString().slice(0,10)}
+    /* Le même écran sert à créer et à modifier. Les dates de la semaine
+       restent figées en modification : besoins, disponibilités et affectations
+       y sont rattachés par date. */
+    function setWeekFormMode(mode){
+      const editing=mode==="edit";
+      weekFormTitle.textContent=editing?"Modifier la semaine":"Créer une semaine";
+      weekFormSubtitle.textContent=editing
+        ? "Repoussez la date limite, changez le message ou rouvrez les réponses."
+        : "Définissez la période et la date limite de réponse.";
+      saveWeekButton.textContent=editing?"Enregistrer les modifications":"Enregistrer la semaine";
+      weekStart.readOnly=editing;
+      weekStart.disabled=editing;
+      openImmediatelyRow.classList.toggle("hidden",editing);
+      weekStatusField.classList.toggle("hidden",!editing);
+      weekEditNotice.classList.toggle("hidden",!editing)
+    }
+
+    function openEditWeekForm(week){
+      editingWeekId=week.id;
+      clearMessage(weekFormMessage);
+      showSection("createWeek");
+
+      weekStart.value=week.startDate||"";
+      weekEnd.value=week.endDate||"";
+      deadlineDate.value=week.deadlineDate||"";
+      deadlineTime.value=week.deadlineTime||establishmentConfig.defaultDeadlineTime||"18:00";
+      weekMessage.value=week.message||"";
+      weekStatusSelect.value=week.status||"draft";
+
+      renderWeekDeliveryMethods();
+      const chosen=new Set(week.deliveryMethods||[]);
+      weekDeliveryMethods.querySelectorAll("input").forEach(input=>{
+        input.checked=chosen.has(input.value)
+      });
+
+      setWeekFormMode("edit")
+    }
+
     function prepareWeekForm(){
       clearMessage(weekFormMessage);
+
+      // On ne réinitialise pas un formulaire ouvert en modification.
+      if(editingWeekId)return;
+
+      setWeekFormMode("create");
       renderWeekDeliveryMethods();
       if(!weekStart.value)weekStart.value=getNextMonday();
       weekEnd.value=addDays(weekStart.value,6);
@@ -2441,10 +2520,12 @@
           </div>
           <div class="week-card-actions">
             <span class="status-badge ${weekStatusClass}">${weekStatusText}</span>
+            <button class="button button-ghost edit-week" type="button">Modifier</button>
             <button class="button button-ghost delete-week" type="button">Supprimer</button>
           </div>
         `;
 
+        card.querySelector(".edit-week").addEventListener("click",()=>openEditWeekForm(w));
         card.querySelector(".delete-week").addEventListener("click",()=>deleteWeekCompletely(w));
         weekList.appendChild(card)
       })
@@ -3069,6 +3150,18 @@
       const previous=needTime.value;
       const date=needDate.value;
       needTime.innerHTML="";
+
+      // Établissement fermé toute la journée : un menu vide serait
+      // incompréhensible, on affiche donc la raison.
+      if(date&&!isDayOpen(date)){
+        const closed=document.createElement("option");
+        closed.value="";
+        closed.textContent="Établissement fermé ce jour-là";
+        closed.disabled=true;
+        closed.selected=true;
+        needTime.appendChild(closed);
+        return
+      }
 
       [["midi","Service de midi"],["soir","Service du soir"]].forEach(([service,title])=>{
         const open=!date||isServiceOpen(date,service);
@@ -4687,8 +4780,18 @@
       return changed
     }
 
+    function renderPlanningRuleNote(){
+      const note=document.getElementById("planningRuleNote");
+      if(!note)return;
+      const days=maxDaysPerWeek();
+      note.textContent="Classement utilisé : priorité × 3, fiabilité × 2 et expérience × 1. "
+        +"Un livreur peut travailler une fois au service de midi et une fois au service du soir le même jour, "
+        +`avec un maximum de ${days} jour${days>1?"s":""} de travail par semaine.`
+    }
+
     function preparePlanningSection(){
       clearMessage(planningMessage);
+      renderPlanningRuleNote();
       // La liste est remplie AVANT la lecture : evite une lecture a vide
       // puis une seconde lecture sur la bonne semaine.
       populatePlanningWeekSelect();
@@ -4769,15 +4872,9 @@
 
       missingDriversList.innerHTML="";
       missingDrivers.forEach(driver=>{
-        const link=document.createElement("a");
-        link.className="missing-driver-chip";
-        const subject=encodeURIComponent(`Rappel disponibilités — semaine du ${formatDate(week.startDate)}`);
-        const body=encodeURIComponent(
-          `Bonjour ${driver.name||""},\n\nMerci d’envoyer vos disponibilités dans Journia avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}.\n\nMerci.`
-        );
-        link.href=`mailto:${driver.email||""}?subject=${subject}&body=${body}`;
-        link.textContent=`✉ ${driver.name||"Livreur"}`;
-        missingDriversList.appendChild(link)
+        const subject=`Disponibilités — semaine du ${formatDate(week.startDate)}`;
+        const message=`Bonjour ${driver.name||""}, merci d’indiquer vos disponibilités dans Journia pour la semaine du ${formatDate(week.startDate)}, avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}. ${appAddress()}`;
+        missingDriversList.appendChild(relanceRow(driver,subject,message))
       });
 
       missingDriversContainer.classList.toggle("hidden",missingDrivers.length===0);
@@ -4793,6 +4890,75 @@
 
       tick();
       planningDeadlineTimer=setInterval(tick,60000)
+    }
+
+    /* ===================================================================
+       RELANCE DES LIVREURS
+       Aucun message n'est envoyé par l'application : elle prépare le texte
+       dans WhatsApp, les SMS ou la messagerie, et le responsable l'envoie.
+       =================================================================== */
+
+    /* Numéros suisses saisis de façons variées : 079…, +41 79…, 4179… */
+    function normalizePhone(value){
+      const digits=String(value||"").replace(/[^0-9]/g,"");
+      if(!digits)return "";
+      if(digits.startsWith("00"))return digits.slice(2);
+      if(digits.startsWith("41"))return digits;
+      if(digits.startsWith("0"))return "41"+digits.slice(1);
+      if(digits.length===9)return "41"+digits;
+      return digits
+    }
+
+    function appAddress(){
+      return `${window.location.origin}${window.location.pathname}`
+    }
+
+    function relanceRow(driver,subject,message){
+      const phone=normalizePhone(driver.phone);
+      const row=document.createElement("div");
+      row.className="relance-row";
+
+      const name=document.createElement("span");
+      name.className="relance-name";
+      name.textContent=driver.name||"Livreur";
+      row.appendChild(name);
+
+      const actions=document.createElement("div");
+      actions.className="relance-actions";
+
+      if(phone){
+        const whatsapp=document.createElement("a");
+        whatsapp.className="relance-link whatsapp";
+        whatsapp.target="_blank";
+        whatsapp.rel="noopener";
+        whatsapp.href=`https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+        whatsapp.textContent="WhatsApp";
+        actions.appendChild(whatsapp);
+
+        const sms=document.createElement("a");
+        sms.className="relance-link sms";
+        sms.href=`sms:+${phone}?&body=${encodeURIComponent(message)}`;
+        sms.textContent="SMS";
+        actions.appendChild(sms)
+      }
+
+      if(driver.email){
+        const mail=document.createElement("a");
+        mail.className="relance-link mail";
+        mail.href=`mailto:${driver.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+        mail.textContent="E-mail";
+        actions.appendChild(mail)
+      }
+
+      if(!actions.children.length){
+        const none=document.createElement("span");
+        none.className="relance-none";
+        none.textContent="Ni téléphone ni e-mail enregistré";
+        actions.appendChild(none)
+      }
+
+      row.appendChild(actions);
+      return row
     }
 
     function availabilityLabel(day){
@@ -5064,12 +5230,64 @@
       return {total,confirmed,pending,refused}
     }
 
+    /* Livreurs qui ont reçu leurs horaires mais n'ont pas encore répondu. */
+    function renderPendingConfirmations(){
+      if(!pendingConfirmContainer)return;
+
+      if(!currentPlan||currentPlan.status!=="validated"){
+        pendingConfirmContainer.classList.add("hidden");
+        return
+      }
+
+      const week=currentWeeks.find(item=>item.id===currentPlan.weekId);
+      const waiting=new Map();
+
+      currentPlan.assignments.forEach(slot=>{
+        slot.selected.forEach(driver=>{
+          const id=assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId);
+          const assignment=currentAssignmentStatuses.get(id);
+          if(assignment&&assignment.active===false)return;
+          if((assignment?.status||"pending")!=="pending")return;
+
+          const entry=waiting.get(driver.userId)||{driver,count:0};
+          entry.count+=1;
+          waiting.set(driver.userId,entry)
+        })
+      });
+
+      pendingConfirmList.innerHTML="";
+
+      if(waiting.size===0){
+        pendingConfirmContainer.classList.add("hidden");
+        return
+      }
+
+      waiting.forEach(({driver,count})=>{
+        // On retrouve le téléphone dans la fiche du livreur : le plan ne le porte pas.
+        const profile=currentDrivers.find(item=>item.id===driver.userId)||{};
+        const full={
+          name:driver.name||profile.name,
+          email:driver.email||profile.email,
+          phone:profile.phone
+        };
+        const semaine=week?`la semaine du ${formatDate(week.startDate)}`:"la semaine à venir";
+        const subject=`Confirmation de vos horaires — ${semaine}`;
+        const message=`Bonjour ${full.name||""}, vous avez ${count} horaire${count>1?"s":""} à confirmer dans Journia pour ${semaine}. Merci de répondre depuis l’application. ${appAddress()}`;
+        pendingConfirmList.appendChild(relanceRow(full,subject,message))
+      });
+
+      pendingConfirmContainer.classList.remove("hidden")
+    }
+
     function renderPlan(){
       if(!currentPlan){
         planContainer.innerHTML='<div class="empty-state">Aucune proposition disponible.</div>';
         validatePlanButton.classList.add("hidden");
+        if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
         return
       }
+
+      renderPendingConfirmations();
 
       const totals=planTotals(currentPlan);
       planContainer.innerHTML="";
@@ -5556,7 +5774,19 @@
     ["middayStart","middayEnd","middayStep","eveningStart","eveningEnd","eveningStep"].forEach(id=>{
       document.getElementById(id).addEventListener("change",updateSlotsPreview)
     });
-    document.querySelectorAll(".backToDashboard").forEach(b=>b.addEventListener("click",()=>showSection("dashboard")));
+    document.querySelectorAll(".backToDashboard").forEach(b=>b.addEventListener("click",()=>{
+      editingWeekId="";
+      setWeekFormMode("create");
+      showSection("dashboard")
+    }));
+    document.getElementById("openCreateWeek").addEventListener("click",()=>{
+      editingWeekId="";
+      weekForm.reset();
+      deadlineTime.value=establishmentConfig.defaultDeadlineTime||"18:00";
+      weekStart.value="";
+      deadlineDate.value="";
+      setWeekFormMode("create")
+    });
     document.getElementById("openDriverForm").addEventListener("click",openNewDriverForm);
     document.getElementById("cancelDriverForm").addEventListener("click",()=>{
       resetDriverForm();
@@ -5603,6 +5833,7 @@
         validatePlanButton.classList.add("hidden");
         closePlanButton.classList.add("hidden");
         generatePlanButton.disabled=false;
+        if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
     });
@@ -5768,6 +5999,39 @@
       event.preventDefault();clearMessage(weekFormMessage);
       if(!auth.currentUser||!currentProfile){showMessage(weekFormMessage,"Votre session n’est plus valide.","error");return}
       saveWeekButton.disabled=true;saveWeekButton.textContent="Enregistrement…";
+
+      // -------- Modification d'une semaine existante --------
+      if(editingWeekId){
+        try{
+          const deliveryMethods=selectedWeekDeliveryMethods();
+          if(deliveryMethods.length===0){
+            throw new Error("Sélectionnez au moins un moyen de livraison autorisé pour cette semaine.")
+          }
+
+          await updateDoc(doc(db,"weeks",editingWeekId),{
+            deadlineDate:deadlineDate.value,
+            deadlineTime:deadlineTime.value,
+            message:weekMessage.value.trim(),
+            deliveryMethods,
+            status:weekStatusSelect.value,
+            updatedAt:serverTimestamp(),
+            updatedBy:auth.currentUser.uid
+          });
+
+          availabilityCache.delete(editingWeekId);
+          showMessage(weekFormMessage,"La semaine a été mise à jour.","success");
+          editingWeekId="";
+          setTimeout(()=>{setWeekFormMode("create");showSection("dashboard")},900)
+        }catch(error){
+          console.error(error);
+          showMessage(weekFormMessage,`Impossible de modifier la semaine : ${error.code||error.message}`,"error")
+        }finally{
+          saveWeekButton.disabled=false;
+          saveWeekButton.textContent=editingWeekId?"Enregistrer les modifications":"Enregistrer la semaine"
+        }
+        return
+      }
+
       try{
         const duplicate=currentWeeks.find(week=>
           week.startDate===weekStart.value
@@ -5823,6 +6087,15 @@
 
       if(needDate.value<week.startDate||needDate.value>week.endDate){
         showMessage(needFormMessage,"Le jour doit être compris dans la semaine sélectionnée.","error");
+        return
+      }
+
+      if(!needTime.value||!isDayOpen(needDate.value)){
+        showMessage(
+          needFormMessage,
+          `L’établissement est fermé le ${WEEKDAY_NAMES[weekdayOf(needDate.value)].toLowerCase()}. Choisissez un autre jour, ou modifiez la fiche de l’établissement.`,
+          "error"
+        );
         return
       }
 
