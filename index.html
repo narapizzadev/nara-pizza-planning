@@ -1355,7 +1355,7 @@
             <div>
               <h3>Parc de véhicules de l’établissement</h3>
               <p class="muted">Vos voitures et scooters, un par ligne. L’application évitera d’attribuer le même véhicule à deux livreurs sur le même service.</p>
-              <p class="muted">Donnez-leur le nom que vos livreurs emploient déjà entre eux — souvent les trois derniers chiffres de la plaque, « Voiture 911 », « Voiture 306 ». La plaque complète n’est utile que si ce nom ne suffit pas à retrouver le véhicule sur le parking.</p>
+              <p class="muted">Donnez-leur le nom que vos livreurs emploient déjà entre eux — souvent les trois derniers chiffres de la plaque, « Voiture 911 », « Voiture 306 ». C’est ce nom, et lui seul, qui s’imprimera sur la feuille de cuisine. La plaque complète reste facultative : elle n’est là que pour votre registre.</p>
             </div>
           </div>
           <div id="fleetList" class="fleet-list"></div>
@@ -2263,16 +2263,13 @@
       return `${method?method.icon+" ":""}${unit.name}${unit.plate?` · ${unit.plate}`:""}`
     }
 
-    // « Voiture 1 · VD 123 456 » : le nom pour savoir lequel c'est,
-    // la plaque pour le retrouver sur le parking. La plaque est relue dans
-    // la fiche à chaque affichage, si bien qu'une correction de plaque se
-    // propage sans avoir à régénérer le moindre planning.
+    // Seul le nom est affiché : c'est celui que l'équipe emploie, et il
+    // porte déjà de quoi reconnaître le véhicule. Le nom est relu dans la
+    // fiche à chaque affichage, si bien qu'un renommage se propage sans
+    // avoir à régénérer le moindre planning.
     function fleetUnitDisplay(unitId,fallbackName){
       const unit=unitId?fleetUnitById(unitId):null;
-      const name=(unit&&unit.name)||fallbackName||"";
-      if(!name)return "";
-      const plate=unit&&unit.plate?unit.plate:"";
-      return plate?`${name} · ${plate}`:name
+      return (unit&&unit.name)||fallbackName||""
     }
 
     function newFleetId(){
@@ -2966,7 +2963,7 @@
               <option value="${type}" ${unit.type===type?"selected":""}>${escapeHtml(deliveryMethodLabel(type))}</option>
             `).join("")}
           </select>
-          <input class="fleet-plate" type="text" placeholder="Plaque complète (facultatif)" value="${escapeHtml(unit.plate||"")}" maxlength="20">
+          <input class="fleet-plate" type="text" placeholder="Plaque — pour votre registre (facultatif)" value="${escapeHtml(unit.plate||"")}" maxlength="20">
           <button class="button button-ghost fleet-remove" type="button">Retirer</button>
         `;
         row.querySelector(".fleet-remove").addEventListener("click",()=>{
@@ -5839,7 +5836,7 @@
                               ${currentPlan.status==="closed"?"disabled":""}>
                         <option value="">Aucun véhicule</option>
                         ${options.map(unit=>`
-                          <option value="${escapeHtml(unit.id)}" ${driver.vehicleUnitId===unit.id?"selected":""}>${escapeHtml(unit.plate?`${unit.name} · ${unit.plate}`:unit.name)}</option>
+                          <option value="${escapeHtml(unit.id)}" ${driver.vehicleUnitId===unit.id?"selected":""}>${escapeHtml(unit.name)}</option>
                         `).join("")}
                       </select>`
                   })()}
@@ -7041,7 +7038,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-e";
+    const APP_VERSION = "2026-08-01-f";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
