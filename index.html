@@ -625,6 +625,7 @@
     .kitchen-driver strong,.kitchen-driver small{display:block}
     .kitchen-driver small{margin-top:3px;color:var(--muted)}
     .kitchen-empty{color:#999}
+    .kitchen-short{display:block;margin-top:6px;font-size:12px;color:#8a5600;font-weight:600}
     .kitchen-status{display:inline-flex;padding:6px 9px;border-radius:999px;background:#ecfdf3;color:var(--success);font-size:12px;font-weight:700}
     .print-only{display:none}
 
@@ -641,6 +642,7 @@
       .kitchen-sheet-header{margin-bottom:12px}
       /* Une ligne d'horaire ne doit jamais être coupée entre deux pages. */
       .kitchen-grid tr,.kitchen-grid td,.kitchen-driver{page-break-inside:avoid;break-inside:avoid}
+      .kitchen-short{color:#000;font-size:11px}
       .kitchen-grid thead{display:table-header-group}
       @page{size:landscape;margin:10mm}
     }
@@ -3202,8 +3204,25 @@
       return days
     }
 
+    /* Un livreur retenu à 17:30 mais qui a déclaré ne pouvoir arriver qu'à
+       18:30 n'est pas en cuisine à 17:30. L'écrire sur la ligne de 17:30
+       trompe celui qui lit la feuille. On récupère donc son heure réelle
+       pour le placer là où il sera vraiment. */
+    function shiftedArrivalTime(driver){
+      if(!driver||driver.forcedCode!=="later")return "";
+      const found=/(\d{1,2}:\d{2})/.exec(driver.forcedReason||"");
+      if(!found)return "";
+      const [hours,minutes]=found[1].split(":");
+      return `${hours.padStart(2,"0")}:${minutes}`
+    }
+
     function renderKitchenPlan(plan,week){
       const assignments=[];
+
+      // Par créneau d'origine : combien de livreurs sont prévus, combien
+      // sont réellement là à l'heure, et à partir de quand l'équipe est
+      // au complet.
+      const coverage=new Map();
 
       plan.assignments.forEach(slot=>{
         slot.selected.forEach(driver=>{
@@ -3228,9 +3247,32 @@
             driver.vehicleUnitName||assignment?.vehicleUnitName||""
           );
 
+          // L'heure à laquelle ce livreur est effectivement en service.
+          const arrival=shiftedArrivalTime(driver);
+          const shifted=!!arrival&&arrival>slot.time;
+
+          const key=`${slot.date}_${slot.time}`;
+          const cover=coverage.get(key)||{planned:0,onTime:0,from:""};
+          cover.planned+=1;
+          if(shifted){
+            if(!cover.from||arrival<cover.from)cover.from=arrival
+          }else{
+            cover.onTime+=1
+          }
+          coverage.set(key,cover);
+
+          // Une fois le livreur placé à son heure réelle, répéter « ne peut
+          // arriver qu'à 18:30 » n'apprend plus rien. On indique à la place
+          // le créneau d'origine, qui, lui, n'est plus visible.
+          if(shifted){
+            const index=notes.indexOf(driver.forcedReason);
+            if(index>=0)notes.splice(index,1,`prévu à ${slot.time}`);
+            else notes.unshift(`prévu à ${slot.time}`)
+          }
+
           assignments.push({
             date:slot.date,
-            time:slot.time,
+            time:shifted?arrival:slot.time,
             name:driver.name||"Livreur",
             vehicle:unitName||(chosen?deliveryMethodLabel(chosen):""),
             note:notes.join(" · "),
@@ -3239,7 +3281,10 @@
         })
       });
 
-      const times=[...new Set(assignments.map(item=>item.time))].sort();
+      const times=[...new Set([
+        ...assignments.map(item=>item.time),
+        ...[...coverage.keys()].map(key=>key.split("_")[1])
+      ])].sort();
       const days=kitchenDays(week);
 
       if(times.length===0){
@@ -3253,8 +3298,13 @@
             .filter(item=>item.date===day&&item.time===time)
             .sort((a,b)=>a.name.localeCompare(b.name,"fr"));
 
+          const cover=coverage.get(`${day}_${time}`);
+          const shortage=cover&&cover.from&&cover.onTime<cover.planned
+            ? `<span class="kitchen-short">${cover.onTime} livreur${cover.onTime>1?"s":""} sur ${cover.planned} avant ${escapeHtml(cover.from)}</span>`
+            : "";
+
           if(drivers.length===0){
-            return '<td><span class="kitchen-empty">—</span></td>'
+            return `<td><span class="kitchen-empty">—</span>${shortage}</td>`
           }
 
           return `<td>${drivers.map(driver=>`
@@ -3263,7 +3313,7 @@
               ${driver.vehicle?`<small>${escapeHtml(driver.vehicle)}</small>`:""}
               ${driver.note?`<small class="kitchen-note">⚠ ${escapeHtml(driver.note)}</small>`:""}
             </span>
-          `).join("")}</td>`
+          `).join("")}${shortage}</td>`
         }).join("");
 
         return `<tr><td class="time-cell">${escapeHtml(time)}</td>${cells}</tr>`
@@ -6991,7 +7041,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-d";
+    const APP_VERSION = "2026-08-01-e";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
