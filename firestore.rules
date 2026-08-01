@@ -1,10 +1,226 @@
 rules_version = '2';
+
+/* =====================================================================
+   NARA PIZZA PLANNING — Règles de sécurité Firestore
+
+   Principe : ces règles sont la seule protection réelle des données.
+   Tout ce qui n'est vérifié que dans index.html peut être contourné,
+   car le code de l'application est public.
+   ===================================================================== */
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /planning/current {
-      allow read: if true;
-      allow write: if request.auth != null;
+
+    /* ---------- Identité et rôles ---------- */
+
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return userDoc().data.role;
+    }
+
+    function isActive() {
+      return isSignedIn() && userDoc().data.active == true;
+    }
+
+    function isAdmin() {
+      return isActive() && userRole() == "admin";
+    }
+
+    function isManager() {
+      return isActive() && (userRole() == "admin" || userRole() == "manager");
+    }
+
+    function isDriver() {
+      return isActive() && userRole() == "driver";
+    }
+
+    function weekStatus(weekId) {
+      return get(/databases/$(database)/documents/weeks/$(weekId)).data.status;
+    }
+
+    /* ---------- Comptes ----------
+       Correction : un manager pouvait auparavant se promouvoir administrateur
+       ou modifier le rôle de n'importe qui. Désormais le champ "role" ne peut
+       être modifié que par un administrateur, et personne ne peut modifier
+       son propre rôle ni se réactiver lui-même. */
+
+    match /users/{userId} {
+
+      allow read: if isActive()
+        && (request.auth.uid == userId || isManager());
+
+      // Un manager crée des livreurs. Créer un manager ou un admin
+      // reste réservé aux administrateurs.
+      allow create: if isManager()
+        && request.resource.data.role in ["driver", "manager", "admin"]
+        && (request.resource.data.role == "driver" || isAdmin());
+
+      allow update: if (
+          isManager()
+          && request.resource.data.role in ["driver", "manager", "admin"]
+          // Changer un rôle : administrateurs uniquement.
+          && (request.resource.data.role == resource.data.role || isAdmin())
+          // Sur sa propre fiche : ni le rôle ni le statut actif ne bougent.
+          && (
+            request.auth.uid != userId
+            || (
+              request.resource.data.role == resource.data.role
+              && request.resource.data.active == resource.data.active
+            )
+          )
+        )
+        // Mot de passe provisoire : chacun peut effacer son propre indicateur,
+        // et rien d'autre. Ni le rôle, ni le statut, ni la fiche d'un collègue.
+        || (
+          isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(["mustChangePassword", "passwordChangedAt"])
+          && request.resource.data.mustChangePassword == false
+        );
+
+      // L'application ne supprime jamais de compte : elle les désactive.
+      allow delete: if isAdmin() && request.auth.uid != userId;
+    }
+
+    /* ---------- Scores confidentiels ----------
+       Priorité, fiabilité, expérience et notes internes.
+       Jamais lisibles par un livreur, y compris les siens. */
+
+    match /driverPrivate/{userId} {
+      allow read, create, update: if isManager();
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- Semaines ----------
+       Le livreur voit les semaines ouvertes (pour répondre) et les semaines
+       clôturées (pour consulter son planning publié). */
+
+    match /weeks/{weekId} {
+
+      allow read: if isManager()
+        || (isDriver() && resource.data.status in ["open", "closed"]);
+
+      allow create, update, delete: if isManager();
+
+      /* ---------- Disponibilités ----------
+         Corrections : la semaine doit réellement être ouverte, et le contenu
+         est contrôlé. Auparavant un livreur pouvait écrire ce qu'il voulait
+         dans une semaine en brouillon ou déjà clôturée. */
+
+      match /availabilities/{userId} {
+
+        function validAvailability(data) {
+          return data.keys().hasAll(["weekId", "userId", "days", "deliveryMethods"])
+            && data.keys().size() <= 12
+            && data.userId is string
+            && data.weekId == weekId
+            && data.days is list
+            && data.days.size() <= 14
+            && data.deliveryMethods is list
+            && data.deliveryMethods.size() <= 10;
+        }
+
+        allow read: if isManager()
+          || (isDriver() && request.auth.uid == userId);
+
+        allow create, update: if isDriver()
+          && request.auth.uid == userId
+          && request.resource.data.userId == request.auth.uid
+          && weekStatus(weekId) == "open"
+          && validAvailability(request.resource.data);
+
+        allow delete: if isManager();
+      }
+    }
+
+    /* ---------- Fiche technique de l'établissement ----------
+       Jours d'ouverture, créneaux horaires, véhicules disponibles.
+       Tout le monde doit pouvoir la lire, seul un administrateur la modifie. */
+
+    match /config/{documentId} {
+      allow read: if isActive();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
+    /* ---------- Besoins et modèles ---------- */
+
+    match /needs/{needId} {
+      allow read, create, update, delete: if isManager();
+    }
+
+    match /needTemplates/{templateId} {
+      allow read, create, update, delete: if isManager();
+    }
+
+    /* ---------- Acceptations du règlement ----------
+       Corrections : l'identifiant du document doit appartenir au livreur,
+       et la date d'acceptation est celle du serveur. Auparavant un livreur
+       pouvait fabriquer l'acceptation d'une future version du règlement,
+       avec la date de son choix. */
+
+    match /regulationAcceptances/{acceptanceId} {
+
+      allow read: if isManager()
+        || (isDriver() && resource.data.userId == request.auth.uid);
+
+      allow create: if isDriver()
+        && acceptanceId.matches("^" + request.auth.uid + "_[0-9_]+$")
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.acceptedBy == request.auth.uid
+        && request.resource.data.acceptedAt == request.time
+        && request.resource.data.version is string
+        && request.resource.data.version.size() <= 10;
+
+      // Une acceptation est une preuve : elle ne se modifie pas.
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- Plannings ---------- */
+
+    match /plans/{weekId} {
+      allow read, create, update, delete: if isManager();
+    }
+
+    /* ---------- Affectations ----------
+       Correction : un livreur pouvait revenir sur un refus et se remettre
+       en "confirmé" après qu'un remplaçant ait été désigné, créant deux
+       livreurs sur le même créneau. Un refus est désormais définitif côté
+       livreur, et une affectation remplacée n'est plus modifiable. */
+
+    match /driverAssignments/{assignmentId} {
+
+      allow read: if isManager()
+        || (isDriver() && resource.data.userId == request.auth.uid);
+
+      allow create, delete: if isManager();
+
+      allow update: if isManager()
+        || (
+          isDriver()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && resource.data.get("active", true) == true
+          && resource.data.status != "refused"
+          && request.resource.data.status in ["confirmed", "refused"]
+          // vehicleChoice : le véhicule que le livreur prendra réellement,
+          // choisi au moment de confirmer.
+          && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(["status", "vehicleChoice", "respondedAt", "updatedAt"])
+        );
+    }
+
+    /* ---------- Tout le reste est refusé ---------- */
+
     match /{document=**} {
       allow read, write: if false;
     }

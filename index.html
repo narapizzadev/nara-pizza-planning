@@ -360,6 +360,15 @@
     .availability-closed{padding:20px;border-radius:12px;background:#f4f4f4;color:var(--muted);text-align:center}
 
   
+    .vehicle-unit{width:auto;min-width:130px;padding:7px 9px;font-size:13px;margin-right:8px}
+    .vehicle-shortage{grid-column:1 / -1;margin-top:12px;padding:12px 14px;border:1px solid #f3c4c4;
+      border-radius:12px;background:#fdecec;color:var(--error);font-weight:700}
+    .fleet-list{display:grid;gap:10px}
+    .fleet-row{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(150px,1fr) minmax(110px,0.8fr) auto;
+      gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .fleet-row input,.fleet-row select{width:100%}
+    .fleet-empty{padding:16px;border:1px dashed var(--border);border-radius:12px;text-align:center;color:var(--muted);background:#fafafa}
+    @media(max-width:760px){.fleet-row{grid-template-columns:1fr}}
     .opening-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
     .opening-day{border:1px solid var(--border);border-radius:12px;padding:12px;background:#fff}
     .opening-day strong{display:block;margin-bottom:8px;font-size:15px}
@@ -630,6 +639,9 @@
       .kitchen-grid th,.kitchen-grid td{padding:6px}
       .kitchen-driver{background:#fff;border:1px solid #bbb;padding:5px}
       .kitchen-sheet-header{margin-bottom:12px}
+      /* Une ligne d'horaire ne doit jamais être coupée entre deux pages. */
+      .kitchen-grid tr,.kitchen-grid td,.kitchen-driver{page-break-inside:avoid;break-inside:avoid}
+      .kitchen-grid thead{display:table-header-group}
       @page{size:landscape;margin:10mm}
     }
 
@@ -1336,6 +1348,17 @@
             </div>
           </div>
           <div id="establishmentMethods" class="delivery-methods-grid"></div>
+
+          <div class="panel-header" style="margin-top:22px">
+            <div>
+              <h3>Parc de véhicules de l’établissement</h3>
+              <p class="muted">Vos voitures et scooters, un par ligne. L’application évitera d’attribuer le même véhicule à deux livreurs sur le même service.</p>
+            </div>
+          </div>
+          <div id="fleetList" class="fleet-list"></div>
+          <div class="form-actions" style="justify-content:flex-start;margin-top:10px">
+            <button id="addFleetUnit" class="button button-ghost" type="button">Ajouter un véhicule</button>
+          </div>
 
           <div class="form-grid" style="margin-top:22px">
             <div class="field">
@@ -2139,6 +2162,7 @@
       midday: { start:"11:30", end:"12:00", step:15 },
       evening:{ start:"18:00", end:"19:00", step:15 },
       deliveryMethods: ["company_car","personal_car","company_scooter","personal_motorcycle","personal_bicycle"],
+      fleet: [],
       maxDaysPerWeek: 6,
       defaultDeadlineTime: "18:00"
     };
@@ -2200,6 +2224,58 @@
       return isServiceOpen(dateString,"midi")||isServiceOpen(dateString,"soir")
     }
 
+    /* ===================================================================
+       PARC DE VÉHICULES
+       Les moyens de livraison sont des TYPES ; le parc contient les
+       EXEMPLAIRES réels. Un exemplaire ne peut servir qu'à un livreur
+       à la fois, pour un jour et un service donnés.
+       =================================================================== */
+    const COMPANY_METHODS = ["company_car","company_scooter"];
+
+    function isCompanyMethod(id){
+      return COMPANY_METHODS.includes(id)
+    }
+
+    function fleetUnits(){
+      return (establishmentConfig.fleet||[]).filter(unit=>unit&&unit.id&&unit.active!==false)
+    }
+
+    function fleetUnitsOfType(type){
+      return fleetUnits().filter(unit=>unit.type===type)
+    }
+
+    function fleetUnitById(id){
+      return fleetUnits().find(unit=>unit.id===id)||null
+    }
+
+    function fleetUnitLabel(id){
+      const unit=fleetUnitById(id);
+      if(!unit)return "";
+      const method=DELIVERY_METHODS.find(item=>item.id===unit.type);
+      return `${method?method.icon+" ":""}${unit.name}${unit.plate?` · ${unit.plate}`:""}`
+    }
+
+    function newFleetId(){
+      return "u"+Math.random().toString(36).slice(2,9)
+    }
+
+    /* Exemplaires déjà pris sur un jour et un service donnés. */
+    function usedUnitsForService(plan,date,service,exceptDriverId){
+      const used=new Set();
+      if(!plan)return used;
+
+      plan.assignments.forEach(slot=>{
+        if(slot.date!==date)return;
+        if(servicePeriod(slot.time)!==service)return;
+        slot.selected.forEach(driver=>{
+          if(exceptDriverId&&driver.userId===exceptDriverId)return;
+          if(driver.vehicleUnitId)used.add(driver.vehicleUnitId)
+        })
+      });
+
+      return used
+    }
+
     function availableDeliveryMethods(){
       const allowed=establishmentConfig.deliveryMethods||[];
       const list=DELIVERY_METHODS.filter(item=>allowed.includes(item.id));
@@ -2221,7 +2297,8 @@
           evening:{...DEFAULT_CONFIG.evening,...(data.evening||{})},
           openingDays:Array.isArray(data.openingDays)&&data.openingDays.length===7
             ? data.openingDays.map(day=>({midday:day?.midday===true,evening:day?.evening===true}))
-            : DEFAULT_CONFIG.openingDays
+            : DEFAULT_CONFIG.openingDays,
+          fleet:Array.isArray(data.fleet)?data.fleet.filter(unit=>unit&&unit.id):[]
         };
         establishmentConfigExists=true
       }else{
@@ -2833,6 +2910,8 @@
         grid.appendChild(card)
       });
 
+      renderFleetList(establishmentConfig.fleet||[]);
+
       const methods=document.getElementById("establishmentMethods");
       methods.innerHTML="";
       DELIVERY_METHODS.forEach(method=>{
@@ -2845,6 +2924,47 @@
 
       updateSlotsPreview();
       document.getElementById("establishmentSetupNotice").classList.toggle("hidden",establishmentConfigExists)
+    }
+
+    function renderFleetList(units){
+      const list=document.getElementById("fleetList");
+      list.innerHTML="";
+
+      if(!units.length){
+        list.innerHTML='<div class="fleet-empty">Aucun véhicule enregistré. Ajoutez vos voitures et scooters pour pouvoir les attribuer.</div>';
+        return
+      }
+
+      units.forEach(unit=>{
+        const row=document.createElement("div");
+        row.className="fleet-row";
+        row.dataset.unitId=unit.id||newFleetId();
+        row.innerHTML=`
+          <input class="fleet-name" type="text" placeholder="Exemple : Scooter A" value="${escapeHtml(unit.name||"")}" maxlength="40">
+          <select class="fleet-type">
+            ${COMPANY_METHODS.map(type=>`
+              <option value="${type}" ${unit.type===type?"selected":""}>${escapeHtml(deliveryMethodLabel(type))}</option>
+            `).join("")}
+          </select>
+          <input class="fleet-plate" type="text" placeholder="Plaque (facultatif)" value="${escapeHtml(unit.plate||"")}" maxlength="20">
+          <button class="button button-ghost fleet-remove" type="button">Retirer</button>
+        `;
+        row.querySelector(".fleet-remove").addEventListener("click",()=>{
+          const remaining=readFleetList().filter(item=>item.id!==row.dataset.unitId);
+          renderFleetList(remaining)
+        });
+        list.appendChild(row)
+      })
+    }
+
+    function readFleetList(){
+      return [...document.querySelectorAll("#fleetList .fleet-row")].map(row=>({
+        id:row.dataset.unitId,
+        name:row.querySelector(".fleet-name").value.trim(),
+        type:row.querySelector(".fleet-type").value,
+        plate:row.querySelector(".fleet-plate").value.trim(),
+        active:true
+      })).filter(unit=>unit.name)
     }
 
     function readEstablishmentForm(){
@@ -2871,6 +2991,7 @@
           step:Number(document.getElementById("eveningStep").value)
         },
         deliveryMethods:[...document.querySelectorAll('#establishmentMethods input:checked')].map(input=>input.value),
+        fleet:readFleetList(),
         maxDaysPerWeek:Number(document.getElementById("maxDaysInput").value),
         defaultDeadlineTime:document.getElementById("defaultDeadlineInput").value
       }
@@ -3076,11 +3197,21 @@
           if(driver.forced)notes.push(driver.forcedReason||"hors disponibilité déclarée");
           if(status==="pending")notes.push("non confirmé");
 
+          // Sur une feuille affichée au mur, une seule information de véhicule
+          // a du sens : celui que le livreur prendra réellement. La liste de
+          // tout ce qu'il a déclaré rendait la feuille illisible.
+          const methods=Array.isArray(driver.weeklyDeliveryMethods)?driver.weeklyDeliveryMethods:[];
+          const chosen=assignment?.vehicleChoice
+            || (methods.length===1?methods[0]:"");
+
+          // Le nom de l'exemplaire prime : c'est ce que la cuisine doit lire.
+          const unitName=driver.vehicleUnitName||assignment?.vehicleUnitName||"";
+
           assignments.push({
             date:slot.date,
             time:slot.time,
             name:driver.name||"Livreur",
-            vehicle:driver.vehicle||"",
+            vehicle:unitName||(chosen?deliveryMethodLabel(chosen):""),
             note:notes.join(" · "),
             status
           })
@@ -3108,7 +3239,7 @@
           return `<td>${drivers.map(driver=>`
             <span class="kitchen-driver">
               <strong>${escapeHtml(driver.name)}</strong>
-              <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</small>
+              ${driver.vehicle?`<small>${escapeHtml(driver.vehicle)}</small>`:""}
               ${driver.note?`<small class="kitchen-note">⚠ ${escapeHtml(driver.note)}</small>`:""}
             </span>
           `).join("")}</td>`
@@ -4515,7 +4646,11 @@
           const options=Array.isArray(assignment.deliveryMethods)?assignment.deliveryMethods:[];
           let chosenVehicle=assignment.vehicleChoice||(options.length===1?options[0]:"");
 
-          const vehicleBlock=status==="pending"&&options.length>1
+          // Si le responsable a attribué un véhicule précis, le livreur n'a
+          // plus à choisir : il prend celui-là.
+          const assignedUnit=assignment.vehicleUnitName||"";
+
+          const vehicleBlock=!assignedUnit&&status==="pending"&&options.length>1
             ? `<div class="dv-vehicle">
                  <div class="dv-vehicle-label">Quel véhicule prenez-vous ?</div>
                  <div class="dv-vehicle-row">
@@ -4524,11 +4659,13 @@
                </div>`
             : "";
 
-          const metaText=chosenVehicle
-            ? deliveryMethodLabel(chosenVehicle)
-            : (options.length>1
-                ? "Véhicule à choisir ci-dessous"
-                : (assignment.vehicleRequirement||"Aucun véhicule indiqué"));
+          const metaText=assignedUnit
+            ? assignedUnit
+            : (chosenVehicle
+                ? deliveryMethodLabel(chosenVehicle)
+                : (options.length>1
+                    ? "Véhicule à choisir ci-dessous"
+                    : (assignment.vehicleRequirement||"Aucun véhicule indiqué")));
 
           const actions=(status==="pending"||status==="implied")
             ? `<div class="dv-slot-actions">
@@ -4576,7 +4713,7 @@
           const refuseButton=card.querySelector(".refuse-assignment");
 
           confirmButton?.addEventListener("click",async()=>{
-            if(options.length>1&&!chosenVehicle){
+            if(!assignedUnit&&options.length>1&&!chosenVehicle){
               driverToast("Choisissez d’abord le véhicule que vous prenez.","bad");
               return
             }
@@ -4714,6 +4851,7 @@
       // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
                   "userId","driverName","driverEmail","vehicleRequirement",
+                  "vehicleUnitId","vehicleUnitName",
                   "forced","forcedReason","forcedCode","active"];
 
       if(keys.some(key=>(existing[key]??"")!==(desired[key]??"")))return false;
@@ -4754,6 +4892,8 @@
             vehicleRequirement:deliveryMethods.length
               ? deliveryMethods.map(deliveryMethodLabel).join(", ")
               : (slot.notes||""),
+            vehicleUnitId:driver.vehicleUnitId||"",
+            vehicleUnitName:driver.vehicleUnitName||"",
             forced:driver.forced===true,
             forcedReason:driver.forcedReason||"",
             forcedCode:driver.forcedCode||"",
@@ -5225,6 +5365,7 @@
       // le même jour, mais sur un maximum de 6 jours distincts par semaine.
       const assignedByDateAndService=new Map();
       const workedDatesByDriver=new Map();
+      const takenUnitsByService=new Map();
 
       const assignments=data.needs.map(need=>{
         const service=servicePeriod(need.time);
@@ -5290,6 +5431,27 @@
 
         assignedByDateAndService.set(serviceKey,usedForService);
 
+        // Attribution d'un exemplaire du parc, sans jamais donner le même
+        // véhicule à deux livreurs sur le même jour et le même service.
+        const takenUnits=takenUnitsByService.get(serviceKey)||new Set();
+        selected.forEach(driver=>{
+          const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
+          if(!companyType)return;
+
+          const free=fleetUnitsOfType(companyType).find(unit=>!takenUnits.has(unit.id));
+          if(!free)return;
+
+          takenUnits.add(free.id);
+          driver.vehicleUnitId=free.id;
+          driver.vehicleUnitName=free.name
+        });
+        takenUnitsByService.set(serviceKey,takenUnits);
+
+        // Combien de livreurs attendent un véhicule qui n'existe pas ?
+        const missingVehicles=selected.filter(driver=>
+          (driver.weeklyDeliveryMethods||[]).some(isCompanyMethod)&&!driver.vehicleUnitId
+        ).length;
+
         // On ne conserve les motifs que pour les créneaux non pourvus :
         // c'est le seul cas où ils servent, et cela garde le document léger.
         // Tout livreur qui n'est pas candidat doit apparaître, avec un motif.
@@ -5312,6 +5474,7 @@
 
         return {
           excluded,
+          missingVehicles,
           needId:need.id,
           date:need.date,
           time:need.time,
@@ -5587,6 +5750,20 @@
                   })()}${driver.availabilityComment?` · ${escapeHtml(driver.availabilityComment)}`:""}</small>
                 </div>
                 <div>
+                  ${(()=>{
+                    const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
+                    if(!companyType||!fleetUnitsOfType(companyType).length)return "";
+                    const taken=usedUnitsForService(currentPlan,slot.date,servicePeriod(slot.time),driver.userId);
+                    const options=fleetUnitsOfType(companyType)
+                      .filter(unit=>!taken.has(unit.id)||unit.id===driver.vehicleUnitId);
+                    return `<select class="vehicle-unit" data-slot="${slotIndex}" data-driver="${index}"
+                              ${currentPlan.status==="closed"?"disabled":""}>
+                        <option value="">Aucun véhicule</option>
+                        ${options.map(unit=>`
+                          <option value="${escapeHtml(unit.id)}" ${driver.vehicleUnitId===unit.id?"selected":""}>${escapeHtml(unit.name)}</option>
+                        `).join("")}
+                      </select>`
+                  })()}
                   <span class="plan-score">Score ${driver.score}</span>
                   ${currentPlan.status==="validated"||currentPlan.status==="closed"
                     ? (()=>{
@@ -5640,6 +5817,18 @@
               <h3>Liste d’attente</h3>
               <div class="waiting-list">${waitlistHtml}</div>
             </div>
+
+            ${(()=>{
+              const waiting=slot.selected.filter(driver=>
+                (driver.weeklyDeliveryMethods||[]).some(isCompanyMethod)&&!driver.vehicleUnitId
+              );
+              if(!waiting.length)return "";
+              return `<div class="vehicle-shortage">
+                ${waiting.length} livreur${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service :
+                ${waiting.map(driver=>escapeHtml(driver.name)).join(", ")}.
+                Votre parc ne suffit pas, ou ils utiliseront un véhicule personnel.
+              </div>`
+            })()}
 
             ${slot.selected.length<Number(slot.quantity||0)&&!(slot.excluded||[]).length
               ? `<div class="why-panel">
@@ -5788,6 +5977,27 @@
         button.addEventListener("click",()=>{
           closeSwapPanels();
           openReplaceChoice(Number(button.dataset.slot),Number(button.dataset.driver))
+        })
+      });
+
+      planContainer.querySelectorAll(".vehicle-unit").forEach(select=>{
+        select.addEventListener("change",async()=>{
+          const slot=currentPlan.assignments[Number(select.dataset.slot)];
+          const driver=slot?.selected?.[Number(select.dataset.driver)];
+          if(!driver)return;
+
+          const unit=fleetUnitById(select.value);
+          driver.vehicleUnitId=unit?unit.id:"";
+          driver.vehicleUnitName=unit?unit.name:"";
+
+          await saveCurrentPlan();
+
+          if(currentPlan.status==="validated"){
+            await loadAssignmentStatuses(currentPlan.weekId);
+            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
+          }
+
+          renderPlan()
         })
       });
 
@@ -6177,6 +6387,9 @@
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
     document.getElementById("saveEstablishmentButton").addEventListener("click",saveEstablishmentConfig);
+    document.getElementById("addFleetUnit").addEventListener("click",()=>{
+      renderFleetList([...readFleetList(),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
+    });
     ["middayStart","middayEnd","middayStep","eveningStart","eveningEnd","eveningStep"].forEach(id=>{
       document.getElementById(id).addEventListener("change",updateSlotsPreview)
     });
@@ -6667,7 +6880,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-07-31-d";
+    const APP_VERSION = "2026-08-01-b";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
