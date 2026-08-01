@@ -1353,6 +1353,7 @@
             <div>
               <h3>Parc de véhicules de l’établissement</h3>
               <p class="muted">Vos voitures et scooters, un par ligne. L’application évitera d’attribuer le même véhicule à deux livreurs sur le même service.</p>
+              <p class="muted">Donnez-leur le nom que vos livreurs emploient déjà entre eux — souvent les trois derniers chiffres de la plaque, « Voiture 911 », « Voiture 306 ». La plaque complète n’est utile que si ce nom ne suffit pas à retrouver le véhicule sur le parking.</p>
             </div>
           </div>
           <div id="fleetList" class="fleet-list"></div>
@@ -2260,6 +2261,18 @@
       return `${method?method.icon+" ":""}${unit.name}${unit.plate?` · ${unit.plate}`:""}`
     }
 
+    // « Voiture 1 · VD 123 456 » : le nom pour savoir lequel c'est,
+    // la plaque pour le retrouver sur le parking. La plaque est relue dans
+    // la fiche à chaque affichage, si bien qu'une correction de plaque se
+    // propage sans avoir à régénérer le moindre planning.
+    function fleetUnitDisplay(unitId,fallbackName){
+      const unit=unitId?fleetUnitById(unitId):null;
+      const name=(unit&&unit.name)||fallbackName||"";
+      if(!name)return "";
+      const plate=unit&&unit.plate?unit.plate:"";
+      return plate?`${name} · ${plate}`:name
+    }
+
     function newFleetId(){
       return "u"+Math.random().toString(36).slice(2,9)
     }
@@ -2945,13 +2958,13 @@
         row.className="fleet-row";
         row.dataset.unitId=unit.id||newFleetId();
         row.innerHTML=`
-          <input class="fleet-name" type="text" placeholder="Exemple : Scooter A" value="${escapeHtml(unit.name||"")}" maxlength="40">
+          <input class="fleet-name" type="text" placeholder="Exemple : Voiture 911" value="${escapeHtml(unit.name||"")}" maxlength="40">
           <select class="fleet-type">
             ${COMPANY_METHODS.map(type=>`
               <option value="${type}" ${unit.type===type?"selected":""}>${escapeHtml(deliveryMethodLabel(type))}</option>
             `).join("")}
           </select>
-          <input class="fleet-plate" type="text" placeholder="Plaque (facultatif)" value="${escapeHtml(unit.plate||"")}" maxlength="20">
+          <input class="fleet-plate" type="text" placeholder="Plaque complète (facultatif)" value="${escapeHtml(unit.plate||"")}" maxlength="20">
           <button class="button button-ghost fleet-remove" type="button">Retirer</button>
         `;
         row.querySelector(".fleet-remove").addEventListener("click",()=>{
@@ -3210,7 +3223,10 @@
             || (methods.length===1?methods[0]:"");
 
           // Le nom de l'exemplaire prime : c'est ce que la cuisine doit lire.
-          const unitName=driver.vehicleUnitName||assignment?.vehicleUnitName||"";
+          const unitName=fleetUnitDisplay(
+            driver.vehicleUnitId||assignment?.vehicleUnitId||"",
+            driver.vehicleUnitName||assignment?.vehicleUnitName||""
+          );
 
           assignments.push({
             date:slot.date,
@@ -4653,7 +4669,10 @@
 
           // Si le responsable a attribué un véhicule précis, le livreur n'a
           // plus à choisir : il prend celui-là.
-          const assignedUnit=assignment.vehicleUnitName||"";
+          const assignedUnit=fleetUnitDisplay(
+            assignment.vehicleUnitId||"",
+            assignment.vehicleUnitName||""
+          );
 
           const vehicleBlock=!assignedUnit&&status==="pending"&&options.length>1
             ? `<div class="dv-vehicle">
@@ -5770,7 +5789,7 @@
                               ${currentPlan.status==="closed"?"disabled":""}>
                         <option value="">Aucun véhicule</option>
                         ${options.map(unit=>`
-                          <option value="${escapeHtml(unit.id)}" ${driver.vehicleUnitId===unit.id?"selected":""}>${escapeHtml(unit.name)}</option>
+                          <option value="${escapeHtml(unit.id)}" ${driver.vehicleUnitId===unit.id?"selected":""}>${escapeHtml(unit.plate?`${unit.name} · ${unit.plate}`:unit.name)}</option>
                         `).join("")}
                       </select>`
                   })()}
@@ -6972,7 +6991,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-c";
+    const APP_VERSION = "2026-08-01-d";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
