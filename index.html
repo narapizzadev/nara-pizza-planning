@@ -571,8 +571,21 @@
       .availability-grid input{padding:10px;font-size:16px}
       .button{font-size:15px}
     }
-    .availability-admin-grid{display:grid;gap:12px}
-    .availability-admin-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fff}
+    .availability-admin-grid{display:grid;gap:10px}
+    .availability-admin-card{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
+    .availability-admin-toggle{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;
+      border:none;background:none;text-align:left;cursor:pointer;font:inherit;color:inherit}
+    .availability-admin-toggle:hover{background:#fff7f0}
+    .availability-admin-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+    .availability-admin-identity{flex:1;min-width:0}
+    .availability-admin-identity strong{display:block}
+    .availability-admin-identity small{display:block;color:var(--muted);margin-top:2px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .availability-admin-count{color:var(--muted);font-size:13px;white-space:nowrap}
+    .availability-admin-chevron{color:var(--muted);font-size:12px;transition:transform .15s}
+    .availability-admin-card.is-open .availability-admin-chevron{transform:rotate(90deg)}
+    .availability-admin-body{padding:0 14px 14px;border-top:1px solid #f0f0f0}
+    .availability-admin-card:not(.is-open) .availability-admin-body{display:none}
     .availability-admin-card h3{margin-bottom:8px}
     .availability-admin-days{display:grid;gap:8px}
     .availability-admin-day{display:grid;grid-template-columns:180px 1fr;gap:12px;padding:9px 0;border-top:1px solid #eee}
@@ -643,6 +656,8 @@
       /* Une ligne d'horaire ne doit jamais être coupée entre deux pages. */
       .kitchen-grid tr,.kitchen-grid td,.kitchen-driver{page-break-inside:avoid;break-inside:avoid}
       .kitchen-short{color:#000;font-size:11px}
+      .availability-admin-body{display:block !important}
+      .availability-admin-chevron{display:none}
       .kitchen-grid thead{display:table-header-group}
       @page{size:landscape;margin:10mm}
     }
@@ -1530,8 +1545,9 @@
             <div class="panel-header">
               <div>
                 <h3>Disponibilités reçues</h3>
-                <p class="muted">Les réponses de la semaine sélectionnée apparaissent ici avant de générer le planning.</p>
+                <p class="muted">Les réponses de la semaine sélectionnée apparaissent ici avant de générer le planning. Cliquez sur un nom pour voir le détail de sa semaine.</p>
               </div>
+              <button id="toggleAllAvailabilities" class="button button-ghost hidden" type="button">Tout déplier</button>
             </div>
             <div id="planningAvailabilityContainer" class="availability-admin-grid">
               <div class="empty-state">Choisissez une semaine.</div>
@@ -2067,6 +2083,7 @@
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
     const planningAvailabilityContainer = document.getElementById("planningAvailabilityContainer");
+    const toggleAllAvailabilities = document.getElementById("toggleAllAvailabilities");
     const deadlineCountdown = document.getElementById("deadlineCountdown");
     const deadlineResponded = document.getElementById("deadlineResponded");
     const deadlineMissing = document.getElementById("deadlineMissing");
@@ -5246,6 +5263,33 @@
       return row
     }
 
+    /* Résumé d'une semaine en une ligne : « 5 soirs · 2 midis ». */
+    function availabilityCounts(days){
+      let midday=0,evening=0;
+      (days||[]).forEach(day=>{
+        const normalized=normalizeAvailabilityDay(day);
+        if(normalized.middayAvailable)midday+=1;
+        if(normalized.eveningAvailable)evening+=1
+      });
+
+      const parts=[];
+      if(evening)parts.push(`${evening} soir${evening>1?"s":""}`);
+      if(midday)parts.push(`${midday} midi${midday>1?"s":""}`);
+      return parts.length?parts.join(" · "):"aucune disponibilité"
+    }
+
+    function refreshToggleAllLabel(){
+      if(!toggleAllAvailabilities)return;
+      const cards=[...planningAvailabilityContainer.querySelectorAll(".availability-admin-card")];
+      if(cards.length===0){
+        toggleAllAvailabilities.classList.add("hidden");
+        return
+      }
+      toggleAllAvailabilities.classList.remove("hidden");
+      const allOpen=cards.every(card=>card.classList.contains("is-open"));
+      toggleAllAvailabilities.textContent=allOpen?"Tout replier":"Tout déplier"
+    }
+
     function availabilityLabel(day){
       const normalized=normalizeAvailabilityDay(day);
       const labels=[];
@@ -5311,6 +5355,7 @@
 
         if(responses.length===0){
           planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+          refreshToggleAllLabel();
           return
         }
 
@@ -5325,26 +5370,48 @@
             .slice()
             .sort((a,b)=>(a.date||"").localeCompare(b.date||""));
 
+          // Replié, chaque livreur tient sur une ligne. Le résumé doit donc
+          // dire l'essentiel : combien de midis, combien de soirs. C'est
+          // ce qu'on cherche en parcourant la liste avant de générer.
+          const summary=availabilityCounts(days);
+
           card.innerHTML=`
-            <h3>${escapeHtml(response.driverName||"Livreur")}</h3>
-            <p class="muted">${escapeHtml(response.driverEmail||"")}</p>
-            <div class="delivery-method-summary">
-              ${(response.deliveryMethods||[]).length
-                ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
-                : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
-            </div>
-            <div class="availability-admin-days">
-              ${days.map(day=>`
-                <div class="availability-admin-day">
-                  <strong>${escapeHtml(formatDay(day.date))}</strong>
-                  <div class="availability-admin-slots">${availabilityLabel(day)}</div>
-                </div>
-              `).join("")}
+            <button class="availability-admin-toggle" type="button" aria-expanded="false">
+              <span class="availability-admin-chevron">▶</span>
+              <span class="availability-admin-identity">
+                <strong>${escapeHtml(response.driverName||"Livreur")}</strong>
+                <small>${escapeHtml(response.driverEmail||"")}</small>
+              </span>
+              <span class="availability-admin-count">${escapeHtml(summary)}</span>
+            </button>
+            <div class="availability-admin-body">
+              <div class="delivery-method-summary">
+                ${(response.deliveryMethods||[]).length
+                  ? response.deliveryMethods.map(methodId=>`<span class="delivery-method-chip">${escapeHtml(deliveryMethodLabel(methodId))}</span>`).join("")
+                  : '<span class="delivery-method-chip">Aucun moyen indiqué</span>'}
+              </div>
+              <div class="availability-admin-days">
+                ${days.map(day=>`
+                  <div class="availability-admin-day">
+                    <strong>${escapeHtml(formatDay(day.date))}</strong>
+                    <div class="availability-admin-slots">${availabilityLabel(day)}</div>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           `;
 
+          const toggle=card.querySelector(".availability-admin-toggle");
+          toggle.addEventListener("click",()=>{
+            const open=card.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded",open?"true":"false");
+            refreshToggleAllLabel()
+          });
+
           planningAvailabilityContainer.appendChild(card)
-        })
+        });
+
+        refreshToggleAllLabel()
       }catch(error){
         console.error(error);
         planningAvailabilityContainer.innerHTML='<div class="empty-state">Impossible de charger les disponibilités.</div>';
@@ -6792,6 +6859,17 @@
       }
     });
 
+    toggleAllAvailabilities.addEventListener("click",()=>{
+      const cards=[...planningAvailabilityContainer.querySelectorAll(".availability-admin-card")];
+      const open=!cards.every(card=>card.classList.contains("is-open"));
+      cards.forEach(card=>{
+        card.classList.toggle("is-open",open);
+        const toggle=card.querySelector(".availability-admin-toggle");
+        if(toggle)toggle.setAttribute("aria-expanded",open?"true":"false")
+      });
+      refreshToggleAllLabel()
+    });
+
     weekStart.addEventListener("change",()=>{if(weekStart.value)weekEnd.value=addDays(weekStart.value,6)});
 
     weekForm.addEventListener("submit",async event=>{
@@ -7038,7 +7116,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-f";
+    const APP_VERSION = "2026-08-01-g";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
