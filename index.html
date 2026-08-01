@@ -5081,6 +5081,45 @@
       return changed
     }
 
+    /* Ce que le responsable a décidé lui-même, et qu'une régénération
+       effacerait sans retour. On les compte pour pouvoir le prévenir
+       précisément, plutôt que de lui servir un avertissement vague. */
+    function manualPlanChanges(plan){
+      const changes=[];
+      if(!plan||!Array.isArray(plan.assignments))return changes;
+
+      plan.assignments.forEach(slot=>{
+        const when=`${formatDay(slot.date)} à ${slot.time}`;
+
+        (slot.selected||[]).forEach(driver=>{
+          if(driver.forced===true){
+            changes.push(`${driver.name} affecté à la main — ${when}`)
+          }
+          if(driver.vehicleUnitId){
+            changes.push(`${driver.name} · ${driver.vehicleUnitName||"véhicule choisi"} — ${when}`)
+          }
+        });
+
+        if(Array.isArray(slot.declinedUserIds)&&slot.declinedUserIds.length){
+          changes.push(`Remplacement après refus — ${when}`)
+        }
+      });
+
+      return changes
+    }
+
+    /* Le libellé doit dire ce que le bouton fait vraiment : générer une
+       première proposition, ou écraser celle qui existe. */
+    function generateButtonLabel(){
+      return currentPlan&&Array.isArray(currentPlan.assignments)&&currentPlan.assignments.length
+        ? "Régénérer la proposition"
+        : "Générer la proposition"
+    }
+
+    function refreshGenerateButtonLabel(){
+      if(!generatePlanButton.disabled)generatePlanButton.textContent=generateButtonLabel()
+    }
+
     function renderPlanningRuleNote(){
       const note=document.getElementById("planningRuleNote");
       if(!note)return;
@@ -5106,6 +5145,7 @@
         closePlanButton.classList.add("hidden");
         reopenPlanButton.classList.add("hidden");
         generatePlanButton.disabled=false;
+        refreshGenerateButtonLabel();
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
     }
@@ -5822,6 +5862,7 @@
     function renderPlan(){
       if(!currentPlan){
         planContainer.innerHTML='<div class="empty-state">Aucune proposition disponible.</div>';
+        refreshGenerateButtonLabel();
         validatePlanButton.classList.add("hidden");
         if(reopenPlanButton)reopenPlanButton.classList.add("hidden");
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
@@ -5835,6 +5876,7 @@
 
       const confirmations=confirmationTotals(currentPlan);
       generatePlanButton.disabled=currentPlan.status==="closed";
+      refreshGenerateButtonLabel();
 
       if(currentPlan.status==="closed"){
         const banner=document.createElement("div");
@@ -6633,6 +6675,7 @@
         closePlanButton.classList.add("hidden");
         reopenPlanButton.classList.add("hidden");
         generatePlanButton.disabled=false;
+        refreshGenerateButtonLabel();
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
@@ -6646,6 +6689,25 @@
       if(!weekId){
         showMessage(planningMessage,"Choisissez d’abord une semaine.","error");
         return
+      }
+
+      // Un planning déjà retouché à la main ne doit jamais disparaître sur
+      // un clic distrait : on dit exactement ce qui sera perdu.
+      const manual=manualPlanChanges(currentPlan);
+      if(manual.length){
+        const shown=manual.slice(0,8);
+        const rest=manual.length-shown.length;
+        const accepted=window.confirm(
+          `Ce planning contient ${manual.length} décision${manual.length>1?"s":""} prise${manual.length>1?"s":""} à la main :\n\n`
+          +shown.map(item=>`· ${item}`).join("\n")
+          +(rest>0?`\n· et ${rest} autre${rest>1?"s":""}`:"")
+          +`\n\nRégénérer la proposition les effacera toutes et repartira des scores et des disponibilités.\n\n`
+          +`Continuer ?`
+        );
+        if(!accepted){
+          showMessage(planningMessage,"Régénération annulée. Votre planning est intact.","success");
+          return
+        }
       }
 
       generatePlanButton.disabled=true;
@@ -6680,7 +6742,7 @@
         )
       }finally{
         generatePlanButton.disabled=false;
-        generatePlanButton.textContent="Générer la proposition"
+        generatePlanButton.textContent=generateButtonLabel()
       }
     });
 
@@ -7153,7 +7215,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-i";
+    const APP_VERSION = "2026-08-01-j";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
