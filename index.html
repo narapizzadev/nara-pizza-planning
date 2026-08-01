@@ -378,6 +378,17 @@
     .deadline-card.success{background:#ecfdf3;color:var(--success)}
     .deadline-card.danger{background:#fff1f0;color:var(--error)}
     .need-warning{margin-top:7px;padding:9px 11px;border-radius:9px;background:#fff1f0;color:var(--error);font-size:13px;line-height:1.45}
+    .why-panel{grid-column:1 / -1;margin-top:14px;padding:14px;border:1px solid #f2dba6;
+      border-radius:12px;background:#fff8e1}
+    .why-panel > strong{display:block;margin-bottom:2px;color:#7a5600}
+    .why-panel > .muted{margin-bottom:10px;color:#8a6a2a}
+    .why-list{display:grid;gap:7px}
+    .why-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 11px;
+      border:1px solid var(--border);border-radius:10px;background:#fff}
+    .why-name{font-weight:700;min-width:130px}
+    .why-reason{flex:1;min-width:180px;color:var(--muted);font-size:14px}
+    .forced-badge{display:inline-flex;padding:4px 9px;border-radius:999px;background:#fff8e1;
+      color:#7a5600;font-size:12px;font-weight:700;margin-left:8px}
     .swap-panel{grid-column:1 / -1;margin-top:12px;padding:14px;border:1px solid var(--orange);
       border-radius:12px;background:var(--soft)}
     .swap-panel strong{display:block;margin-bottom:4px}
@@ -5121,6 +5132,30 @@
       return time<"16:00"?"midi":"soir"
     }
 
+    /* Pourquoi un livreur n'apparaît pas dans la proposition.
+       Les motifs sont ordonnés du plus fréquent au plus rare, et seul
+       le premier rencontré est retenu : c'est celui qui compte. */
+    function exclusionReason(ctx){
+      const {availability,day,need,service,weeklyDeliveryMethods,respectsSixDayLimit,workedCount,alreadyUsed}=ctx;
+      const serviceName=service==="midi"?"le midi":"le soir";
+
+      if(!availability)return "n’a pas envoyé ses disponibilités";
+      if(alreadyUsed)return `déjà affecté sur ce service`;
+      if(!respectsSixDayLimit)return `déjà ${workedCount} jours cette semaine`;
+
+      const normalized=day?normalizeAvailabilityDay(day):null;
+      if(!normalized)return "pas disponible ce jour";
+
+      const declared=service==="midi"?normalized.middayAvailable:normalized.eveningAvailable;
+      if(!declared)return `pas disponible ${serviceName} ce jour`;
+
+      const earliest=service==="midi"?normalized.middayEarliest:normalized.eveningEarliest;
+      if(earliest>need.time)return `ne peut arriver qu’à ${earliest}`;
+
+      if(!weeklyDeliveryMethods.length)return "aucun véhicule déclaré";
+      return ""
+    }
+
     function createProposal(data){
       // Un livreur peut être affecté une fois à midi et une fois le soir
       // le même jour, mais sur un maximum de 6 jours distincts par semaine.
@@ -5132,7 +5167,7 @@
         const serviceKey=`${need.date}_${service}`;
         const usedForService=assignedByDateAndService.get(serviceKey)||new Set();
 
-        const candidates=data.drivers
+        const evaluated=data.drivers
           .map(driver=>{
             const availability=data.availabilities.find(item=>item.userId===driver.userId);
             const day=availability?.days?.find(item=>item.date===need.date);
@@ -5153,9 +5188,19 @@
               fits:timeFits(day,need.time),
               hasDeliveryMethod:weeklyDeliveryMethods.length>0,
               respectsSixDayLimit,
-              availabilityComment:day?.comment||""
+              alreadyUsed:usedForService.has(driver.userId),
+              availabilityComment:day?.comment||"",
+              exclusionReason:exclusionReason({
+                availability,day,need,service,
+                weeklyDeliveryMethods,
+                respectsSixDayLimit,
+                workedCount:workedDates.size,
+                alreadyUsed:usedForService.has(driver.userId)
+              })
             }
-          })
+          });
+
+        const candidates=evaluated
           .filter(candidate=>
             candidate.fits
             && candidate.hasDeliveryMethod
@@ -5181,7 +5226,23 @@
 
         assignedByDateAndService.set(serviceKey,usedForService);
 
+        // On ne conserve les motifs que pour les créneaux non pourvus :
+        // c'est le seul cas où ils servent, et cela garde le document léger.
+        const excluded=selected.length<quantity
+          ? evaluated
+              .filter(item=>item.exclusionReason)
+              .map(item=>({
+                userId:item.userId,
+                name:item.name,
+                score:item.score,
+                reason:item.exclusionReason,
+                methods:item.weeklyDeliveryMethods||[]
+              }))
+              .sort((a,b)=>b.score-a.score)
+          : [];
+
         return {
+          excluded,
           needId:need.id,
           date:need.date,
           time:need.time,
@@ -5376,7 +5437,7 @@
           ? slot.selected.map((driver,index)=>`
               <div class="plan-person selected">
                 <div class="person-info">
-                  <strong>${escapeHtml(driver.name)}</strong>
+                  <strong>${escapeHtml(driver.name)}${driver.forced?'<span class="forced-badge">hors disponibilité</span>':""}</strong>
                   <small>${(()=>{
                     const chosen=currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.vehicleChoice;
                     return chosen
@@ -5434,6 +5495,24 @@
               <h3>Liste d’attente</h3>
               <div class="waiting-list">${waitlistHtml}</div>
             </div>
+
+            ${slot.selected.length<Number(slot.quantity||0)&&(slot.excluded||[]).length
+              ? `<div class="why-panel">
+                   <strong>Pourquoi ce créneau n’est pas complet</strong>
+                   <p class="muted">Les livreurs écartés, et la raison. Vous pouvez en affecter un malgré tout.</p>
+                   <div class="why-list">
+                     ${slot.excluded.map((item,index)=>`
+                       <div class="why-row">
+                         <span class="why-name">${escapeHtml(item.name)}</span>
+                         <span class="why-reason">${escapeHtml(item.reason)}</span>
+                         ${currentPlan.status!=="closed"
+                           ? `<button class="button button-ghost force-driver" data-slot="${slotIndex}" data-excluded="${index}" type="button">Affecter quand même</button>`
+                           : ""}
+                       </div>
+                     `).join("")}
+                   </div>
+                 </div>`
+              : ""}
 
             <div class="swap-panel hidden" data-swap="${slotIndex}"></div>
           </div>
@@ -5556,6 +5635,49 @@
         button.addEventListener("click",()=>{
           closeSwapPanels();
           openReplaceChoice(Number(button.dataset.slot),Number(button.dataset.driver))
+        })
+      });
+
+      planContainer.querySelectorAll(".force-driver").forEach(button=>{
+        button.addEventListener("click",async()=>{
+          const slotIndex=Number(button.dataset.slot);
+          const slot=currentPlan.assignments[slotIndex];
+          const item=slot?.excluded?.[Number(button.dataset.excluded)];
+          if(!slot||!item)return;
+
+          const question=`Affecter ${item.name} sur ce créneau alors qu’il ${item.reason} ?\n\n`
+            +`Cette affectation ne respecte pas ses disponibilités déclarées. Prévenez-le avant de valider le planning.`;
+          if(!window.confirm(question))return;
+
+          const profile=currentDrivers.find(driver=>driver.id===item.userId)||{};
+          const methods=(item.methods&&item.methods.length)?item.methods:[];
+
+          slot.selected.push({
+            userId:item.userId,
+            name:item.name||profile.name||"Livreur",
+            email:profile.email||"",
+            phone:profile.phone||"",
+            score:Number(item.score||0),
+            weeklyDeliveryMethods:methods,
+            vehicle:methods.length?methods.map(deliveryMethodLabel).join(", "):(profile.vehicle||""),
+            availabilityComment:"",
+            forced:true
+          });
+
+          slot.excluded=slot.excluded.filter(entry=>entry.userId!==item.userId);
+
+          if(Array.isArray(slot.declinedUserIds)){
+            slot.declinedUserIds=slot.declinedUserIds.filter(id=>id!==item.userId)
+          }
+
+          await saveCurrentPlan();
+
+          if(currentPlan.status==="validated"){
+            await loadAssignmentStatuses(currentPlan.weekId);
+            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
+          }
+
+          renderPlan()
         })
       });
 
