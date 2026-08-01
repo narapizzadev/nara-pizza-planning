@@ -5152,6 +5152,9 @@
       const earliest=service==="midi"?normalized.middayEarliest:normalized.eveningEarliest;
       if(earliest>need.time)return `ne peut arriver qu’à ${earliest}`;
 
+      const latest=service==="midi"?normalized.middayLatest:normalized.eveningLatest;
+      if(latest&&need.time>latest)return `n’est plus disponible après ${latest}`;
+
       if(!weeklyDeliveryMethods.length)return "aucun véhicule déclaré";
       return ""
     }
@@ -5228,14 +5231,17 @@
 
         // On ne conserve les motifs que pour les créneaux non pourvus :
         // c'est le seul cas où ils servent, et cela garde le document léger.
+        // Tout livreur qui n'est pas candidat doit apparaître, avec un motif.
+        // Un repli garantit que personne ne disparaît silencieusement.
+        const retained=new Set(candidates.map(item=>item.userId));
         const excluded=selected.length<quantity
           ? evaluated
-              .filter(item=>item.exclusionReason)
+              .filter(item=>!retained.has(item.userId))
               .map(item=>({
                 userId:item.userId,
                 name:item.name,
                 score:item.score,
-                reason:item.exclusionReason,
+                reason:item.exclusionReason||"ne correspond pas à ce créneau",
                 methods:item.weeklyDeliveryMethods||[]
               }))
               .sort((a,b)=>b.score-a.score)
@@ -5495,6 +5501,14 @@
               <h3>Liste d’attente</h3>
               <div class="waiting-list">${waitlistHtml}</div>
             </div>
+
+            ${slot.selected.length<Number(slot.quantity||0)&&!(slot.excluded||[]).length
+              ? `<div class="why-panel">
+                   <strong>Pourquoi ce créneau n’est pas complet</strong>
+                   <p class="muted">Cette proposition a été générée avant l’ajout des motifs.
+                   Cliquez sur « Générer la proposition » pour les faire apparaître.</p>
+                 </div>`
+              : ""}
 
             ${slot.selected.length<Number(slot.quantity||0)&&(slot.excluded||[]).length
               ? `<div class="why-panel">
@@ -6490,7 +6504,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-07-31-a";
+    const APP_VERSION = "2026-07-31-b";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
