@@ -363,6 +363,27 @@
     .vehicle-unit{width:auto;min-width:130px;padding:7px 9px;font-size:13px;margin-right:8px}
     .vehicle-shortage{grid-column:1 / -1;margin-top:12px;padding:12px 14px;border:1px solid #f3c4c4;
       border-radius:12px;background:#fdecec;color:var(--error);font-weight:700}
+    .faq-search{margin-bottom:16px}
+    .faq-group{margin-bottom:22px}
+    .faq-group h3{margin-bottom:10px}
+    .faq-list{display:grid;gap:8px}
+    .faq-item{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
+    .faq-question{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;
+      border:none;background:none;text-align:left;cursor:pointer;font:inherit;color:inherit;font-weight:700}
+    .faq-question:hover{background:#fff7f0}
+    .faq-question:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+    .faq-question span:first-child{color:var(--muted);font-size:12px;font-weight:400;transition:transform .15s}
+    .faq-item.is-open .faq-question span:first-child{transform:rotate(90deg)}
+    .faq-answer{padding:0 14px 14px;border-top:1px solid #f0f0f0;color:#333;line-height:1.55}
+    .faq-answer p{margin:10px 0 0}
+    .faq-answer strong{color:var(--text)}
+    .faq-item:not(.is-open) .faq-answer{display:none}
+    .faq-empty{padding:18px;text-align:center;color:var(--muted)}
+    @media print{
+      .faq-answer{display:block !important}
+      .faq-question span:first-child,.faq-search,.back-row{display:none}
+    }
+
     .fleet-list{display:grid;gap:10px}
     .fleet-row{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(150px,1fr) minmax(110px,0.8fr) auto;
       gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;background:#fff}
@@ -1060,6 +1081,7 @@
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
           <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
           <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
+          <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
         </div>
 
         <section class="panel">
@@ -1393,6 +1415,28 @@
             <button id="saveEstablishmentButton" class="button button-primary" type="button">Enregistrer la fiche</button>
           </div>
           <div id="establishmentMessage" class="message"></div>
+        </section>
+      </section>
+
+      <section id="helpSection" class="section-view">
+        <div class="back-row">
+          <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Aide du responsable</h2>
+              <p class="muted">Personne ne retient tout à la première explication. Cherchez un mot, ou parcourez les rubriques.</p>
+            </div>
+            <button id="printHelp" class="button button-secondary" type="button">Imprimer</button>
+          </div>
+
+          <div class="field faq-search">
+            <input id="helpSearch" type="search" placeholder="Chercher : véhicule, délai, refus, mot de passe…" autocomplete="off">
+          </div>
+
+          <div id="helpContent"></div>
         </section>
       </section>
 
@@ -1991,7 +2035,8 @@
       planning: document.getElementById("planningSection"),
       kitchen: document.getElementById("kitchenSection"),
       regulationAdmin: document.getElementById("regulationAdminSection"),
-      establishment: document.getElementById("establishmentSection")
+      establishment: document.getElementById("establishmentSection"),
+      help: document.getElementById("helpSection")
     };
 
     const weekForm = document.getElementById("weekForm");
@@ -2436,6 +2481,7 @@
       if(name==="kitchen")prepareKitchenSection();
       if(name==="regulationAdmin")loadRegulationAcceptances();
       if(name==="establishment")prepareEstablishmentSection();
+      if(name==="help")prepareHelpSection();
       window.scrollTo({top:0,behavior:"smooth"})
     }
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
@@ -5120,6 +5166,268 @@
       if(!generatePlanButton.disabled)generatePlanButton.textContent=generateButtonLabel()
     }
 
+
+    /* ===================================================================
+       AIDE DU RESPONSABLE
+       Une formation se fait une fois ; les questions reviennent pendant
+       des mois. Tout est écrit ici, cherchable, et imprimable.
+       Le contenu est en dur : aucune lecture Firestore, donc aucun coût.
+       =================================================================== */
+    const HELP_ENTRIES = [
+      {
+        group:"Le déroulé d’une semaine",
+        question:"Dans quel ordre dois-je m’y prendre ?",
+        answer:`<p>Toujours les mêmes cinq étapes, dans cet ordre.</p>
+          <p><strong>1. Créer la semaine</strong> et l’ouvrir, avec une date limite de réponse.
+          <strong>2. Définir les besoins</strong> : pour chaque service, l’heure et le nombre de livreurs.
+          <strong>3. Générer la proposition</strong> une fois les réponses arrivées.
+          <strong>4. Valider le planning</strong> : les livreurs voient alors leurs horaires et peuvent confirmer.
+          <strong>5. Clôturer et publier</strong> : le planning devient définitif et la feuille de cuisine est prête.</p>
+          <p>Les besoins peuvent être saisis avant les réponses, cela ne change rien. En revanche, générer avant la date limite vous fera travailler sur des réponses incomplètes.</p>`
+      },
+      {
+        group:"Le déroulé d’une semaine",
+        question:"Quelle différence entre brouillon, ouverte et clôturée ?",
+        answer:`<p><strong>Brouillon</strong> : la semaine existe pour vous seul, les livreurs ne la voient pas. Utile pour la préparer à l’avance.</p>
+          <p><strong>Ouverte</strong> : les livreurs peuvent envoyer et modifier leurs disponibilités.</p>
+          <p><strong>Clôturée</strong> : plus aucune réponse n’est acceptée. La semaine passe automatiquement dans cet état quand vous publiez le planning.</p>`
+      },
+      {
+        group:"Le déroulé d’une semaine",
+        question:"La date limite est passée et un livreur n’a pas répondu. Que faire ?",
+        answer:`<p>Rien ne se bloque : la date limite est un signal, pas un verrou. Vous pouvez générer la proposition sans lui, il apparaîtra dans les écartés avec le motif « n’a pas envoyé ses disponibilités ».</p>
+          <p>Si vous préférez lui laisser une chance, ouvrez la semaine, repoussez la date limite et enregistrez. Il pourra répondre, et vous régénérerez ensuite.</p>`
+      },
+
+      {
+        group:"La proposition",
+        question:"Comment l’application choisit-elle les livreurs ?",
+        answer:`<p>Elle ne garde que ceux qui sont réellement disponibles à cette heure-là, avec un véhicule autorisé, et qui n’ont pas dépassé leur maximum de jours dans la semaine.</p>
+          <p>Puis elle les classe par score : <strong>priorité × 3 + fiabilité × 2 + expérience × 1</strong>. Ces trois notes sont dans la fiche de chaque livreur, et elles ne sont jamais visibles par eux.</p>
+          <p>À score égal, l’ordre alphabétique tranche. Ce n’est pas arbitraire : il fallait une règle stable, sinon la proposition changerait à chaque génération.</p>`
+      },
+      {
+        group:"La proposition",
+        question:"Pourquoi ce livreur n’apparaît-il pas dans la proposition ?",
+        answer:`<p>Quand un créneau n’est pas pourvu, la liste des écartés s’affiche avec le motif de chacun. Les motifs possibles :</p>
+          <p>· <strong>n’a pas envoyé ses disponibilités</strong> · <strong>pas disponible ce jour</strong> · <strong>pas disponible le midi / le soir ce jour</strong> · <strong>ne peut arriver qu’à telle heure</strong> · <strong>n’est plus disponible après telle heure</strong> · <strong>déjà affecté sur ce service</strong> · <strong>déjà N jours cette semaine</strong> · <strong>aucun véhicule déclaré</strong> · <strong>n’a déclaré qu’un véhicule non autorisé cette semaine</strong>.</p>
+          <p>Un score faible n’écarte jamais personne. Il ne fait que classer.</p>`
+      },
+      {
+        group:"La proposition",
+        question:"Puis-je choisir moi-même qui travaille ?",
+        answer:`<p>Oui, toujours. <strong>Affecter</strong> fait monter quelqu’un de la liste d’attente. Si le créneau est complet, l’application vous demande qui il remplace. <strong>Remplacer</strong> part du livreur proposé et vous laisse choisir son remplaçant.</p>
+          <p>Sur un créneau non pourvu, un bouton permet même d’affecter un livreur en dehors de ses disponibilités. Vous devrez confirmer, et le prévenir vous-même : il n’a rien promis.</p>
+          <p>C’est ainsi qu’on forme un nouveau livreur : on le place à côté d’un ancien, même si son score ne l’aurait pas sorti.</p>`
+      },
+      {
+        group:"La proposition",
+        question:"Si je régénère, est-ce que je perds mes modifications ?",
+        answer:`<p>Oui, et c’est pour cela que le bouton s’appelle <strong>Régénérer</strong> dès qu’une proposition existe. Il repart de zéro à partir des scores et des disponibilités.</p>
+          <p>Si vous avez pris des décisions à la main — une affectation forcée, un véhicule choisi, un remplacement après refus — l’application vous les liste et vous demande confirmation avant d’écraser. Vous pouvez annuler sans rien perdre.</p>
+          <p>Après avoir ajusté un planning, n’y touchez plus : passez directement à <strong>Valider</strong>.</p>`
+      },
+
+      {
+        group:"Les véhicules",
+        question:"Comment déclarer mes voitures et mes scooters ?",
+        answer:`<p>Dans la <strong>fiche de l’établissement</strong>, section « Parc de véhicules ». Un exemplaire par ligne, avec son type : voiture ou scooter de l’établissement.</p>
+          <p>Nommez-les comme vos livreurs les appellent déjà entre eux — souvent les trois derniers chiffres de la plaque : « voiture 399 », « voiture 402 ». C’est ce nom, et lui seul, qui s’imprimera sur la feuille de cuisine.</p>
+          <p>Un véhicule en réparation se désactive au lieu d’être supprimé : il ne sera plus attribué, et son historique reste intact.</p>`
+      },
+      {
+        group:"Les véhicules",
+        question:"Comment le véhicule est-il attribué à chaque livreur ?",
+        answer:`<p>À la génération, chaque livreur qui roule avec un véhicule de la maison reçoit automatiquement un exemplaire libre du bon type. Deux livreurs n’ont jamais le même véhicule sur le même service.</p>
+          <p>Vous pouvez toujours corriger : la liste déroulante à côté de chaque nom ne propose que les exemplaires réellement disponibles sur ce créneau.</p>
+          <p>Un livreur qui utilise son véhicule personnel ne consomme rien du parc.</p>`
+      },
+      {
+        group:"Les véhicules",
+        question:"Un bandeau rouge dit qu’un livreur n’a pas de véhicule. Pourquoi ?",
+        answer:`<p>Parce qu’il attend un véhicule de l’établissement et qu’aucun exemplaire du bon type n’est libre sur ce service. Deux causes possibles.</p>
+          <p>Soit votre parc est plus petit que le nombre de livreurs sur ce créneau : il faut en retirer un, ou accepter qu’il vienne avec son propre véhicule.</p>
+          <p>Soit le type manque dans la fiche. Un livreur qui n’a déclaré que le scooter ne peut rien recevoir si aucun scooter n’est enregistré dans votre parc.</p>`
+      },
+      {
+        group:"Les véhicules",
+        question:"L’hiver, je ne veux pas sortir les scooters. Est-ce possible ?",
+        answer:`<p>Oui. Dans le formulaire de la semaine, cochez uniquement les moyens de livraison autorisés.</p>
+          <p>Un livreur qui n’a déclaré que le scooter ne sera plus retenu, et apparaîtra dans les écartés avec le motif « n’a déclaré qu’un véhicule non autorisé cette semaine ». Celui qui a déclaré les deux garde sa place et reçoit une voiture.</p>`
+      },
+
+      {
+        group:"Valider et publier",
+        question:"Que se passe-t-il quand je valide ?",
+        answer:`<p>Les affectations sont créées et deviennent visibles par les livreurs, chacun ne voyant que les siennes. Ils peuvent alors confirmer ou refuser.</p>
+          <p>Tant que le planning est validé et non publié, vous pouvez encore tout modifier.</p>`
+      },
+      {
+        group:"Valider et publier",
+        question:"Je ne peux pas publier : que me manque-t-il ?",
+        answer:`<p>Un refus non traité. Un livreur a refusé un créneau, et l’application refuse de publier un planning où quelqu’un manque à l’appel.</p>
+          <p>Remplacez-le depuis la liste d’attente, et le bouton redevient actif.</p>
+          <p>En revanche, une simple absence de réponse ne bloque plus rien : voyez la confirmation tacite ci-dessous.</p>`
+      },
+      {
+        group:"Valider et publier",
+        question:"Faut-il attendre que tout le monde ait confirmé ?",
+        answer:`<p>Non. Après publication, chaque livreur dispose de <strong>12 heures</strong> pour signaler un problème. Passé ce délai, l’horaire qu’il a lui-même déclaré est réputé accepté, et il apparaît comme « Réputé confirmé ».</p>
+          <p>Une exception : un livreur que vous avez affecté <em>hors</em> de ses disponibilités doit répondre explicitement. Il n’a rien promis, l’accord tacite ne s’applique pas à lui.</p>
+          <p>Un simple décalage d’horaire — il arrive à 18:30 au lieu de 18:00, comme il l’avait annoncé — reste dans ce qu’il a déclaré : l’accord tacite s’applique.</p>
+          <p><strong>Important :</strong> cette règle des 12 heures doit figurer dans votre règlement interne avant d’être appliquée à de vrais employés.</p>`
+      },
+      {
+        group:"Valider et publier",
+        question:"Un scooter casse le vendredi. Comment corriger un planning publié ?",
+        answer:`<p>Bouton <strong>Rouvrir le planning</strong>. Il repasse en « validé » : vous pouvez changer un véhicule, remplacer un livreur, corriger un créneau. Puis vous republiez.</p>
+          <p>Les réponses déjà données sont conservées, personne ne répond deux fois. Le délai de 12 heures repart à zéro à la republication — sinon des livreurs seraient réputés d’accord sur un horaire modifié après coup.</p>`
+      },
+
+      {
+        group:"La feuille de cuisine",
+        question:"Que montre exactement la feuille de cuisine ?",
+        answer:`<p>La semaine en tableau : une ligne par heure, une colonne par jour, et dans chaque case les livreurs présents avec le nom de leur véhicule.</p>
+          <p>Elle est faite pour être imprimée et affichée. C’est un tableau de clés autant qu’un planning.</p>`
+      },
+      {
+        group:"La feuille de cuisine",
+        question:"Pourquoi un livreur apparaît-il à une autre heure que son créneau ?",
+        answer:`<p>Parce qu’il arrive plus tard, et qu’il l’avait annoncé. Un livreur retenu à 17:30 qui ne peut venir qu’à 18:30 est affiché sur la ligne de 18:30, avec la mention « prévu à 17:30 ».</p>
+          <p>Sa ligne d’origine porte alors un compteur discret : « 1 livreur sur 2 avant 18:30 ». Vous voyez d’un coup d’œil les moments creux.</p>
+          <p>Un départ anticipé, lui, ne déplace personne : le livreur est bien là à l’heure prévue.</p>`
+      },
+
+      {
+        group:"Les livreurs",
+        question:"Comment créer un compte livreur ?",
+        answer:`<p>Écran <strong>Gérer les livreurs</strong>, bouton « Ajouter un livreur ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
+          <p>À sa première connexion, il est obligé de le changer. Vous ne connaissez donc jamais son mot de passe définitif, et c’est voulu.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Un livreur a oublié son mot de passe.",
+        answer:`<p>Il se débrouille seul : sur l’écran de connexion, « Mot de passe oublié » lui envoie un lien par e-mail. Vous n’avez rien à faire.</p>
+          <p>Le message affiché est le même que l’adresse existe ou non — c’est une précaution, pour ne pas révéler qui a un compte.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Un livreur part. Faut-il supprimer son compte ?",
+        answer:`<p>Non : <strong>désactivez-le</strong>. Il ne pourra plus se connecter ni apparaître dans les propositions, mais son historique reste lisible.</p>
+          <p>Supprimer un compte effacerait les traces dont vous pourriez avoir besoin — qui travaillait tel soir, qui avait accepté quelle version du règlement.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"À quoi servent priorité, fiabilité et expérience ?",
+        answer:`<p>Ce sont les trois notes qui composent le score de classement, de 1 à 5 chacune.</p>
+          <p><strong>Priorité</strong> : celui à qui vous voulez donner des heures en premier. <strong>Fiabilité</strong> : il vient, il est à l’heure, il prévient. <strong>Expérience</strong> : il connaît le secteur et les procédures.</p>
+          <p>Ces notes sont strictement confidentielles : aucun livreur ne peut voir les siennes, ni celles des autres. C’est garanti par les règles de sécurité, pas seulement par l’affichage.</p>`
+      },
+
+      {
+        group:"La fiche de l’établissement",
+        question:"À quoi sert la fiche, et qui peut la modifier ?",
+        answer:`<p>Elle décrit votre maison : jours et services d’ouverture, plages horaires proposées aux livreurs, moyens de livraison acceptés, nombre maximum de jours par semaine et par livreur, parc de véhicules.</p>
+          <p>Tout le reste en découle. Si vous ne livrez pas le lundi midi, personne ne pourra se déclarer disponible à ce moment-là.</p>
+          <p>Seul un compte <strong>administrateur</strong> peut la modifier. Un manager la consulte sans y toucher.</p>`
+      },
+      {
+        group:"La fiche de l’établissement",
+        question:"Je change mes horaires en cours de saison. Que deviennent les réponses déjà données ?",
+        answer:`<p>Elles restent enregistrées, mais un service que vous venez de fermer s’affiche comme « service fermé » au lieu d’être compté. Rien n’est perdu, rien n’est appliqué à tort.</p>
+          <p>Prévenez tout de même vos livreurs : ils ont répondu sur d’autres bases.</p>`
+      },
+
+      {
+        group:"Quand quelque chose ne va pas",
+        question:"Je ne vois pas ma modification après une mise à jour.",
+        answer:`<p>Le numéro de version s’affiche en bas de l’écran du livreur. S’il ne correspond pas à la dernière version livrée, votre appareil sert encore l’ancienne.</p>
+          <p>Rechargez avec <strong>Cmd+Shift+R</strong> ou <strong>Ctrl+Shift+R</strong>. Sur iPhone, fermez complètement l’application puis rouvrez-la.</p>`
+      },
+      {
+        group:"Quand quelque chose ne va pas",
+        question:"Un message rouge parle de « permission-denied ».",
+        answer:`<p>Le serveur a refusé une écriture. Le plus souvent, votre session a expiré : déconnectez-vous et reconnectez-vous.</p>
+          <p>Si le message revient, notez l’écran et le geste exact, et transmettez-le. Le texte entre parenthèses est la seule information qui permette de trouver la cause.</p>
+          <p>Dans tous les cas, ce qui est affiché à l’écran n’est alors pas ce qui est enregistré : rechargez la page avant de continuer.</p>`
+      },
+      {
+        group:"Quand quelque chose ne va pas",
+        question:"Puis-je revenir en arrière si je me trompe ?",
+        answer:`<p>Un planning publié se rouvre. Une semaine clôturée se rouvre en repoussant sa date limite et en repassant son état sur « Ouverte ». Un livreur désactivé se réactive.</p>
+          <p>La seule opération vraiment destructrice est la régénération d’une proposition retouchée à la main — et elle vous demande confirmation.</p>`
+      },
+
+      {
+        group:"Sécurité et coûts",
+        question:"Que voient exactement mes livreurs ?",
+        answer:`<p>Leurs propres affectations, leurs propres disponibilités, et les semaines ouvertes ou publiées. Rien d’autre.</p>
+          <p>Ils ne voient ni les scores, ni les notes internes, ni les disponibilités de leurs collègues, ni la liste d’attente. Ces restrictions sont appliquées par le serveur : elles ne peuvent pas être contournées depuis un navigateur.</p>`
+      },
+      {
+        group:"Sécurité et coûts",
+        question:"Est-ce que l’usage coûte quelque chose ?",
+        answer:`<p>L’application est conçue pour rester dans l’offre gratuite de Firebase pour un établissement de votre taille : lecture mise en cache sur l’appareil, écrans chargés seulement à leur ouverture, écritures groupées, et aucune réécriture inutile.</p>
+          <p>Cette aide, par exemple, ne lit rien : son contenu est dans l’application.</p>`
+      }
+    ];
+
+    function prepareHelpSection(){
+      const search=document.getElementById("helpSearch");
+      renderHelp(search?search.value:"")
+    }
+
+    function renderHelp(term){
+      const container=document.getElementById("helpContent");
+      if(!container)return;
+
+      const needle=(term||"").trim().toLowerCase();
+      const matches=HELP_ENTRIES.filter(entry=>{
+        if(!needle)return true;
+        return `${entry.group} ${entry.question} ${entry.answer}`.toLowerCase().includes(needle)
+      });
+
+      if(matches.length===0){
+        container.innerHTML='<div class="faq-empty">Aucune réponse ne contient ce mot. Essayez « véhicule », « délai », « refus », « mot de passe ».</div>';
+        return
+      }
+
+      const groups=[];
+      matches.forEach(entry=>{
+        let group=groups.find(item=>item.name===entry.group);
+        if(!group){group={name:entry.group,entries:[]};groups.push(group)}
+        group.entries.push(entry)
+      });
+
+      // Une recherche ouvre d'office : on cherche une réponse, pas un titre.
+      const open=needle.length>0;
+
+      container.innerHTML=groups.map(group=>`
+        <div class="faq-group">
+          <h3>${escapeHtml(group.name)}</h3>
+          <div class="faq-list">
+            ${group.entries.map(entry=>`
+              <article class="faq-item${open?" is-open":""}">
+                <button class="faq-question" type="button" aria-expanded="${open?"true":"false"}">
+                  <span>▶</span>
+                  <span>${escapeHtml(entry.question)}</span>
+                </button>
+                <div class="faq-answer">${entry.answer}</div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      `).join("");
+
+      container.querySelectorAll(".faq-question").forEach(button=>{
+        button.addEventListener("click",()=>{
+          const item=button.closest(".faq-item");
+          const isOpen=item.classList.toggle("is-open");
+          button.setAttribute("aria-expanded",isOpen?"true":"false")
+        })
+      })
+    }
+
     function renderPlanningRuleNote(){
       const note=document.getElementById("planningRuleNote");
       if(!note)return;
@@ -6608,6 +6916,11 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    document.getElementById("openHelp").addEventListener("click",()=>showSection("help"));
+    document.getElementById("printHelp").addEventListener("click",()=>window.print());
+    document.getElementById("helpSearch").addEventListener("input",event=>{
+      renderHelp(event.target.value)
+    });
     document.getElementById("saveEstablishmentButton").addEventListener("click",saveEstablishmentConfig);
     document.getElementById("addFleetUnit").addEventListener("click",()=>{
       renderFleetList([...readFleetList(),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
@@ -7215,7 +7528,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-j";
+    const APP_VERSION = "2026-08-01-k";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
