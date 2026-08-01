@@ -7,7 +7,7 @@
    CACHE_VERSION. C'est ce qui force les telephones a prendre la nouvelle
    version au lieu de servir l'ancienne indefiniment. */
 
-const CACHE_VERSION = "2026-07-31-b";
+const CACHE_VERSION = "2026-07-31-c";
 const CACHE = `journia-${CACHE_VERSION}`;
 
 const SHELL = [

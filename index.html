@@ -387,6 +387,7 @@
       border:1px solid var(--border);border-radius:10px;background:#fff}
     .why-name{font-weight:700;min-width:130px}
     .why-reason{flex:1;min-width:180px;color:var(--muted);font-size:14px}
+    .kitchen-note{display:block;margin-top:2px;color:#8a5600;font-weight:700}
     .forced-badge{display:inline-flex;padding:4px 9px;border-radius:999px;background:#fff8e1;
       color:#7a5600;font-size:12px;font-weight:700;margin-left:8px}
     .swap-panel{grid-column:1 / -1;margin-top:12px;padding:14px;border:1px solid var(--orange);
@@ -3071,6 +3072,7 @@
             time:slot.time,
             name:driver.name||"Livreur",
             vehicle:driver.vehicle||"",
+            note:driver.forced?(driver.forcedReason||"hors disponibilité déclarée"):"",
             status:"confirmé"
           })
         })
@@ -3098,6 +3100,7 @@
             <span class="kitchen-driver">
               <strong>${escapeHtml(driver.name)}</strong>
               <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</small>
+              ${driver.note?`<small class="kitchen-note">⚠ ${escapeHtml(driver.note)}</small>`:""}
             </span>
           `).join("")}</td>`
         }).join("");
@@ -4665,7 +4668,8 @@
       // vehicleChoice appartient au livreur : il n'entre pas dans la comparaison,
       // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
-                  "userId","driverName","driverEmail","vehicleRequirement","active"];
+                  "userId","driverName","driverEmail","vehicleRequirement",
+                  "forced","forcedReason","active"];
 
       if(keys.some(key=>(existing[key]??"")!==(desired[key]??"")))return false;
 
@@ -4705,6 +4709,8 @@
             vehicleRequirement:deliveryMethods.length
               ? deliveryMethods.map(deliveryMethodLabel).join(", ")
               : (slot.notes||""),
+            forced:driver.forced===true,
+            forcedReason:driver.forcedReason||"",
             active:true
           };
 
@@ -5443,7 +5449,7 @@
           ? slot.selected.map((driver,index)=>`
               <div class="plan-person selected">
                 <div class="person-info">
-                  <strong>${escapeHtml(driver.name)}${driver.forced?'<span class="forced-badge">hors disponibilité</span>':""}</strong>
+                  <strong>${escapeHtml(driver.name)}${driver.forced?`<span class="forced-badge">hors disponibilité${driver.forcedReason?` · ${escapeHtml(driver.forcedReason)}`:""}</span>`:""}</strong>
                   <small>${(()=>{
                     const chosen=currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.vehicleChoice;
                     return chosen
@@ -5675,7 +5681,8 @@
             weeklyDeliveryMethods:methods,
             vehicle:methods.length?methods.map(deliveryMethodLabel).join(", "):(profile.vehicle||""),
             availabilityComment:"",
-            forced:true
+            forced:true,
+            forcedReason:item.reason||""
           });
 
           slot.excluded=slot.excluded.filter(entry=>entry.userId!==item.userId);
@@ -6504,7 +6511,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-07-31-b";
+    const APP_VERSION = "2026-07-31-c";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
