@@ -378,6 +378,16 @@
     .deadline-card.success{background:#ecfdf3;color:var(--success)}
     .deadline-card.danger{background:#fff1f0;color:var(--error)}
     .need-warning{margin-top:7px;padding:9px 11px;border-radius:9px;background:#fff1f0;color:var(--error);font-size:13px;line-height:1.45}
+    .swap-panel{grid-column:1 / -1;margin-top:12px;padding:14px;border:1px solid var(--orange);
+      border-radius:12px;background:var(--soft)}
+    .swap-panel strong{display:block;margin-bottom:4px}
+    .swap-panel .muted{margin-bottom:10px}
+    .swap-options{display:flex;gap:8px;flex-wrap:wrap}
+    .swap-option{padding:9px 13px;border-radius:999px;border:1px solid var(--border);
+      background:#fff;font-weight:700;font-size:14px}
+    .swap-option:hover{border-color:var(--orange)}
+    .swap-cancel{margin-top:10px;background:none;border:none;text-decoration:underline;
+      color:var(--muted);font-size:13px;padding:0}
     .missing-drivers{margin:14px 0;padding:14px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
     .relance-list{display:grid;gap:8px;margin-top:12px}
     .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
@@ -5388,13 +5398,18 @@
           : '<div class="empty-state">Aucun livreur disponible pour ce besoin.</div>';
 
         const waitlistHtml=slot.waitlist.length
-          ? slot.waitlist.map(driver=>`
+          ? slot.waitlist.map((driver,index)=>`
               <div class="plan-person">
                 <div class="person-info">
                   <strong>${escapeHtml(driver.name)}</strong>
                   <small>${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</small>
                 </div>
-                <span class="plan-score">Score ${driver.score}</span>
+                <div>
+                  <span class="plan-score">Score ${driver.score}</span>
+                  ${currentPlan.status!=="closed"
+                    ? `<button class="button button-ghost promote-driver" data-slot="${slotIndex}" data-waiting="${index}" type="button">Affecter</button>`
+                    : ""}
+                </div>
               </div>
             `).join("")
           : '<div class="empty-state">Aucun autre candidat.</div>';
@@ -5419,33 +5434,147 @@
               <h3>Liste d’attente</h3>
               <div class="waiting-list">${waitlistHtml}</div>
             </div>
+
+            <div class="swap-panel hidden" data-swap="${slotIndex}"></div>
           </div>
         `;
 
         planContainer.appendChild(section)
       });
 
+      /* ---------------------------------------------------------------
+         Affectation manuelle.
+         L'application ne décide plus à la place du responsable : elle
+         propose, il choisit. Indispensable pour faire tourner un nouveau
+         livreur, dont la note est mécaniquement basse au départ.
+         --------------------------------------------------------------- */
+
+      function swapPanel(slotIndex){
+        return planContainer.querySelector(`.swap-panel[data-swap="${slotIndex}"]`)
+      }
+
+      function closeSwapPanels(){
+        planContainer.querySelectorAll(".swap-panel").forEach(panel=>{
+          panel.classList.add("hidden");
+          panel.innerHTML=""
+        })
+      }
+
+      async function applySwap(slotIndex,waitingIndex,selectedIndex){
+        const slot=currentPlan.assignments[slotIndex];
+        if(!slot)return;
+
+        const incoming=slot.waitlist[waitingIndex];
+        if(!incoming)return;
+
+        slot.waitlist.splice(waitingIndex,1);
+
+        if(selectedIndex===null){
+          slot.selected.push(incoming)
+        }else{
+          const outgoing=slot.selected[selectedIndex];
+          slot.selected[selectedIndex]=incoming;
+          if(outgoing){
+            slot.waitlist.push(outgoing);
+            slot.waitlist.sort((a,b)=>b.score-a.score)
+          }
+        }
+
+        // Un choix manuel ne doit pas être défait par le remplacement
+        // automatique : on retire l'entrant de la liste des refus connus.
+        if(Array.isArray(slot.declinedUserIds)){
+          slot.declinedUserIds=slot.declinedUserIds.filter(id=>id!==incoming.userId)
+        }
+
+        await saveCurrentPlan();
+
+        if(currentPlan.status==="validated"){
+          await loadAssignmentStatuses(currentPlan.weekId);
+          await syncDriverAssignments(currentPlan,{statusesLoaded:true})
+        }
+
+        renderPlan()
+      }
+
+      function openSwapChoice(slotIndex,waitingIndex){
+        const slot=currentPlan.assignments[slotIndex];
+        const panel=swapPanel(slotIndex);
+        if(!slot||!panel)return;
+
+        const incoming=slot.waitlist[waitingIndex];
+        panel.innerHTML=`
+          <strong>${escapeHtml(incoming.name)} prend la place de qui ?</strong>
+          <p class="muted">Le créneau est déjà complet : choisissez le livreur qu’il remplace.</p>
+          <div class="swap-options">
+            ${slot.selected.map((driver,index)=>`
+              <button class="swap-option" data-target="${index}" type="button">${escapeHtml(driver.name)}</button>
+            `).join("")}
+          </div>
+          <button class="swap-cancel" type="button">Annuler</button>
+        `;
+        panel.classList.remove("hidden");
+
+        panel.querySelectorAll(".swap-option").forEach(option=>{
+          option.addEventListener("click",()=>{
+            closeSwapPanels();
+            applySwap(slotIndex,waitingIndex,Number(option.dataset.target))
+          })
+        });
+        panel.querySelector(".swap-cancel").addEventListener("click",closeSwapPanels);
+        panel.scrollIntoView?.({behavior:"smooth",block:"nearest"})
+      }
+
+      function openReplaceChoice(slotIndex,selectedIndex){
+        const slot=currentPlan.assignments[slotIndex];
+        const panel=swapPanel(slotIndex);
+        if(!slot||!panel||!slot.waitlist.length)return;
+
+        const outgoing=slot.selected[selectedIndex];
+        panel.innerHTML=`
+          <strong>Qui remplace ${escapeHtml(outgoing.name)} ?</strong>
+          <p class="muted">Choisissez dans la liste d’attente.</p>
+          <div class="swap-options">
+            ${slot.waitlist.map((driver,index)=>`
+              <button class="swap-option" data-waiting="${index}" type="button">${escapeHtml(driver.name)} · ${driver.score}</button>
+            `).join("")}
+          </div>
+          <button class="swap-cancel" type="button">Annuler</button>
+        `;
+        panel.classList.remove("hidden");
+
+        panel.querySelectorAll(".swap-option").forEach(option=>{
+          option.addEventListener("click",()=>{
+            closeSwapPanels();
+            applySwap(slotIndex,Number(option.dataset.waiting),selectedIndex)
+          })
+        });
+        panel.querySelector(".swap-cancel").addEventListener("click",closeSwapPanels);
+        panel.scrollIntoView?.({behavior:"smooth",block:"nearest"})
+      }
+
       planContainer.querySelectorAll(".replace-driver").forEach(button=>{
-        button.addEventListener("click",async()=>{
+        button.addEventListener("click",()=>{
+          closeSwapPanels();
+          openReplaceChoice(Number(button.dataset.slot),Number(button.dataset.driver))
+        })
+      });
+
+      planContainer.querySelectorAll(".promote-driver").forEach(button=>{
+        button.addEventListener("click",()=>{
           const slotIndex=Number(button.dataset.slot);
-          const driverIndex=Number(button.dataset.driver);
+          const waitingIndex=Number(button.dataset.waiting);
           const slot=currentPlan.assignments[slotIndex];
+          if(!slot)return;
 
-          if(!slot||!slot.waitlist.length)return;
+          closeSwapPanels();
 
-          const replacement=slot.waitlist.shift();
-          const replaced=slot.selected[driverIndex];
-          slot.selected[driverIndex]=replacement;
-          slot.waitlist.push(replaced);
-          slot.waitlist.sort((a,b)=>b.score-a.score);
-
-          await saveCurrentPlan();
-
-          if(currentPlan.status==="validated"){
-            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
+          // Place libre : on affecte directement, sans poser de question.
+          if(slot.selected.length<Number(slot.quantity||0)){
+            applySwap(slotIndex,waitingIndex,null);
+            return
           }
 
-          renderPlan()
+          openSwapChoice(slotIndex,waitingIndex)
         })
       })
     }
