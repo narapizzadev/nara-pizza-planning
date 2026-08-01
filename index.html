@@ -388,6 +388,7 @@
     .why-name{font-weight:700;min-width:130px}
     .why-reason{flex:1;min-width:180px;color:var(--muted);font-size:14px}
     .kitchen-note{display:block;margin-top:2px;color:#8a5600;font-weight:700}
+    .confirmation-implied{background:#eef4ff;color:#1a4f8a}
     .forced-badge{display:inline-flex;padding:4px 9px;border-radius:999px;background:#fff8e1;
       color:#7a5600;font-size:12px;font-weight:700;margin-left:8px}
     .swap-panel{grid-column:1 / -1;margin-top:12px;padding:14px;border:1px solid var(--orange);
@@ -3067,13 +3068,21 @@
 
       plan.assignments.forEach(slot=>{
         slot.selected.forEach(driver=>{
+          const assignment=currentAssignmentStatuses.get(
+            assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId)
+          );
+          const status=effectiveStatus(plan,assignment,driver);
+          const notes=[];
+          if(driver.forced)notes.push(driver.forcedReason||"hors disponibilité déclarée");
+          if(status==="pending")notes.push("non confirmé");
+
           assignments.push({
             date:slot.date,
             time:slot.time,
             name:driver.name||"Livreur",
             vehicle:driver.vehicle||"",
-            note:driver.forced?(driver.forcedReason||"hors disponibilité déclarée"):"",
-            status:"confirmé"
+            note:notes.join(" · "),
+            status
           })
         })
       });
@@ -3151,6 +3160,7 @@
         if(!planSnapshot.exists())throw new Error("Aucun planning enregistré pour cette semaine.");
 
         const plan=planSnapshot.data();
+        await loadAssignmentStatuses(weekId);
 
         if(plan.status!=="closed"){
           throw new Error("Le planning doit être clôturé et publié avant l’impression.")
@@ -4435,6 +4445,28 @@
       renderDriverActionCard()
     }
 
+    /* Le livreur ne lit pas le planning : la date de publication et le délai
+       sont inscrits sur son affectation au moment de la clôture. */
+    function driverContestationDeadline(assignment){
+      const closed=Number(assignment?.planClosedAt||0);
+      if(!closed)return null;
+      const hours=Number(assignment.contestationHours||12);
+      return closed+hours*3600000
+    }
+
+    function driverEffectiveStatus(assignment){
+      const status=assignment?.status||"pending";
+      if(status!=="pending")return status;
+
+      const deadline=driverContestationDeadline(assignment);
+      if(deadline===null)return "pending";
+
+      // Un horaire décalé reste dans ce que le livreur a déclaré.
+      if(assignment.forced===true&&!isTimeShiftOnly(assignment.forcedCode))return "pending";
+
+      return Date.now()>=deadline?"implied":"pending"
+    }
+
     function renderCurrentDriverAssignments(){
       const assignments=currentDriverAssignments
         .filter(assignment=>assignment.weekId===currentDriverWeekId&&assignment.active!==false)
@@ -4468,11 +4500,15 @@
         driverAssignmentsContainer.appendChild(label);
 
         dayAssignments.forEach(assignment=>{
-          const status=assignment.status||"pending";
+          const status=driverEffectiveStatus(assignment);
+          const deadline=driverContestationDeadline(assignment);
+          const remaining=deadline===null?null:deadline-Date.now();
           const card=document.createElement("article");
           card.className=`dv-slot${status==="pending"?" is-pending":""}`;
 
-          const badgeClass=status==="confirmed"?"is-ok":status==="refused"?"is-bad":"is-pending";
+          const badgeClass=status==="confirmed"?"is-ok"
+            :status==="refused"?"is-bad"
+            :status==="implied"?"is-ok":"is-pending";
 
           // Véhicules réellement possibles pour ce service : ceux que le livreur
           // a déclarés, et qui sont donc déjà limités aux moyens autorisés.
@@ -4494,10 +4530,10 @@
                 ? "Véhicule à choisir ci-dessous"
                 : (assignment.vehicleRequirement||"Aucun véhicule indiqué"));
 
-          const actions=status==="pending"
+          const actions=(status==="pending"||status==="implied")
             ? `<div class="dv-slot-actions">
-                 <button class="dv-btn dv-btn-primary confirm-assignment" type="button">Je confirme</button>
-                 <button class="dv-btn refuse-assignment" type="button">Je refuse</button>
+                 <button class="dv-btn dv-btn-primary confirm-assignment" type="button">${status==="implied"?"Confirmer":"Je confirme"}</button>
+                 <button class="dv-btn refuse-assignment" type="button">${status==="implied"?"Signaler un problème":"Je refuse"}</button>
                </div>`
             : "";
 
@@ -4507,12 +4543,21 @@
                 <div class="dv-slot-time">${escapeHtml(assignment.time||"—")}</div>
                 <div class="dv-slot-service">${escapeHtml(serviceLabelForTime(assignment.time||"18:00"))}</div>
               </div>
-              <span class="dv-badge ${badgeClass}">${assignmentStatusLabel(status)}</span>
+              <span class="dv-badge ${badgeClass}">${effectiveStatusLabel(status)}</span>
             </div>
             <div class="dv-slot-meta">
               ${dvSvg("car")}
               <span class="slot-vehicle-text">${escapeHtml(metaText)}</span>
             </div>
+            ${assignment.forced&&assignment.forcedReason
+              ? `<div class="dv-slot-meta"><span>Votre horaire déclaré est retenu : ${escapeHtml(assignment.forcedReason)}.</span></div>`
+              : ""}
+            ${status==="pending"&&remaining!==null&&remaining>0
+              ? `<div class="dv-slot-meta"><span>Sans réponse de votre part, cet horaire sera considéré comme accepté dans ${escapeHtml(formatCountdown(remaining))}.</span></div>`
+              : ""}
+            ${status==="implied"
+              ? `<div class="dv-slot-meta"><span>Accepté sans réponse dans le délai. Prévenez le responsable en cas de problème.</span></div>`
+              : ""}
             ${vehicleBlock}
             ${actions}
           `;
@@ -4669,7 +4714,7 @@
       // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
                   "userId","driverName","driverEmail","vehicleRequirement",
-                  "forced","forcedReason","active"];
+                  "forced","forcedReason","forcedCode","active"];
 
       if(keys.some(key=>(existing[key]??"")!==(desired[key]??"")))return false;
 
@@ -4711,6 +4756,7 @@
               : (slot.notes||""),
             forced:driver.forced===true,
             forcedReason:driver.forcedReason||"",
+            forcedCode:driver.forcedCode||"",
             active:true
           };
 
@@ -5144,25 +5190,34 @@
     function exclusionReason(ctx){
       const {availability,day,need,service,weeklyDeliveryMethods,respectsSixDayLimit,workedCount,alreadyUsed}=ctx;
       const serviceName=service==="midi"?"le midi":"le soir";
+      const none={code:"",text:""};
 
-      if(!availability)return "n’a pas envoyé ses disponibilités";
-      if(alreadyUsed)return `déjà affecté sur ce service`;
-      if(!respectsSixDayLimit)return `déjà ${workedCount} jours cette semaine`;
+      if(!availability)return {code:"no-answer",text:"n’a pas envoyé ses disponibilités"};
+      if(alreadyUsed)return {code:"already-used",text:"déjà affecté sur ce service"};
+      if(!respectsSixDayLimit)return {code:"max-days",text:`déjà ${workedCount} jours cette semaine`};
 
       const normalized=day?normalizeAvailabilityDay(day):null;
-      if(!normalized)return "pas disponible ce jour";
+      if(!normalized)return {code:"day-off",text:"pas disponible ce jour"};
 
       const declared=service==="midi"?normalized.middayAvailable:normalized.eveningAvailable;
-      if(!declared)return `pas disponible ${serviceName} ce jour`;
+      if(!declared)return {code:"service-off",text:`pas disponible ${serviceName} ce jour`};
 
+      // Les deux cas suivants ne sont pas des indisponibilités : le livreur
+      // est bien là ce soir-là, à une autre heure que celle du besoin.
       const earliest=service==="midi"?normalized.middayEarliest:normalized.eveningEarliest;
-      if(earliest>need.time)return `ne peut arriver qu’à ${earliest}`;
+      if(earliest>need.time)return {code:"later",text:`ne peut arriver qu’à ${earliest}`};
 
       const latest=service==="midi"?normalized.middayLatest:normalized.eveningLatest;
-      if(latest&&need.time>latest)return `n’est plus disponible après ${latest}`;
+      if(latest&&need.time>latest)return {code:"earlier",text:`n’est plus disponible après ${latest}`};
 
-      if(!weeklyDeliveryMethods.length)return "aucun véhicule déclaré";
-      return ""
+      if(!weeklyDeliveryMethods.length)return {code:"no-vehicle",text:"aucun véhicule déclaré"};
+      return none
+    }
+
+    /* Le livreur reste-t-il dans le cadre de ce qu'il a déclaré ?
+       Un simple décalage d'horaire ne remet pas en cause son accord. */
+    function isTimeShiftOnly(code){
+      return code==="later"||code==="earlier"
     }
 
     function createProposal(data){
@@ -5240,6 +5295,7 @@
         // Tout livreur qui n'est pas candidat doit apparaître, avec un motif.
         // Un repli garantit que personne ne disparaît silencieusement.
         const retained=new Set(candidates.map(item=>item.userId));
+        // eslint-disable-next-line no-unused-vars
         const excluded=selected.length<quantity
           ? evaluated
               .filter(item=>!retained.has(item.userId))
@@ -5247,7 +5303,8 @@
                 userId:item.userId,
                 name:item.name,
                 score:item.score,
-                reason:item.exclusionReason||"ne correspond pas à ce créneau",
+                reason:item.exclusionReason?.text||"ne correspond pas à ce créneau",
+                reasonCode:item.exclusionReason?.code||"other",
                 methods:item.weeklyDeliveryMethods||[]
               }))
               .sort((a,b)=>b.score-a.score)
@@ -5289,6 +5346,54 @@
       return {required,selected,waiting,missing:Math.max(0,required-selected)}
     }
 
+    /* ===================================================================
+       CONFIRMATION TACITE
+       Une fois le planning publié, le livreur dispose d'un délai pour
+       signaler un problème. Passé ce délai, le créneau est réputé confirmé.
+       Rien n'est réécrit dans la base : le statut enregistré reste
+       « en attente », l'application se contente de le présenter autrement.
+       Une affectation hors disponibilité en est exclue : le livreur n'avait
+       rien déclaré, il doit répondre explicitement.
+       =================================================================== */
+    const CONTESTATION_HOURS = 12;
+
+    function planClosedAtMs(plan){
+      const value=plan?.closedAt;
+      if(!value)return null;
+      if(typeof value==="number")return value;
+      if(typeof value.toMillis==="function")return value.toMillis();
+      if(value.seconds)return value.seconds*1000;
+      const parsed=Date.parse(value);
+      return Number.isFinite(parsed)?parsed:null
+    }
+
+    function contestationDeadlineMs(plan){
+      const closed=planClosedAtMs(plan);
+      return closed===null?null:closed+CONTESTATION_HOURS*3600000
+    }
+
+    /* "confirmed" | "refused" | "pending" | "implied" */
+    function effectiveStatus(plan,assignment,driver){
+      const status=assignment?.status||"pending";
+      if(status!=="pending")return status;
+      if(!plan||plan.status!=="closed")return "pending";
+
+      // Un décalage d'horaire reste dans ce que le livreur a déclaré :
+      // l'accord tacite s'applique. Une véritable indisponibilité, non.
+      if(driver&&driver.forced===true&&!isTimeShiftOnly(driver.forcedCode))return "pending";
+
+      const deadline=contestationDeadlineMs(plan);
+      if(deadline===null)return "pending";
+      return Date.now()>=deadline?"implied":"pending"
+    }
+
+    function effectiveStatusLabel(status){
+      if(status==="confirmed")return "Confirmé";
+      if(status==="refused")return "Refusé";
+      if(status==="implied")return "Réputé confirmé";
+      return "En attente"
+    }
+
     function confirmationTotals(plan){
       let total=0;
       let confirmed=0;
@@ -5311,6 +5416,31 @@
       });
 
       return {total,confirmed,pending,refused}
+    }
+
+    function pendingDriverNames(plan){
+      const names=new Map();
+      if(!plan)return [];
+
+      plan.assignments.forEach(slot=>{
+        slot.selected.forEach(driver=>{
+          const id=assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId);
+          const assignment=currentAssignmentStatuses.get(id);
+          if(assignment&&assignment.active===false)return;
+          if((assignment?.status||"pending")!=="pending")return;
+
+          const entry=names.get(driver.userId)||{
+            name:driver.name||"Livreur",count:0,
+            forced:driver.forced===true&&!isTimeShiftOnly(driver.forcedCode)
+          };
+          entry.count+=1;
+          names.set(driver.userId,entry)
+        })
+      });
+
+      return [...names.values()].map(item=>
+        `• ${item.name} — ${item.count} créneau${item.count>1?"x":""}${item.forced?" (hors disponibilité)":""}`
+      )
     }
 
     /* Livreurs qui ont reçu leurs horaires mais n'ont pas encore répondu. */
@@ -5392,15 +5522,14 @@
         planContainer.appendChild(banner);
         validatePlanButton.classList.add("hidden");
         closePlanButton.classList.remove("hidden");
-        closePlanButton.disabled=!(
-          confirmations.total>0
-          && confirmations.pending===0
-          && confirmations.refused===0
-          && confirmations.confirmed===confirmations.total
-        );
-        closePlanButton.title=closePlanButton.disabled
-          ? "Tous les livreurs doivent confirmer avant la clôture."
-          : "Clôturer et publier le planning final."
+        // Un refus doit être traité avant publication ; une simple absence
+        // de réponse ne bloque plus, elle sera réputée acceptée.
+        closePlanButton.disabled=!(confirmations.total>0&&confirmations.refused===0);
+        closePlanButton.title=confirmations.refused>0
+          ? "Remplacez d’abord les livreurs qui ont refusé."
+          : (confirmations.pending>0
+              ? `Publier maintenant. Les ${confirmations.pending} horaire(s) sans réponse seront réputés acceptés après ${CONTESTATION_HOURS} heures.`
+              : "Clôturer et publier le planning final.")
       }else{
         validatePlanButton.classList.remove("hidden");
         closePlanButton.classList.add("hidden");
@@ -5459,8 +5588,12 @@
                 </div>
                 <div>
                   <span class="plan-score">Score ${driver.score}</span>
-                  ${currentPlan.status==="validated"
-                    ? `<span class="confirmation-badge confirmation-${(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status)||"pending"}">${assignmentStatusLabel(currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId))?.status||"pending")}</span>`
+                  ${currentPlan.status==="validated"||currentPlan.status==="closed"
+                    ? (()=>{
+                        const assignment=currentAssignmentStatuses.get(assignmentDocId(currentPlan.weekId,slot.date,slot.time,driver.userId));
+                        const status=effectiveStatus(currentPlan,assignment,driver);
+                        return `<span class="confirmation-badge confirmation-${status}">${effectiveStatusLabel(status)}</span>`
+                      })()
                     : ""}
                   ${slot.waitlist.length&&currentPlan.status!=="closed"
                     ? `<button class="button button-ghost replace-driver" data-slot="${slotIndex}" data-driver="${index}" type="button">Remplacer</button>`
@@ -5682,7 +5815,8 @@
             vehicle:methods.length?methods.map(deliveryMethodLabel).join(", "):(profile.vehicle||""),
             availabilityComment:"",
             forced:true,
-            forcedReason:item.reason||""
+            forcedReason:item.reason||"",
+            forcedCode:item.reasonCode||"other"
           });
 
           slot.excluded=slot.excluded.filter(entry=>entry.userId!==item.userId);
@@ -6199,24 +6333,32 @@
       await loadAssignmentStatuses(currentPlan.weekId);
       const totals=confirmationTotals(currentPlan);
 
-      if(
-        totals.total===0
-        || totals.pending>0
-        || totals.refused>0
-        || totals.confirmed!==totals.total
-      ){
+      if(totals.total===0){
+        showMessage(planningMessage,"Aucune affectation à publier.","error");
+        renderPlan();
+        return
+      }
+
+      if(totals.refused>0){
         showMessage(
           planningMessage,
-          "Le planning ne peut être clôturé que lorsque toutes les affectations sont confirmées.",
+          "Un livreur a refusé un créneau. Remplacez-le avant de publier.",
           "error"
         );
         renderPlan();
         return
       }
 
-      const confirmed=window.confirm(
-        "Clôturer et publier définitivement ce planning ? Les disponibilités de cette semaine seront fermées."
-      );
+      const waiting=pendingDriverNames(currentPlan);
+      let question="Clôturer et publier définitivement ce planning ? Les disponibilités de cette semaine seront fermées.";
+
+      if(waiting.length){
+        question=`${waiting.length} horaire(s) n’ont pas encore été confirmés :\n\n${waiting.join("\n")}\n\n`
+          +`Après publication, ces livreurs disposeront de ${CONTESTATION_HOURS} heures pour signaler un problème. `
+          +`Passé ce délai, leurs horaires seront réputés acceptés.\n\nPublier maintenant ?`
+      }
+
+      const confirmed=window.confirm(question);
       if(!confirmed)return;
 
       closePlanButton.disabled=true;
@@ -6242,6 +6384,20 @@
           closedBy:auth.currentUser.uid,
           closedByName:currentProfile.name||""
         });
+
+        // Le livreur ne lit pas le planning : la date de publication est
+        // inscrite sur ses affectations pour qu'il puisse voir son délai.
+        const stamp=Date.now();
+        const operations=[];
+        currentAssignmentStatuses.forEach((data,id)=>{
+          if(data.active===false)return;
+          operations.push({
+            ref:doc(db,"driverAssignments",id),
+            data:{planClosedAt:stamp,contestationHours:CONTESTATION_HOURS,updatedAt:serverTimestamp()}
+          })
+        });
+        await commitOperations(operations);
+        await loadAssignmentStatuses(currentPlan.weekId);
 
         availabilityCache.delete(currentPlan.weekId);
         driverStatsLoadedAt=0;
@@ -6511,7 +6667,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-07-31-c";
+    const APP_VERSION = "2026-07-31-d";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
