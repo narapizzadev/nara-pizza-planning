@@ -1484,6 +1484,10 @@
             <button id="closePlanButton" class="button button-primary hidden" type="button">
               Clôturer et publier
             </button>
+
+            <button id="reopenPlanButton" class="button button-secondary hidden" type="button">
+              Rouvrir le planning
+            </button>
           </div>
 
           <div id="planningMessage" class="message"></div>
@@ -2056,6 +2060,7 @@
     const generatePlanButton = document.getElementById("generatePlanButton");
     const validatePlanButton = document.getElementById("validatePlanButton");
     const closePlanButton = document.getElementById("closePlanButton");
+    const reopenPlanButton = document.getElementById("reopenPlanButton");
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
     const planningAvailabilityContainer = document.getElementById("planningAvailabilityContainer");
@@ -5016,6 +5021,7 @@
         currentPlan=null;
         validatePlanButton.classList.add("hidden");
         closePlanButton.classList.add("hidden");
+        reopenPlanButton.classList.add("hidden");
         generatePlanButton.disabled=false;
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
       }
@@ -5659,6 +5665,7 @@
       if(!currentPlan){
         planContainer.innerHTML='<div class="empty-state">Aucune proposition disponible.</div>';
         validatePlanButton.classList.add("hidden");
+        if(reopenPlanButton)reopenPlanButton.classList.add("hidden");
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
         return
       }
@@ -5677,7 +5684,8 @@
         banner.textContent="Planning clôturé et publié";
         planContainer.appendChild(banner);
         validatePlanButton.classList.add("hidden");
-        closePlanButton.classList.add("hidden")
+        closePlanButton.classList.add("hidden");
+        reopenPlanButton.classList.remove("hidden")
       }else if(currentPlan.status==="validated"){
         const banner=document.createElement("div");
         banner.className="validated-banner";
@@ -5685,6 +5693,7 @@
         planContainer.appendChild(banner);
         validatePlanButton.classList.add("hidden");
         closePlanButton.classList.remove("hidden");
+        reopenPlanButton.classList.add("hidden");
         // Un refus doit être traité avant publication ; une simple absence
         // de réponse ne bloque plus, elle sera réputée acceptée.
         closePlanButton.disabled=!(confirmations.total>0&&confirmations.refused===0);
@@ -5696,6 +5705,7 @@
       }else{
         validatePlanButton.classList.remove("hidden");
         closePlanButton.classList.add("hidden");
+        reopenPlanButton.classList.add("hidden");
         generatePlanButton.disabled=false
       }
 
@@ -6451,6 +6461,7 @@
         currentPlan=null;
         validatePlanButton.classList.add("hidden");
         closePlanButton.classList.add("hidden");
+        reopenPlanButton.classList.add("hidden");
         generatePlanButton.disabled=false;
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
         planContainer.innerHTML='<div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>'
@@ -6631,6 +6642,87 @@
         renderPlan()
       }finally{
         closePlanButton.textContent="Clôturer et publier"
+      }
+    });
+
+    /* ----------------------------------------------------------------
+       Rouvrir un planning publié.
+
+       Un scooter en panne le vendredi soir, un livreur malade : après la
+       publication, il faut pouvoir corriger. Le planning repasse en
+       « validé », les attributions redeviennent modifiables.
+
+       Deux précautions. La date de publication est effacée, sinon le
+       compte à rebours de confirmation tacite continuerait de courir sur
+       un planning qui n'est plus celui que les livreurs ont vu. Et les
+       réponses déjà données — confirmations comme refus — sont conservées
+       telles quelles : personne n'a à répondre une deuxième fois.
+       ---------------------------------------------------------------- */
+    reopenPlanButton.addEventListener("click",async()=>{
+      if(!currentPlan||currentPlan.status!=="closed")return;
+      if(!auth.currentUser||!currentProfile){
+        showMessage(planningMessage,"Votre session n’est plus valide.","error");
+        return
+      }
+
+      const confirmed=window.confirm(
+        "Rouvrir ce planning ?\n\n"
+        +"Il repasse en « validé » : vous pourrez de nouveau changer les véhicules, "
+        +"remplacer un livreur ou corriger un créneau.\n\n"
+        +"Les réponses déjà données sont conservées. Le délai de contestation "
+        +"repart à zéro : il faudra republier pour le relancer."
+      );
+      if(!confirmed)return;
+
+      reopenPlanButton.disabled=true;
+      reopenPlanButton.textContent="Réouverture…";
+
+      try{
+        currentPlan.status="validated";
+        currentPlan.closedAt=null;
+
+        await setDoc(
+          doc(db,"plans",currentPlan.weekId),
+          {
+            ...currentPlan,
+            closedAt:null,
+            reopenedAt:serverTimestamp(),
+            reopenedBy:auth.currentUser.uid,
+            reopenedByName:currentProfile.name||""
+          },
+          {merge:true}
+        );
+
+        // Le livreur lit le délai sur son affectation : on l'efface aussi.
+        const operations=[];
+        currentAssignmentStatuses.forEach((data,id)=>{
+          if(data.active===false)return;
+          operations.push({
+            ref:doc(db,"driverAssignments",id),
+            data:{planClosedAt:null,updatedAt:serverTimestamp()}
+          })
+        });
+        await commitOperations(operations);
+        await loadAssignmentStatuses(currentPlan.weekId);
+
+        renderPlan();
+        showMessage(
+          planningMessage,
+          "Planning rouvert. Pensez à le republier une fois vos corrections faites.",
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        currentPlan.status="closed";
+        showMessage(
+          planningMessage,
+          `Impossible de rouvrir : ${error.code||error.message}`,
+          "error"
+        );
+        renderPlan()
+      }finally{
+        reopenPlanButton.disabled=false;
+        reopenPlanButton.textContent="Rouvrir le planning"
       }
     });
 
@@ -6880,7 +6972,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-b";
+    const APP_VERSION = "2026-08-01-c";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
