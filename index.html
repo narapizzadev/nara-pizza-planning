@@ -5468,6 +5468,7 @@
        le premier rencontré est retenu : c'est celui qui compte. */
     function exclusionReason(ctx){
       const {availability,day,need,service,weeklyDeliveryMethods,respectsSixDayLimit,workedCount,alreadyUsed}=ctx;
+      const declaredMethods=Array.isArray(ctx.declaredMethods)?ctx.declaredMethods:[];
       const serviceName=service==="midi"?"le midi":"le soir";
       const none={code:"",text:""};
 
@@ -5489,7 +5490,14 @@
       const latest=service==="midi"?normalized.middayLatest:normalized.eveningLatest;
       if(latest&&need.time>latest)return {code:"earlier",text:`n’est plus disponible après ${latest}`};
 
-      if(!weeklyDeliveryMethods.length)return {code:"no-vehicle",text:"aucun véhicule déclaré"};
+      if(!weeklyDeliveryMethods.length){
+        // Nuance importante : le livreur a bien répondu et il a un véhicule.
+        // C'est le responsable qui a fermé ce moyen pour la semaine — en
+        // hiver, par exemple, quand les scooters restent au garage.
+        return declaredMethods.length
+          ? {code:"method-off",text:"n’a déclaré qu’un véhicule non autorisé cette semaine"}
+          : {code:"no-vehicle",text:"aucun véhicule déclaré"}
+      }
       return none
     }
 
@@ -5500,6 +5508,13 @@
     }
 
     function createProposal(data){
+      // Moyens de livraison autorisés pour cette semaine. Vide ou absent
+      // signifie « tous », c'est le cas courant.
+      const weekMethods=data.week&&Array.isArray(data.week.deliveryMethods)
+        ? data.week.deliveryMethods.filter(Boolean)
+        : [];
+      const allowedMethods=weekMethods.length?weekMethods:null;
+
       // Un livreur peut être affecté une fois à midi et une fois le soir
       // le même jour, mais sur un maximum de 6 jours distincts par semaine.
       const assignedByDateAndService=new Map();
@@ -5519,12 +5534,21 @@
             const alreadyWorksThisDate=workedDates.has(need.date);
             const respectsSixDayLimit=alreadyWorksThisDate||workedDates.size<maxDaysPerWeek();
 
-            const weeklyDeliveryMethods=Array.isArray(availability?.deliveryMethods)
+            const declaredMethods=Array.isArray(availability?.deliveryMethods)
               ? availability.deliveryMethods
               : (driver.vehicle?[driver.vehicle]:[]);
 
+            // Le responsable peut restreindre les moyens de livraison d'une
+            // semaine : l'hiver, on sort les voitures et pas les scooters.
+            // Un livreur qui n'a déclaré qu'un moyen désormais fermé n'est
+            // plus retenu, mais il apparaît dans les écartés avec le motif.
+            const weeklyDeliveryMethods=allowedMethods
+              ? declaredMethods.filter(methodId=>allowedMethods.includes(methodId))
+              : declaredMethods;
+
             return {
               ...driver,
+              declaredMethods,
               weeklyDeliveryMethods,
               vehicle:weeklyDeliveryMethods.length
                 ? weeklyDeliveryMethods.map(deliveryMethodLabel).join(", ")
@@ -5536,6 +5560,7 @@
               availabilityComment:day?.comment||"",
               exclusionReason:exclusionReason({
                 availability,day,need,service,
+                declaredMethods,
                 weeklyDeliveryMethods,
                 respectsSixDayLimit,
                 workedCount:workedDates.size,
@@ -6050,14 +6075,7 @@
           slot.declinedUserIds=slot.declinedUserIds.filter(id=>id!==incoming.userId)
         }
 
-        await saveCurrentPlan();
-
-        if(currentPlan.status==="validated"){
-          await loadAssignmentStatuses(currentPlan.weekId);
-          await syncDriverAssignments(currentPlan,{statusesLoaded:true})
-        }
-
-        renderPlan()
+        await persistPlanChange(`${incoming.name} affecté`)
       }
 
       function openSwapChoice(slotIndex,waitingIndex){
@@ -6133,14 +6151,9 @@
           driver.vehicleUnitId=unit?unit.id:"";
           driver.vehicleUnitName=unit?unit.name:"";
 
-          await saveCurrentPlan();
-
-          if(currentPlan.status==="validated"){
-            await loadAssignmentStatuses(currentPlan.weekId);
-            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
-          }
-
-          renderPlan()
+          await persistPlanChange(unit
+            ? `${driver.name} · ${unit.name}`
+            : `${driver.name} sans véhicule attribué`)
         })
       });
 
@@ -6178,14 +6191,7 @@
             slot.declinedUserIds=slot.declinedUserIds.filter(id=>id!==item.userId)
           }
 
-          await saveCurrentPlan();
-
-          if(currentPlan.status==="validated"){
-            await loadAssignmentStatuses(currentPlan.weekId);
-            await syncDriverAssignments(currentPlan,{statusesLoaded:true})
-          }
-
-          renderPlan()
+          await persistPlanChange(`${item.name} affecté`)
         })
       });
 
@@ -6212,6 +6218,10 @@
     async function saveCurrentPlan(){
       if(!currentPlan)return;
 
+      if(!auth.currentUser||!currentProfile){
+        throw new Error("Votre session n’est plus valide. Reconnectez-vous.")
+      }
+
       await setDoc(
         doc(db,"plans",currentPlan.weekId),
         {
@@ -6222,6 +6232,33 @@
         },
         {merge:true}
       )
+    }
+
+    /* Toute modification manuelle du planning passe par ici : on enregistre,
+       on confirme à l'écran, et surtout on affiche l'erreur si l'écriture
+       est refusée, au lieu de laisser croire que c'est passé. */
+    async function persistPlanChange(label){
+      try{
+        await saveCurrentPlan();
+
+        if(currentPlan.status==="validated"){
+          await loadAssignmentStatuses(currentPlan.weekId);
+          await syncDriverAssignments(currentPlan,{statusesLoaded:true})
+        }
+
+        renderPlan();
+        showMessage(planningMessage,`${label} — enregistré.`,"success");
+        return true
+      }catch(error){
+        console.error(error);
+        showMessage(
+          planningMessage,
+          `${label} : l’enregistrement a échoué (${error.code||error.message}). `
+          +`Le planning affiché n’est pas celui qui est enregistré : rechargez la page.`,
+          "error"
+        );
+        return false
+      }
     }
 
     async function loadSavedPlan(weekId){
@@ -7116,7 +7153,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-g";
+    const APP_VERSION = "2026-08-01-i";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
