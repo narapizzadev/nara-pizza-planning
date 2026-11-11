@@ -339,6 +339,18 @@
     .driver-overview{min-width:0}
     .driver-score-panel{display:grid;gap:10px}
     .driver-score-row{display:flex;gap:7px;flex-wrap:wrap}
+    .role-badge{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
+      border:1px solid var(--border);background:#fff;color:var(--muted)}
+    .role-badge.is-admin{background:#fdecec;border-color:#f3c4c4;color:var(--error)}
+    .role-badge.is-manager{background:#e9f1fd;border-color:#c6dcf7;color:#1a4f8a}
+    .staff-list{display:grid;gap:12px;margin-bottom:8px}
+    .staff-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:15px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .staff-card h3{margin-bottom:3px}
+    .staff-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .staff-note{margin-top:4px;font-size:12px;color:var(--muted)}
+    .driver-form-wrap.is-staff .driver-only{display:none}
+    @media(max-width:560px){.staff-card{grid-template-columns:1fr}.staff-actions{justify-content:flex-start}}
     .driver-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .driver-stat-card{padding:11px;border:1px solid var(--border);border-radius:10px;background:#fafafa}
     .driver-stat-card strong,.driver-stat-card small{display:block}
@@ -1202,6 +1214,20 @@
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
           </div>
 
+          <div id="staffSection" class="hidden">
+            <div class="panel-header" style="margin-bottom:12px">
+              <div>
+                <h3>Responsables</h3>
+                <p class="muted">Les comptes qui préparent les plannings. Ils n’apparaissent pas dans les propositions.</p>
+              </div>
+            </div>
+            <div id="staffList" class="staff-list"></div>
+          </div>
+
+          <div id="driversHeading" class="panel-header hidden" style="margin-bottom:12px">
+            <div><h3>Livreurs</h3></div>
+          </div>
+
           <div id="driverList" class="driver-list">
             <div class="empty-state">Chargement des livreurs…</div>
           </div>
@@ -1242,22 +1268,32 @@
                   <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
                 </div>
 
+                <div id="driverRoleField" class="field hidden">
+                  <label for="driverRole">Rôle dans l’application</label>
+                  <select id="driverRole">
+                    <option value="driver">Livreur — envoie ses disponibilités</option>
+                    <option value="manager">Responsable — prépare et publie les plannings</option>
+                    <option value="admin">Administrateur — responsable, plus la fiche et les rôles</option>
+                  </select>
+                  <p class="form-note" id="driverRoleNote">Seul un administrateur peut attribuer un rôle.</p>
+                </div>
+
                 <div id="driverPasswordField" class="field">
                   <label for="driverPassword">Mot de passe provisoire</label>
                   <input id="driverPassword" type="password" minlength="6" autocomplete="new-password">
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverPriority">Priorité interne (1 à 5)</label>
                   <input id="driverPriority" type="number" min="1" max="5" value="3" required>
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverReliability">Fiabilité (1 à 5)</label>
                   <input id="driverReliability" type="number" min="1" max="5" value="3" required>
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverExperience">Expérience (1 à 5)</label>
                   <input id="driverExperience" type="number" min="1" max="5" value="3" required>
                 </div>
@@ -2119,6 +2155,12 @@
     let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
+    const driverRoleField = document.getElementById("driverRoleField");
+    const driverRoleSelect = document.getElementById("driverRole");
+    const driverRoleNote = document.getElementById("driverRoleNote");
+    const staffSection = document.getElementById("staffSection");
+    const staffList = document.getElementById("staffList");
+    const driversHeading = document.getElementById("driversHeading");
     const driverFormWrap = document.getElementById("driverFormWrap");
     const driverForm = document.getElementById("driverForm");
     const driverFormTitle = document.getElementById("driverFormTitle");
@@ -2264,6 +2306,7 @@
     let currentNeedTemplates = [];
     let selectedNeedTemplateId = "";
     let currentDrivers = [];
+    let currentStaff = [];
     let currentDriverPrivateData = new Map();
     let currentManagerAssignments = [];
     let planningDeadlineTimer = null;
@@ -2805,9 +2848,30 @@
       document.getElementById("driverEmail").readOnly=false;
       document.getElementById("driverPassword").required=true;
       driverPasswordField.classList.remove("hidden");
+
+      // Le rôle ne se choisit que si l'on a soi-même le droit de l'attribuer.
+      driverRoleSelect.value="driver";
+      driverRoleSelect.disabled=false;
+      driverRoleField.classList.toggle("hidden",!isAdminProfile());
+      driverRoleNote.textContent="Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
+
       driverFormTitle.textContent="Ajouter un livreur";
       saveDriverButton.textContent="Créer le livreur";
+      applyRoleToForm();
       clearMessage(driverFormMessage)
+    }
+
+    /* Un responsable n'a ni priorité, ni fiabilité, ni expérience : ces
+       notes ne servent qu'au classement des livreurs. */
+    function applyRoleToForm(){
+      const estLivreur=driverRoleSelect.value==="driver";
+      driverFormWrap.classList.toggle("is-staff",!estLivreur);
+      ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
+        document.getElementById(id).required=estLivreur
+      });
+      saveDriverButton.textContent=document.getElementById("driverId").value
+        ? "Enregistrer les modifications"
+        : (estLivreur?"Créer le livreur":"Créer le responsable")
     }
 
     function openNewDriverForm(){
@@ -2828,6 +2892,19 @@
       driverPasswordField.classList.add("hidden");
       document.getElementById("driverPassword").required=false;
 
+      const role=profile.role||"driver";
+      driverRoleSelect.value=role;
+      driverRoleField.classList.toggle("hidden",!isAdminProfile());
+
+      const soiMeme=userId===auth.currentUser?.uid;
+      const dernierAdmin=userId===lastActiveAdminId();
+      driverRoleSelect.disabled=soiMeme||dernierAdmin;
+      driverRoleNote.textContent=soiMeme
+        ? "C’est votre propre compte : votre rôle ne peut pas être modifié ici."
+        : dernierAdmin
+          ? "Seul administrateur actif : son rôle ne peut pas être retiré."
+          : "Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
+
       try{
         const privateSnap=await getDoc(doc(db,"driverPrivate",userId));
         if(privateSnap.exists()){
@@ -2842,7 +2919,10 @@
         showMessage(driverFormMessage,`Impossible de charger la fiche confidentielle : ${error.code||error.message}`,"error")
       }
 
-      driverFormTitle.textContent="Modifier le livreur";
+      applyRoleToForm();
+      driverFormTitle.textContent=(profile.role&&profile.role!=="driver")
+        ? "Modifier le responsable"
+        : "Modifier le livreur";
       saveDriverButton.textContent="Enregistrer les modifications";
       driverFormWrap.classList.remove("hidden");
       driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
@@ -2916,6 +2996,8 @@
         loadPlanningAvailabilities(planningWeekSelect.value)
       }
 
+      renderStaff();
+
       if(drivers.length===0){
         driverList.innerHTML='<div class="empty-state">Aucun livreur n’a encore été ajouté.</div>';
         return
@@ -2976,6 +3058,67 @@
 
         card.querySelector(".edit-driver").addEventListener("click",()=>openEditDriverForm(driver.id,driver));
         driverList.appendChild(card)
+      })
+    }
+
+    const ROLE_LABELS = { driver:"Livreur", manager:"Responsable", admin:"Administrateur" };
+
+    function isAdminProfile(){
+      return currentProfile?.role==="admin"
+    }
+
+    function roleBadge(role){
+      const classe=role==="admin"?"is-admin":role==="manager"?"is-manager":"";
+      return `<span class="role-badge ${classe}">${escapeHtml(ROLE_LABELS[role]||role||"—")}</span>`
+    }
+
+    /* On ne doit jamais pouvoir se retirer soi-même la main, ni laisser
+       l'établissement sans aucun administrateur. */
+    function lastActiveAdminId(){
+      const admins=currentStaff.filter(item=>item.role==="admin"&&item.active===true);
+      return admins.length===1?admins[0].id:null
+    }
+
+    function renderStaff(){
+      if(!staffSection)return;
+
+      const visible=isAdminProfile();
+      staffSection.classList.toggle("hidden",!visible||currentStaff.length===0);
+      driversHeading.classList.toggle("hidden",!visible||currentStaff.length===0);
+      if(!visible||currentStaff.length===0)return;
+
+      const liste=currentStaff
+        .slice()
+        .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+
+      staffList.innerHTML="";
+
+      liste.forEach(membre=>{
+        const soiMeme=membre.id===auth.currentUser?.uid;
+        const dernierAdmin=membre.id===lastActiveAdminId();
+        const card=document.createElement("article");
+        card.className="staff-card";
+
+        card.innerHTML=`
+          <div>
+            <h3>${escapeHtml(membre.name||"Responsable")}</h3>
+            <p class="driver-meta">${escapeHtml(membre.email||"")}</p>
+            <div class="staff-note">
+              ${soiMeme?"C’est vous. Votre propre rôle ne peut pas être modifié ici."
+                : dernierAdmin?"Seul administrateur actif : son rôle ne peut pas être retiré."
+                : "Ne figure pas dans les propositions de planning."}
+            </div>
+          </div>
+          <div class="staff-actions">
+            ${roleBadge(membre.role)}
+            <span class="status-badge ${membre.active===true?"status-active":"status-inactive"}">${membre.active===true?"Actif":"Désactivé"}</span>
+            ${soiMeme||dernierAdmin?"":'<button class="button button-ghost edit-staff" type="button">Modifier</button>'}
+          </div>
+        `;
+
+        const bouton=card.querySelector(".edit-staff");
+        if(bouton)bouton.addEventListener("click",()=>openEditDriverForm(membre.id,membre));
+        staffList.appendChild(card)
       })
     }
 
@@ -3219,10 +3362,16 @@
       unsubscribeDrivers=onSnapshot(
         collection(db,"users"),
         snapshot=>{
+          // Les livreurs alimentent les plannings ; les responsables ne
+          // doivent jamais s'y retrouver. On sépare les deux listes dès la
+          // lecture, pour qu'aucun écran ne puisse les confondre.
           currentDrivers=[];
+          currentStaff=[];
           snapshot.forEach(docSnap=>{
             const data=docSnap.data();
-            if(data.role==="driver")currentDrivers.push({id:docSnap.id,...data})
+            const entry={id:docSnap.id,...data};
+            if(data.role==="driver")currentDrivers.push(entry);
+            else if(data.role==="manager"||data.role==="admin")currentStaff.push(entry)
           });
 
           // Aucune relecture des affectations ici : elle avait lieu a chaque
@@ -5380,6 +5529,14 @@
       },
       {
         group:"Les livreurs",
+        question:"Comment donner un accès responsable à quelqu’un ?",
+        answer:`<p>Écran <strong>Gérer les livreurs</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
+          <p>Un <strong>responsable</strong> prépare et publie les plannings, gère les livreurs et les besoins. Un <strong>administrateur</strong> fait tout cela, et peut en plus modifier la fiche de l’établissement et attribuer les rôles.</p>
+          <p>Les responsables sont regroupés dans leur propre liste, en haut de l’écran. Ils n’apparaissent jamais dans les propositions de planning : ce ne sont pas des livreurs.</p>
+          <p>Deux sécurités : vous ne pouvez pas modifier votre propre rôle, et le dernier administrateur actif ne peut pas perdre le sien. Sans cela, on peut se verrouiller dehors en un clic.</p>`
+      },
+      {
+        group:"Les livreurs",
         question:"Un livreur part. Faut-il supprimer son compte ?",
         answer:`<p>Non : <strong>désactivez-le</strong>. Il ne pourra plus se connecter ni apparaître dans les propositions, mais son historique reste lisible.</p>
           <p>Supprimer un compte effacerait les traces dont vous pourriez avoir besoin — qui travaillait tel soir, qui avait accepté quelle version du règlement.</p>`
@@ -7285,6 +7442,7 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    driverRoleSelect.addEventListener("change",applyRoleToForm);
     document.getElementById("openHelp").addEventListener("click",()=>showSection("help"));
     document.getElementById("refreshNextServiceButton").addEventListener("click",async()=>{
       const bouton=document.getElementById("refreshNextServiceButton");
@@ -7833,6 +7991,7 @@
       const reliability=Number(document.getElementById("driverReliability").value);
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
+      const role=isAdminProfile()?driverRoleSelect.value:"driver";
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -7847,7 +8006,7 @@
 
           await setDoc(doc(db,"users",userId),{
             name,email,phone,vehicle,active,
-            role:"driver",
+            role,
             mustChangePassword:true,
             createdAt:serverTimestamp(),
             createdBy:auth.currentUser.uid,
@@ -7856,18 +8015,23 @@
 
           await signOut(driverCreatorAuth)
         }else{
-          await updateDoc(doc(db,"users",userId),{
+          const champs={
             name,phone,vehicle,active,
             updatedAt:serverTimestamp(),
             updatedBy:auth.currentUser.uid
-          })
+          };
+          // Le rôle n'est transmis que si on a le droit de le changer.
+          if(isAdminProfile()&&!driverRoleSelect.disabled)champs.role=role;
+          await updateDoc(doc(db,"users",userId),champs)
         }
 
-        await setDoc(doc(db,"driverPrivate",userId),{
-          priority,reliability,experience,notes,
-          updatedAt:serverTimestamp(),
-          updatedBy:auth.currentUser.uid
-        },{merge:true});
+        if(role==="driver"){
+          await setDoc(doc(db,"driverPrivate",userId),{
+            priority,reliability,experience,notes,
+            updatedAt:serverTimestamp(),
+            updatedBy:auth.currentUser.uid
+          },{merge:true})
+        }
 
         // Les scores confidentiels viennent de changer : on force leur relecture.
         await loadDriverPrivateData(true);
@@ -7905,7 +8069,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-11-b · ESSAI";
+    const APP_VERSION = "2026-11-11-c · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8004,6 +8168,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-11-b. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-11-c. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
