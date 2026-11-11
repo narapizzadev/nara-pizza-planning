@@ -1211,7 +1211,7 @@
               <h2>Gérer les livreurs</h2>
               <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
             </div>
-            <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
+            <button id="openDriverForm" class="button button-primary" type="button">Ajouter un compte</button>
           </div>
 
           <div id="staffSection" class="hidden">
@@ -2869,9 +2869,18 @@
       ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
         document.getElementById(id).required=estLivreur
       });
+      const creations={driver:"Créer le livreur",manager:"Créer le responsable",
+                      admin:"Créer l’administrateur"};
       saveDriverButton.textContent=document.getElementById("driverId").value
         ? "Enregistrer les modifications"
-        : (estLivreur?"Créer le livreur":"Créer le responsable")
+        : (creations[driverRoleSelect.value]||"Créer le compte");
+
+      // Le titre du formulaire dit lui aussi ce qu'on est en train de créer.
+      if(!document.getElementById("driverId").value){
+        const titres={driver:"Ajouter un livreur",manager:"Ajouter un responsable",
+                      admin:"Ajouter un administrateur"};
+        driverFormTitle.textContent=titres[driverRoleSelect.value]||"Ajouter un compte"
+      }
     }
 
     function openNewDriverForm(){
@@ -3081,6 +3090,11 @@
 
     function renderStaff(){
       if(!staffSection)return;
+
+      const ouvrir=document.getElementById("openDriverForm");
+      if(ouvrir){
+        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un livreur"
+      }
 
       const visible=isAdminProfile();
       staffSection.classList.toggle("hidden",!visible||currentStaff.length===0);
@@ -8069,7 +8083,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-11-c · ESSAI";
+    const APP_VERSION = "2026-11-11-d · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8168,6 +8182,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-11-c. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-11-d. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
