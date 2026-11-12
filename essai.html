@@ -1164,7 +1164,7 @@
 
         <div class="dashboard-grid">
           <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités des livreurs</small></span></button>
-          <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les livreurs</strong><small>Consulter les profils et préparer les comptes</small></span></button>
+          <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les employés</strong><small>Postes, comptes et notes internes</small></span></button>
           <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Préparer les heures et le nombre de livreurs</small></span></button>
           <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Comparer besoins, disponibilités et classement</small></span></button>
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
@@ -1226,7 +1226,7 @@
         <section class="panel">
           <div class="driver-toolbar">
             <div>
-              <h2>Gérer les livreurs</h2>
+              <h2>Gérer les employés</h2>
               <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
             </div>
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un compte</button>
@@ -1243,7 +1243,7 @@
           </div>
 
           <div id="driversHeading" class="panel-header hidden" style="margin-bottom:12px">
-            <div><h3>Livreurs</h3></div>
+            <div><h3>Équipe</h3></div>
           </div>
 
           <div id="driverList" class="driver-list">
@@ -1284,6 +1284,17 @@
                 <div class="field">
                   <label for="driverVehicle">Véhicule</label>
                   <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
+                </div>
+
+                <div id="driverPositionField" class="field">
+                  <label for="driverPosition">Poste de travail</label>
+                  <select id="driverPosition"></select>
+                  <p class="form-note">Ce que cette personne fait dans la maison. Le rôle, lui, dit ce qu’elle peut faire dans l’application.</p>
+                </div>
+
+                <div id="driverPlanningRow" class="checkbox-row hidden">
+                  <input id="driverInPlanning" type="checkbox">
+                  <span>Apparaît dans les plannings. À cocher pour un responsable qui travaille aussi en service.</span>
                 </div>
 
                 <div id="driverRoleField" class="field hidden">
@@ -1406,8 +1417,13 @@
                     <select id="needTime" required></select>
                   </div>
 
+                  <div class="field" id="needPositionField">
+                    <label for="needPosition">Poste</label>
+                    <select id="needPosition"></select>
+                  </div>
+
                   <div class="field">
-                    <label for="needQuantity">Nombre de livreurs</label>
+                    <label for="needQuantity">Nombre de personnes</label>
                     <input id="needQuantity" type="number" min="1" max="50" value="1" required>
                   </div>
                 </div>
@@ -1501,6 +1517,18 @@
             </div>
           </div>
           <div id="establishmentMethods" class="delivery-methods-grid"></div>
+
+          <div class="panel-header" style="margin-top:22px">
+            <div>
+              <h3>Postes de travail</h3>
+              <p class="muted">Les métiers de votre maison : livreur, caissier, cuisine, téléphoniste. Chaque employé en occupe un, et chaque besoin en demande un.</p>
+              <p class="muted">Cochez « véhicule » pour les postes qui en exigent un. Un caissier ne se verra alors jamais demander de moyen de livraison, et ne sera jamais écarté faute de véhicule.</p>
+            </div>
+          </div>
+          <div id="positionList" class="fleet-list"></div>
+          <div class="form-actions" style="justify-content:flex-start;margin-top:10px">
+            <button id="addPosition" class="button button-ghost" type="button">Ajouter un poste</button>
+          </div>
 
           <div class="panel-header" style="margin-top:22px">
             <div>
@@ -1736,7 +1764,7 @@
 
             <div id="pendingConfirmContainer" class="missing-drivers hidden">
               <strong>Horaires non confirmés</strong>
-              <p class="muted">Ces livreurs ont reçu leurs horaires mais n’ont pas encore répondu. Relancez le groupe en un geste.</p>
+              <p class="muted">Ces personnes ont reçu leurs horaires mais n’ont pas encore répondu. Relancez le groupe en un geste.</p>
               <div id="pendingConfirmList" class="relance-list"></div>
             </div>
 
@@ -2254,6 +2282,9 @@
     let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
+    const driverPositionSelect = document.getElementById("driverPosition");
+    const driverPlanningRow = document.getElementById("driverPlanningRow");
+    const driverInPlanning = document.getElementById("driverInPlanning");
     const driverRoleField = document.getElementById("driverRoleField");
     const driverRoleSelect = document.getElementById("driverRole");
     const driverRoleNote = document.getElementById("driverRoleNote");
@@ -2271,6 +2302,8 @@
     const needForm = document.getElementById("needForm");
     const needDate = document.getElementById("needDate");
     const needTime = document.getElementById("needTime");
+    const needPosition = document.getElementById("needPosition");
+    const needPositionField = document.getElementById("needPositionField");
     const needQuantity = document.getElementById("needQuantity");
     const needNotes = document.getElementById("needNotes");
     const needList = document.getElementById("needList");
@@ -2504,6 +2537,55 @@
 
     function isDayOpen(dateString){
       return isServiceOpen(dateString,"midi")||isServiceOpen(dateString,"soir")
+    }
+
+    /* ===================================================================
+       POSTES DE TRAVAIL
+       Le poste dit ce qu'une personne fait dans la maison — livreur,
+       caissier, cuisine. À ne pas confondre avec le rôle, qui dit ce
+       qu'elle a le droit de faire dans l'application.
+
+       Une installation qui n'a rien déclaré se comporte comme avant :
+       tout le monde est livreur et doit avoir un véhicule.
+       =================================================================== */
+    const DEFAULT_POSITION = { id:"livreur", name:"Livreur", requiresVehicle:true, active:true };
+
+    function positions(){
+      const list=(establishmentConfig.positions||[]).filter(item=>item&&item.id&&item.active!==false);
+      return list.length?list:[DEFAULT_POSITION]
+    }
+
+    function positionById(id){
+      return positions().find(item=>item.id===id)||null
+    }
+
+    function defaultPositionId(){
+      return positions()[0].id
+    }
+
+    /* Un document sans poste date d'avant cette notion : c'est un livreur. */
+    function positionOf(value){
+      const id=value||DEFAULT_POSITION.id;
+      return positionById(id)?id:defaultPositionId()
+    }
+
+    function positionLabel(id){
+      const poste=positionById(id);
+      return poste?poste.name:"Livreur"
+    }
+
+    function positionRequiresVehicle(id){
+      const poste=positionById(id);
+      return poste?poste.requiresVehicle!==false:true
+    }
+
+    function newPositionId(){
+      return "p"+Math.random().toString(36).slice(2,9)
+    }
+
+    /* Plusieurs postes déclarés : l'information mérite d'être affichée. */
+    function severalPositions(){
+      return positions().length>1
     }
 
     /* ===================================================================
@@ -2768,7 +2850,8 @@
       driverGreeting.textContent=`Bonjour ${firstName}`;
       document.getElementById("driverProfileName").textContent=profile.name||"Livreur";
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
-      document.getElementById("driverTopbarUser").textContent="Espace livreur";
+      document.getElementById("driverTopbarUser").textContent=
+        positionLabel(positionOf(currentProfile?.position));
       setDriverTab("planning");
 
       // Mot de passe provisoire : rien d'autre n'est accessible tant qu'il n'a pas été changé.
@@ -2983,6 +3066,8 @@
       driverPasswordField.classList.remove("hidden");
 
       // Le rôle ne se choisit que si l'on a soi-même le droit de l'attribuer.
+      fillPositionSelect(defaultPositionId());
+      driverInPlanning.checked=false;
       driverRoleSelect.value="driver";
       driverRoleSelect.disabled=false;
       driverRoleField.classList.toggle("hidden",!isAdminProfile());
@@ -2996,9 +3081,16 @@
 
     /* Un responsable n'a ni priorité, ni fiabilité, ni expérience : ces
        notes ne servent qu'au classement des livreurs. */
+    function fillPositionSelect(selected){
+      driverPositionSelect.innerHTML=positions()
+        .map(poste=>`<option value="${escapeHtml(poste.id)}" ${poste.id===selected?"selected":""}>${escapeHtml(poste.name)}</option>`)
+        .join("")
+    }
+
     function applyRoleToForm(){
       const estLivreur=driverRoleSelect.value==="driver";
       driverFormWrap.classList.toggle("is-staff",!estLivreur);
+      driverPlanningRow.classList.toggle("hidden",estLivreur);
       ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
         document.getElementById(id).required=estLivreur
       });
@@ -3033,6 +3125,9 @@
       document.getElementById("driverActive").checked=profile.active===true;
       driverPasswordField.classList.add("hidden");
       document.getElementById("driverPassword").required=false;
+
+      fillPositionSelect(positionOf(profile.position));
+      driverInPlanning.checked=profile.inPlanning===true;
 
       const role=profile.role||"driver";
       driverRoleSelect.value=role;
@@ -3141,7 +3236,7 @@
       renderStaff();
 
       if(drivers.length===0){
-        driverList.innerHTML='<div class="empty-state">Aucun livreur n’a encore été ajouté.</div>';
+        driverList.innerHTML='<div class="empty-state">Aucun employé n’a encore été ajouté.</div>';
         return
       }
 
@@ -3347,6 +3442,7 @@
         grid.appendChild(card)
       });
 
+      renderPositionList(establishmentConfig.positions||[]);
       renderFleetList(establishmentConfig.fleet||[]);
 
       const methods=document.getElementById("establishmentMethods");
@@ -3387,21 +3483,60 @@
           <button class="button button-ghost fleet-remove" type="button">Retirer</button>
         `;
         row.querySelector(".fleet-remove").addEventListener("click",()=>{
-          const remaining=readFleetList().filter(item=>item.id!==row.dataset.unitId);
+          const remaining=readFleetList(true).filter(item=>item.id!==row.dataset.unitId);
           renderFleetList(remaining)
         });
         list.appendChild(row)
       })
     }
 
-    function readFleetList(){
+    function renderPositionList(list){
+      const container=document.getElementById("positionList");
+      container.innerHTML="";
+
+      if(!list.length){
+        container.innerHTML='<div class="fleet-empty">Aucun poste enregistré. Sans poste déclaré, tout le monde est considéré comme livreur.</div>';
+        return
+      }
+
+      list.forEach(poste=>{
+        const row=document.createElement("div");
+        row.className="fleet-row";
+        row.dataset.positionId=poste.id||newPositionId();
+        row.innerHTML=`
+          <input class="position-name" type="text" placeholder="Exemple : Caissier" value="${escapeHtml(poste.name||"")}" maxlength="40">
+          <label class="checkbox-row" style="margin:0;align-items:center">
+            <input class="position-vehicle" type="checkbox" ${poste.requiresVehicle!==false?"checked":""}>
+            <span>Nécessite un véhicule</span>
+          </label>
+          <span></span>
+          <button class="button button-ghost position-remove" type="button">Retirer</button>
+        `;
+        row.querySelector(".position-remove").addEventListener("click",()=>{
+          const remaining=readPositionList(true).filter(item=>item.id!==row.dataset.positionId);
+          renderPositionList(remaining)
+        });
+        container.appendChild(row)
+      })
+    }
+
+    function readPositionList(keepEmpty){
+      return [...document.querySelectorAll("#positionList .fleet-row")].map(row=>({
+        id:row.dataset.positionId,
+        name:row.querySelector(".position-name").value.trim(),
+        requiresVehicle:row.querySelector(".position-vehicle").checked,
+        active:true
+      })).filter(poste=>keepEmpty||poste.name)
+    }
+
+    function readFleetList(keepEmpty){
       return [...document.querySelectorAll("#fleetList .fleet-row")].map(row=>({
         id:row.dataset.unitId,
         name:row.querySelector(".fleet-name").value.trim(),
         type:row.querySelector(".fleet-type").value,
         plate:row.querySelector(".fleet-plate").value.trim(),
         active:true
-      })).filter(unit=>unit.name)
+      })).filter(unit=>keepEmpty||unit.name)
     }
 
     function readEstablishmentForm(){
@@ -3416,6 +3551,7 @@
 
       return {
         name:document.getElementById("establishmentName").value.trim(),
+        positions:readPositionList(),
         openingDays,
         midday:{
           start:document.getElementById("middayStart").value,
@@ -3698,6 +3834,7 @@
             date:slot.date,
             time:shifted?arrival:slot.time,
             name:driver.name||"Livreur",
+            position:severalPositions()?positionLabel(positionOf(slot.positionId)):"",
             vehicle:unitName||(chosen?deliveryMethodLabel(chosen):""),
             note:notes.join(" · "),
             status
@@ -3724,7 +3861,7 @@
 
           const cover=coverage.get(`${day}_${time}`);
           const shortage=cover&&cover.from&&cover.onTime<cover.planned
-            ? `<span class="kitchen-short">${cover.onTime} livreur${cover.onTime>1?"s":""} sur ${cover.planned} avant ${escapeHtml(cover.from)}</span>`
+            ? `<span class="kitchen-short">${cover.onTime} sur ${cover.planned} avant ${escapeHtml(cover.from)}</span>`
             : "";
 
           if(drivers.length===0){
@@ -3734,6 +3871,7 @@
           return `<td>${drivers.map(driver=>`
             <span class="kitchen-driver">
               <strong>${escapeHtml(driver.name)}</strong>
+              ${driver.position?`<small>${escapeHtml(driver.position)}</small>`:""}
               ${driver.vehicle?`<small>${escapeHtml(driver.vehicle)}</small>`:""}
               ${driver.note?`<small class="kitchen-note">⚠ ${escapeHtml(driver.note)}</small>`:""}
             </span>
@@ -3849,7 +3987,16 @@
       }
     }
 
+    function fillNeedPositionSelect(){
+      const liste=positions();
+      needPosition.innerHTML=liste
+        .map(poste=>`<option value="${escapeHtml(poste.id)}">${escapeHtml(poste.name)}</option>`)
+        .join("");
+      needPositionField.classList.toggle("hidden",liste.length<2)
+    }
+
     function prepareNeedsSection(){
+      fillNeedPositionSelect();
       clearMessage(needFormMessage);
       subscribeToNeedTemplates();   // charge uniquement a la 1re ouverture de l'ecran
       renderNeedTimeOptions();
@@ -3912,7 +4059,7 @@
         card.className="need-card";
         card.innerHTML=`
           <div>
-            <h3>${escapeHtml(formatDay(need.date))} à ${escapeHtml(need.time||"—")}</h3>
+            <h3>${escapeHtml(formatDay(need.date))} à ${escapeHtml(need.time||"—")}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(need.positionId)))}`:""}</h3>
             <p class="need-meta">${need.notes?escapeHtml(need.notes):"Aucune note interne"}</p>
             ${isNeedTimeAllowed(need.time)?"":`
               <p class="need-warning">Heure hors des créneaux déclarables par les livreurs.
@@ -4391,11 +4538,12 @@
         </div>
         <div class="dv-days"></div>
 
+        ${positionRequiresVehicle(positionOf(currentProfile?.position))?`
         <div class="dv-secthead">
           <h3>Mes moyens de livraison</h3>
           <p class="dv-sub">Uniquement ceux que vous pourrez réellement utiliser cette semaine.</p>
         </div>
-        <div class="dv-methods"></div>
+        <div class="dv-methods"></div>`:""}
 
         <div class="dv-savebar">
           <button class="dv-btn dv-btn-primary save-availability" type="button">
@@ -4555,15 +4703,17 @@
       });
 
       const methodsBox=wrapper.querySelector(".dv-methods");
+      const demandeVehicule=!!methodsBox;
       const methodChips=new Map();
 
       function paintMethods(){
+        if(!demandeVehicule)return;
         methodChips.forEach((chip,methodId)=>{
           chip.classList.toggle("is-on",chosenMethods.has(methodId))
         })
       }
 
-      allowedMethods.forEach(methodId=>{
+      if(demandeVehicule)allowedMethods.forEach(methodId=>{
         const chip=document.createElement("button");
         chip.type="button";
         chip.className="dv-chip";
@@ -4596,7 +4746,8 @@
 
         const hasAvailability=daysPayload.some(day=>day.middayAvailable||day.eveningAvailable);
 
-        if(hasAvailability&&deliveryMethods.length===0){
+        // Un caissier n'a aucun moyen de livraison à déclarer.
+        if(demandeVehicule&&hasAvailability&&deliveryMethods.length===0){
           driverToast("Choisissez au moins un moyen de livraison.","bad");
           return
         }
@@ -5348,7 +5499,7 @@
       // vehicleChoice appartient au livreur : il n'entre pas dans la comparaison,
       // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
-                  "userId","driverName","driverEmail","vehicleRequirement",
+                  "userId","positionId","driverName","driverEmail","vehicleRequirement",
                   "vehicleUnitId","vehicleUnitName",
                   "forced","forcedReason","forcedCode","active"];
 
@@ -5384,6 +5535,7 @@
             time:slot.time,
             needId:slot.needId||"",
             userId:driver.userId,
+            positionId:slot.positionId||"",
             driverName:driver.name||"",
             driverEmail:driver.email||"",
             deliveryMethods,
@@ -5674,7 +5826,7 @@
       {
         group:"Les livreurs",
         question:"Comment créer un compte livreur ?",
-        answer:`<p>Écran <strong>Gérer les livreurs</strong>, bouton « Ajouter un livreur ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
+        answer:`<p>Écran <strong>Gérer les employés</strong>, bouton « Ajouter un compte ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
           <p>À sa première connexion, il est obligé de le changer. Vous ne connaissez donc jamais son mot de passe définitif, et c’est voulu.</p>`
       },
       {
@@ -5685,8 +5837,17 @@
       },
       {
         group:"Les livreurs",
+        question:"Mon équipe n’est pas faite que de livreurs. Comment faire ?",
+        answer:`<p>Dans la <strong>fiche de l’établissement</strong>, déclarez vos <strong>postes de travail</strong> : livreur, caissier, cuisine, téléphoniste — les métiers de votre maison. Cochez « nécessite un véhicule » pour ceux qui en demandent un.</p>
+          <p>Chaque employé reçoit ensuite un poste sur sa fiche, et chaque besoin en vise un : « 2 livreurs et 1 caissier à 18:00 ». La proposition ne retient que les gens du bon poste, et n’exige un véhicule que là où c’est justifié — un caissier ne sera jamais écarté faute de voiture.</p>
+          <p>Ne confondez pas le poste et le rôle. Le <strong>rôle</strong> dit ce qu’on a le droit de faire dans l’application ; le <strong>poste</strong> dit ce qu’on fait dans la maison. Le patron sera administrateur et propriétaire.</p>
+          <p>Un responsable qui travaille aussi en service coche « apparaît dans les plannings » sur sa fiche. Sans cette case, il reste hors des propositions.</p>
+          <p>Tant que vous ne déclarez aucun poste, tout le monde est considéré comme livreur : rien ne change pour une maison qui n’a que des livreurs.</p>`
+      },
+      {
+        group:"Les livreurs",
         question:"Comment donner un accès responsable à quelqu’un ?",
-        answer:`<p>Écran <strong>Gérer les livreurs</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
+        answer:`<p>Écran <strong>Gérer les employés</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
           <p>Un <strong>responsable</strong> prépare et publie les plannings, gère les livreurs et les besoins. Un <strong>administrateur</strong> fait tout cela, et peut en plus modifier la fiche de l’établissement et attribuer les rôles.</p>
           <p>Les responsables sont regroupés dans leur propre liste, en haut de l’écran. Ils n’apparaissent jamais dans les propositions de planning : ce ne sont pas des livreurs.</p>
           <p>Deux sécurités : vous ne pouvez pas modifier votre propre rôle, et le dernier administrateur actif ne peut pas perdre le sien. Sans cela, on peut se verrouiller dehors en un clic.</p>`
@@ -5916,7 +6077,7 @@
 
       if(rows.length===0){
         nextServiceList.innerHTML=
-          '<div class="next-service-empty">Aucun livreur affecté sur ce service. '
+          '<div class="next-service-empty">Personne n’est affecté sur ce service. '
           +'Ouvrez l’écran Planning pour le préparer.</div>';
         nextServiceCount.innerHTML='<span class="service-chip is-bad">Personne</span>';
         return
@@ -5927,7 +6088,7 @@
       const refus=statuts.filter(st=>st==="refused").length;
       const attente=statuts.filter(st=>st==="pending").length;
 
-      const chips=[`<span class="service-chip">${rows.length} livreur${rows.length>1?"s":""}</span>`];
+      const chips=[`<span class="service-chip">${rows.length} personne${rows.length>1?"s":""}</span>`];
       if(acquis)chips.push(`<span class="service-chip is-ok">${acquis} confirmé${acquis>1?"s":""}</span>`);
       if(attente)chips.push(`<span class="service-chip is-warn">${attente} sans réponse</span>`);
       if(refus)chips.push(`<span class="service-chip is-bad">${refus} refus</span>`);
@@ -5945,7 +6106,11 @@
             <span class="service-time">${escapeHtml(row.time||"")}</span>
             <span class="service-who">
               <strong>${escapeHtml(row.driverName||"Livreur")}</strong>
-              <small>${escapeHtml([vehicule,retard].filter(Boolean).join(" · ")||"Aucun véhicule attribué")}</small>
+              <small>${escapeHtml([
+                severalPositions()?positionLabel(positionOf(row.positionId)):"",
+                vehicule,
+                retard
+              ].filter(Boolean).join(" · ")||"Aucun véhicule attribué")}</small>
             </span>
             <span class="service-right">
               <span class="confirmation-badge confirmation-${statut}">${effectiveStatusLabel(statut)}</span>
@@ -5975,7 +6140,7 @@
         nextServiceWarning.classList.remove("hidden")
       }else if(attente){
         nextServiceWarning.textContent=
-          `${attente} livreur${attente>1?"s n’ont":" n’a"} pas encore répondu. `
+          `${attente} personne${attente>1?"s n’ont":" n’a"} pas encore répondu. `
           +`Vous pouvez relancer le groupe depuis l’écran Planning.`;
         nextServiceWarning.classList.remove("hidden")
       }
@@ -6202,10 +6367,10 @@
 
         missingDriversList.appendChild(groupMessageBar(
           missingDrivers.length>1
-            ? `Un seul message pour les ${missingDrivers.length} livreurs`
+            ? `Un seul message pour les ${missingDrivers.length} personnes`
             : "Message prêt à envoyer",
           groupMessage,
-          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe d’équipe."
         ));
 
         missingDriversList.appendChild(individualLabel("Ou un message à la fois"))
@@ -6489,7 +6654,7 @@
         updateDeadlineDisplay(week,responseUserIds);
 
         if(responses.length===0){
-          planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+          planningAvailabilityContainer.innerHTML='<div class="empty-state">Personne n’a encore envoyé ses disponibilités pour cette semaine.</div>';
           refreshToggleAllLabel();
           return
         }
@@ -6576,13 +6741,21 @@
       // toute la collection users puis un document par livreur.
       await loadDriverPrivateData();
 
-      const drivers=currentDrivers
+      // Les livreurs sont planifiés d'office ; un responsable seulement
+      // s'il a coché « apparaît dans les plannings » sur sa fiche.
+      const planifiables=[
+        ...currentDrivers,
+        ...currentStaff.filter(profile=>profile.inPlanning===true)
+      ];
+
+      const drivers=planifiables
         .filter(profile=>profile.active===true)
         .map(profile=>{
           const privateData=currentDriverPrivateData.get(profile.id)||{priority:3,reliability:3,experience:3};
 
           return {
             userId:profile.id,
+            position:positionOf(profile.position),
             name:profile.name||"Livreur",
             email:profile.email||"",
             phone:profile.phone||"",
@@ -6628,7 +6801,8 @@
       const latest=service==="midi"?normalized.middayLatest:normalized.eveningLatest;
       if(latest&&need.time>latest)return {code:"earlier",text:`n’est plus disponible après ${latest}`};
 
-      if(!weeklyDeliveryMethods.length){
+      // Un caissier n'a pas à justifier d'un véhicule.
+      if(ctx.posteExigeVehicule!==false&&!weeklyDeliveryMethods.length){
         // Nuance importante : le livreur a bien répondu et il a un véhicule.
         // C'est le responsable qui a fermé ce moyen pour la semaine — en
         // hiver, par exemple, quand les scooters restent au garage.
@@ -6664,7 +6838,13 @@
         const serviceKey=`${need.date}_${service}`;
         const usedForService=assignedByDateAndService.get(serviceKey)||new Set();
 
+        // Un besoin vise un poste : les autres n'ont rien à faire dans la
+        // liste, ni comme candidats ni comme écartés.
+        const besoinPoste=positionOf(need.positionId);
+        const posteExigeVehicule=positionRequiresVehicle(besoinPoste);
+
         const evaluated=data.drivers
+          .filter(driver=>positionOf(driver.position)===besoinPoste)
           .map(driver=>{
             const availability=data.availabilities.find(item=>item.userId===driver.userId);
             const day=availability?.days?.find(item=>item.date===need.date);
@@ -6700,6 +6880,7 @@
                 availability,day,need,service,
                 declaredMethods,
                 weeklyDeliveryMethods,
+                posteExigeVehicule,
                 respectsSixDayLimit,
                 workedCount:workedDates.size,
                 alreadyUsed:usedForService.has(driver.userId)
@@ -6710,7 +6891,7 @@
         const candidates=evaluated
           .filter(candidate=>
             candidate.fits
-            && candidate.hasDeliveryMethod
+            && (!posteExigeVehicule||candidate.hasDeliveryMethod)
             && candidate.respectsSixDayLimit
             && !usedForService.has(candidate.userId)
           )
@@ -6778,6 +6959,7 @@
           excluded,
           missingVehicles,
           needId:need.id,
+          positionId:besoinPoste,
           date:need.date,
           time:need.time,
           service,
@@ -6959,10 +7141,10 @@
 
         pendingConfirmList.appendChild(groupMessageBar(
           waiting.size>1
-            ? `Un seul message pour les ${waiting.size} livreurs`
+            ? `Un seul message pour les ${waiting.size} personnes`
             : "Message prêt à envoyer",
           groupMessage,
-          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe d’équipe."
         ));
 
         pendingConfirmList.appendChild(individualLabel("Ou un message à la fois"))
@@ -7136,8 +7318,8 @@
         section.innerHTML=`
           <div class="plan-slot-header">
             <div>
-              <h3>${formatDay(slot.date)} à ${escapeHtml(slot.time)}</h3>
-              <p class="muted">${slot.quantity} livreur${slot.quantity>1?"s":""} nécessaire${slot.quantity>1?"s":""}${slot.notes?` · ${escapeHtml(slot.notes)}`:""}</p>
+              <h3>${formatDay(slot.date)} à ${escapeHtml(slot.time)}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(slot.positionId)))}`:""}</h3>
+              <p class="muted">${slot.quantity} personne${slot.quantity>1?"s":""} nécessaire${slot.quantity>1?"s":""}${slot.notes?` · ${escapeHtml(slot.notes)}`:""}</p>
             </div>
             <span class="status-badge ${slot.selected.length>=slot.quantity?"status-active":"status-inactive"}">
               ${slot.selected.length}/${slot.quantity}
@@ -7160,7 +7342,7 @@
               );
               if(!waiting.length)return "";
               return `<div class="vehicle-shortage">
-                ${waiting.length} livreur${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service :
+                ${waiting.length} personne${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service :
                 ${waiting.map(driver=>escapeHtml(driver.name)).join(", ")}.
                 Votre parc ne suffit pas, ou ils utiliseront un véhicule personnel.
               </div>`
@@ -7834,8 +8016,13 @@
       renderHelp(event.target.value)
     });
     document.getElementById("saveEstablishmentButton").addEventListener("click",saveEstablishmentConfig);
+    document.getElementById("addPosition").addEventListener("click",()=>{
+      renderPositionList([...readPositionList(true),
+        {id:newPositionId(),name:"",requiresVehicle:true,active:true}])
+    });
+
     document.getElementById("addFleetUnit").addEventListener("click",()=>{
-      renderFleetList([...readFleetList(),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
+      renderFleetList([...readFleetList(true),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
     });
     ["middayStart","middayEnd","middayStep","eveningStart","eveningEnd","eveningStep"].forEach(id=>{
       document.getElementById(id).addEventListener("change",updateSlotsPreview)
@@ -7946,7 +8133,7 @@
         }
 
         if(data.availabilities.length===0){
-          throw new Error("Aucun livreur n’a encore envoyé ses disponibilités.")
+          throw new Error("Personne n’a encore envoyé ses disponibilités.")
         }
 
         currentPlan=createProposal(data);
@@ -8314,14 +8501,19 @@
       saveNeedButton.textContent="Enregistrement…";
 
       try{
+        const positionId=positionOf(needPosition.value);
+
         const duplicateNeed=currentNeeds.find(need=>
           need.weekId===week.id
           && need.date===needDate.value
           && need.time===needTime.value
+          && positionOf(need.positionId)===positionId
         );
 
         if(duplicateNeed){
-          throw new Error("Un besoin existe déjà pour ce jour et cette heure.")
+          throw new Error(severalPositions()
+            ? `Un besoin existe déjà pour ce jour, cette heure et le poste « ${positionLabel(positionId)} ».`
+            : "Un besoin existe déjà pour ce jour et cette heure.")
         }
 
         await addDoc(collection(db,"needs"),{
@@ -8329,6 +8521,7 @@
           weekStartDate:week.startDate,
           date:needDate.value,
           time:needTime.value,
+          positionId,
           quantity:Number(needQuantity.value),
           notes:needNotes.value.trim(),
           createdAt:serverTimestamp(),
@@ -8370,6 +8563,9 @@
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
       const role=isAdminProfile()?driverRoleSelect.value:"driver";
+      const position=positionOf(driverPositionSelect.value);
+      // Un livreur est toujours planifié ; un responsable seulement s'il le demande.
+      const inPlanning=role==="driver"?true:driverInPlanning.checked;
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -8384,7 +8580,7 @@
 
           await setDoc(doc(db,"users",userId),{
             name,email,phone,vehicle,active,
-            role,
+            role,position,inPlanning,
             mustChangePassword:true,
             createdAt:serverTimestamp(),
             createdBy:auth.currentUser.uid,
@@ -8394,7 +8590,7 @@
           await signOut(driverCreatorAuth)
         }else{
           const champs={
-            name,phone,vehicle,active,
+            name,phone,vehicle,active,position,inPlanning,
             updatedAt:serverTimestamp(),
             updatedBy:auth.currentUser.uid
           };
@@ -8447,7 +8643,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-12-c · ESSAI";
+    const APP_VERSION = "2026-11-12-d · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8549,6 +8745,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-12-c. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-12-d. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
