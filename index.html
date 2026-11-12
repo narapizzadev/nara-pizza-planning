@@ -30,7 +30,11 @@
     h1,h2,h3,p{margin-top:0}h1{margin-bottom:6px;font-size:30px}h2{margin-bottom:8px;font-size:26px}h3{margin-bottom:6px;font-size:18px}
     .subtitle,.muted{color:var(--muted);line-height:1.45}.field{margin-bottom:18px}label{display:block;margin-bottom:7px;font-weight:700}
     input,textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;background:var(--white);color:var(--text)}
-    textarea{min-height:96px;resize:vertical}input:focus,textarea:focus{outline:3px solid rgba(242,140,69,.2);border-color:var(--orange)}
+    /* Les listes déroulantes n'avaient aucun style : elles paraissaient
+       rabougries à côté des champs de saisie. Même boîte, même hauteur. */
+    select{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;
+      background:var(--white);color:var(--text);font:inherit;line-height:1.3}
+    textarea{min-height:96px;resize:vertical}input:focus,textarea:focus,select:focus{outline:3px solid rgba(242,140,69,.2);border-color:var(--orange)}
     .checkbox-row{display:flex;gap:10px;align-items:flex-start;margin:8px 0 18px}.checkbox-row input{width:auto;margin-top:3px}
     .delivery-methods-box{margin:16px 0;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fafafa}
     .delivery-methods-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
@@ -283,6 +287,34 @@
     }
     .layout{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 48px}.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}
     .profile-card{background:var(--soft);border-radius:14px;padding:14px 16px;min-width:230px}.profile-card p{margin-bottom:4px}.profile-card small{color:var(--muted)}
+    .next-service{margin-bottom:22px;border-color:#f0cdaa;background:linear-gradient(180deg,#fffaf5,#fff)}
+    .next-service .panel-header{margin-bottom:12px;align-items:flex-start}
+    .next-service h3{font-size:21px}
+    .next-service-count{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .service-chip{padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;
+      border:1px solid var(--border);background:#fff;color:var(--muted);white-space:nowrap}
+    .service-chip.is-ok{background:#e8f8ee;border-color:#bfe8cf;color:#0f6b4a}
+    .service-chip.is-warn{background:#fff6e6;border-color:#f0d7a8;color:#8a5600}
+    .service-chip.is-bad{background:#fdecec;border-color:#f3c4c4;color:var(--error)}
+    .next-service-tools{display:flex;justify-content:flex-end;margin:-4px 0 10px}
+    .next-service-tools .button{padding:6px 12px;font-size:13px}
+    .next-service-list{display:grid;gap:9px}
+    .service-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;
+      padding:11px 13px;border:1px solid var(--border);border-radius:11px;background:#fff}
+    .service-time{font-weight:700;font-size:16px}
+    .service-who strong{display:block}
+    .service-who small{display:block;color:var(--muted);margin-top:2px}
+    .service-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .service-call{display:inline-flex;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;
+      text-decoration:none;background:#e9f1fd;border:1px solid #c6dcf7;color:#1a4f8a}
+    .service-warn{margin-top:12px;padding:11px 13px;border:1px solid #f0d7a8;border-radius:11px;
+      background:#fff8ec;color:#8a5600;font-weight:600;font-size:13px}
+    .next-service-empty{padding:18px;border:1px dashed var(--border);border-radius:12px;
+      text-align:center;color:var(--muted);background:#fafafa}
+    @media(max-width:640px){
+      .service-row{grid-template-columns:52px minmax(0,1fr);row-gap:8px}
+      .service-right{grid-column:1 / -1;justify-content:flex-start}
+    }
     .dashboard-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
     .dashboard-button{width:100%;display:flex;align-items:flex-start;gap:14px;text-align:left;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:14px;padding:18px}
     .dashboard-button:hover{border-color:var(--orange);background:#fff8f2}.dashboard-icon{font-size:26px;line-height:1;flex:0 0 auto}
@@ -311,6 +343,18 @@
     .driver-overview{min-width:0}
     .driver-score-panel{display:grid;gap:10px}
     .driver-score-row{display:flex;gap:7px;flex-wrap:wrap}
+    .role-badge{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;
+      border:1px solid var(--border);background:#fff;color:var(--muted)}
+    .role-badge.is-admin{background:#fdecec;border-color:#f3c4c4;color:var(--error)}
+    .role-badge.is-manager{background:#e9f1fd;border-color:#c6dcf7;color:#1a4f8a}
+    .staff-list{display:grid;gap:12px;margin-bottom:8px}
+    .staff-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:15px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .staff-card h3{margin-bottom:3px}
+    .staff-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+    .staff-note{margin-top:4px;font-size:12px;color:var(--muted)}
+    .driver-form-wrap.is-staff .driver-only{display:none}
+    @media(max-width:560px){.staff-card{grid-template-columns:1fr}.staff-actions{justify-content:flex-start}}
     .driver-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .driver-stat-card{padding:11px;border:1px solid var(--border);border-radius:10px;background:#fafafa}
     .driver-stat-card strong,.driver-stat-card small{display:block}
@@ -384,6 +428,19 @@
       .faq-question span:first-child,.faq-search,.back-row{display:none}
     }
 
+    .garage-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;
+      padding:16px;border:1px solid var(--border);border-radius:14px;background:#fffaf6;margin-bottom:18px}
+    .garage-form .field{margin-bottom:0}
+    .garage-form .form-actions{grid-column:1 / -1;margin-top:4px}
+    @media(max-width:820px){.garage-form{grid-template-columns:1fr}}
+    .garage-list{display:grid;gap:10px}
+    .garage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .garage-row.is-now{border-color:#f0d7a8;background:#fff8ec}
+    .garage-row strong{display:block}
+    .garage-row small{display:block;color:var(--muted);margin-top:3px}
+    .garage-when{font-weight:700;color:#8a5600}
+    @media(max-width:560px){.garage-row{grid-template-columns:1fr}}
     .fleet-list{display:grid;gap:10px}
     .fleet-row{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(150px,1fr) minmax(110px,0.8fr) auto;
       gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;background:#fff}
@@ -443,6 +500,15 @@
     .relance-link.sms{background:#e9f1fd;border-color:#c6dcf7;color:#1a4f8a}
     .relance-link.mail{background:#fff1f0;border-color:#f4cdc9;color:var(--error)}
     .relance-none{font-size:13px;color:var(--muted)}
+    .relance-group{margin-top:12px;padding:13px 14px;border:1px solid #bfe8cf;border-radius:12px;background:#f3fbf6}
+    .relance-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .relance-group-title{font-weight:700;color:#0f6b4a}
+    .relance-group-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .relance-group-text{margin-top:10px;padding:11px 12px;border:1px solid #d7ece0;border-radius:9px;
+      background:#fff;color:#333;font-size:13px;line-height:1.5;white-space:pre-wrap}
+    .relance-group-note{margin-top:8px;font-size:12px;color:var(--muted)}
+    .relance-individual{margin-top:14px;font-size:12px;font-weight:700;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.04em}
     .missing-driver-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .missing-driver-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 10px;border-radius:999px;background:#fff1f0;color:var(--error);font-weight:700;text-decoration:none}
     @media(max-width:760px){.deadline-dashboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -1073,6 +1139,21 @@
           <div class="profile-card"><p>Bonjour <strong id="profileName">—</strong></p><small><span id="profileEmail">—</span> · <span id="profileRole">—</span></small></div>
         </div>
 
+        <section id="nextServicePanel" class="panel next-service hidden">
+          <div class="panel-header">
+            <div>
+              <h3 id="nextServiceTitle">Prochain service</h3>
+              <p class="muted" id="nextServiceSubtitle">—</p>
+            </div>
+            <div class="next-service-count" id="nextServiceCount"></div>
+          </div>
+          <div class="next-service-tools">
+            <button id="refreshNextServiceButton" class="button button-ghost" type="button">Actualiser</button>
+          </div>
+          <div id="nextServiceList" class="next-service-list"></div>
+          <div id="nextServiceWarning" class="service-warn hidden"></div>
+        </section>
+
         <div class="dashboard-grid">
           <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités des livreurs</small></span></button>
           <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les livreurs</strong><small>Consulter les profils et préparer les comptes</small></span></button>
@@ -1081,6 +1162,7 @@
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
           <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
           <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
+          <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
           <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
         </div>
 
@@ -1139,7 +1221,21 @@
               <h2>Gérer les livreurs</h2>
               <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
             </div>
-            <button id="openDriverForm" class="button button-primary" type="button">Ajouter un livreur</button>
+            <button id="openDriverForm" class="button button-primary" type="button">Ajouter un compte</button>
+          </div>
+
+          <div id="staffSection" class="hidden">
+            <div class="panel-header" style="margin-bottom:12px">
+              <div>
+                <h3>Responsables</h3>
+                <p class="muted">Les comptes qui préparent les plannings. Ils n’apparaissent pas dans les propositions.</p>
+              </div>
+            </div>
+            <div id="staffList" class="staff-list"></div>
+          </div>
+
+          <div id="driversHeading" class="panel-header hidden" style="margin-bottom:12px">
+            <div><h3>Livreurs</h3></div>
           </div>
 
           <div id="driverList" class="driver-list">
@@ -1182,22 +1278,32 @@
                   <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
                 </div>
 
+                <div id="driverRoleField" class="field hidden">
+                  <label for="driverRole">Rôle dans l’application</label>
+                  <select id="driverRole">
+                    <option value="driver">Livreur — envoie ses disponibilités</option>
+                    <option value="manager">Responsable — prépare et publie les plannings</option>
+                    <option value="admin">Administrateur — responsable, plus la fiche et les rôles</option>
+                  </select>
+                  <p class="form-note" id="driverRoleNote">Seul un administrateur peut attribuer un rôle.</p>
+                </div>
+
                 <div id="driverPasswordField" class="field">
                   <label for="driverPassword">Mot de passe provisoire</label>
                   <input id="driverPassword" type="password" minlength="6" autocomplete="new-password">
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverPriority">Priorité interne (1 à 5)</label>
                   <input id="driverPriority" type="number" min="1" max="5" value="3" required>
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverReliability">Fiabilité (1 à 5)</label>
                   <input id="driverReliability" type="number" min="1" max="5" value="3" required>
                 </div>
 
-                <div class="field">
+                <div class="field driver-only">
                   <label for="driverExperience">Expérience (1 à 5)</label>
                   <input id="driverExperience" type="number" min="1" max="5" value="3" required>
                 </div>
@@ -1418,6 +1524,46 @@
         </section>
       </section>
 
+      <section id="garageSection" class="section-view">
+        <div class="back-row">
+          <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Véhicules indisponibles</h2>
+              <p class="muted">Un véhicule déclaré ici n’est plus attribué pendant la période indiquée. Laissez la date de fin vide si vous ne la connaissez pas encore.</p>
+            </div>
+          </div>
+
+          <form id="garageForm" class="garage-form">
+            <div class="field">
+              <label for="garageUnit">Véhicule</label>
+              <select id="garageUnit" required></select>
+            </div>
+            <div class="field">
+              <label for="garageFrom">Indisponible à partir du</label>
+              <input id="garageFrom" type="date" required>
+            </div>
+            <div class="field">
+              <label for="garageTo">Jusqu’au (facultatif)</label>
+              <input id="garageTo" type="date">
+            </div>
+            <div class="field">
+              <label for="garageReason">Motif</label>
+              <input id="garageReason" type="text" maxlength="200" placeholder="Révision, pare-brise, panne…">
+            </div>
+            <div class="form-actions">
+              <button id="saveGarageButton" class="button button-primary" type="submit">Déclarer l’indisponibilité</button>
+            </div>
+          </form>
+
+          <div id="garageMessage" class="message"></div>
+          <div id="garageList" class="garage-list"></div>
+        </section>
+      </section>
+
       <section id="helpSection" class="section-view">
         <div class="back-row">
           <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
@@ -1449,7 +1595,7 @@
           <div class="panel-header">
             <div>
               <h2>Règlement interne des livreurs</h2>
-              <p class="muted">Version active : 1.0. Chaque nouvelle version devra être acceptée à nouveau.</p>
+              <p class="muted">Version active : 1.1. Chaque nouvelle version devra être acceptée à nouveau.</p>
             </div>
             <button class="button button-secondary open-regulation-modal" type="button">Lire le règlement</button>
           </div>
@@ -1576,13 +1722,13 @@
 
             <div id="missingDriversContainer" class="missing-drivers hidden">
               <strong>Disponibilités manquantes</strong>
-              <p class="muted">Un appui prépare le message, il ne part que si vous l’envoyez.</p>
+              <p class="muted">Un seul message pour tout le groupe, ou un message par livreur. Rien ne part sans votre geste.</p>
               <div id="missingDriversList" class="relance-list"></div>
             </div>
 
             <div id="pendingConfirmContainer" class="missing-drivers hidden">
               <strong>Horaires non confirmés</strong>
-              <p class="muted">Ces livreurs ont reçu leurs horaires mais n’ont pas encore répondu.</p>
+              <p class="muted">Ces livreurs ont reçu leurs horaires mais n’ont pas encore répondu. Relancez le groupe en un geste.</p>
               <div id="pendingConfirmList" class="relance-list"></div>
             </div>
 
@@ -1643,7 +1789,7 @@
     <section id="driverRegulationGate" class="dv-body hidden">
       <div class="dv-secthead">
         <h2>Règlement interne des livreurs</h2>
-        <p class="dv-sub">Version 1.0 — à lire et accepter une seule fois, avant d’envoyer vos disponibilités.</p>
+        <p class="dv-sub">Version 1.1 — à lire et accepter une seule fois, avant d’envoyer vos disponibilités.</p>
       </div>
 
       <div class="dv-action is-send" style="margin-bottom:6px">
@@ -1659,7 +1805,29 @@
         <ul>
           <li>Une disponibilité n’est pas encore un horaire confirmé.</li>
           <li>Le planning publié devient contraignant.</li>
+          <li>Après publication, vous avez 12 heures pour signaler un problème sur un horaire.</li>
+          <li>Sans réponse dans ce délai, les horaires correspondant à vos disponibilités sont considérés comme acceptés.</li>
+          <li>Un horaire placé hors de vos disponibilités demande toujours votre accord explicite.</li>
           <li>Tout échange ou remplacement doit être validé par le manager.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Géolocalisation pendant le service</h3>
+        <ul>
+          <li>Pendant votre service, l’application de livraison transmet votre position à la pizzeria et au client de la commande en cours.</li>
+          <li>Elle sert à informer le client, à répartir les commandes et à vous porter secours. Jamais à évaluer votre conduite ni vos pauses.</li>
+          <li>Hors service, aucune position n’est transmise : vous fermez l’application en terminant.</li>
+          <li>Les positions sont effacées après 30 jours.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Votre téléphone</h3>
+        <ul>
+          <li>Vous utilisez votre téléphone pour le travail : une indemnité mensuelle vous est versée pour le forfait et l’usure.</li>
+          <li>Si votre appareil ne convient pas, ou si vous préférez ne pas installer les applications dessus, dites-le : un téléphone de service vous sera remis.</li>
+          <li>Le téléphone ne se manipule jamais en mouvement.</li>
         </ul>
       </article>
 
@@ -1784,7 +1952,7 @@
         <article class="dv-rule">
           <h3>Règlement interne</h3>
           <ul>
-            <li>Version 1.0 — résumé opérationnel et procédures rapides.</li>
+            <li>Version 1.1 — résumé opérationnel et procédures rapides.</li>
             <li>Retard, client absent, adresse incorrecte, panne, accident, agression, fin de service.</li>
           </ul>
           <div style="margin-top:12px">
@@ -1869,7 +2037,7 @@
       <div class="regulation-modal-header">
         <div>
           <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
-          <p class="muted">Version 1.0 — résumé opérationnel consultable à tout moment.</p>
+          <p class="muted">Version 1.1 — résumé opérationnel consultable à tout moment.</p>
         </div>
         <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
       </div>
@@ -1877,6 +2045,8 @@
       <section class="regulation-section">
         <h3>1. Disponibilités, planning et affectations</h3>
         <p>Le livreur déclare chaque semaine ses disponibilités et ses moyens de livraison. Une disponibilité n’est pas encore un horaire confirmé. Le planning publié devient contraignant. Les échanges de service et les remplacements doivent être approuvés par le manager.</p>
+        <p>Lorsque le planning d’une semaine est publié, le livreur dispose de <strong>douze heures</strong> pour signaler un problème sur l’un de ses horaires, depuis l’application ou auprès du responsable. Passé ce délai, les horaires qu’il n’a pas contestés sont réputés acceptés et deviennent contraignants, au même titre que ceux qu’il a confirmés explicitement.</p>
+        <p>Cette règle ne s’applique qu’aux horaires compris dans les disponibilités que le livreur a lui-même déclarées, y compris lorsque son heure d’arrivée réelle a été reprise telle qu’il l’avait indiquée. Un horaire placé en dehors de ses disponibilités déclarées exige au contraire une réponse explicite de sa part : le silence ne vaut jamais accord dans ce cas. Si le planning est rouvert et republié après modification, un nouveau délai de douze heures recommence.</p>
       </section>
 
       <section class="regulation-section">
@@ -1902,6 +2072,22 @@
       <section class="regulation-section">
         <h3>6. Comportement et incidents</h3>
         <p>Harcèlement, discrimination, menaces, violence et publication de données internes sont interdits. Tout accident, chute, dommage, menace, perte de clé, vol, contravention ou incident significatif doit être signalé avant la fin du service, sauf urgence médicale.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>7. Géolocalisation pendant le service</h3>
+        <p>Nara Pizza utilise une application de suivi des livraisons qui transmet la position du livreur à la pizzeria et au client pendant la commande en cours. Elle sert à informer le client de l’avancement de sa livraison, à répartir les commandes entre les livreurs disponibles, et à porter assistance rapidement en cas de panne, d’accident ou de difficulté sur la route.</p>
+        <p>La position n’est transmise que pendant le temps de travail, lorsque l’application est ouverte. Le livreur l’ouvre en prenant son service et la ferme en le terminant. En dehors de ces périodes, aucune position n’est collectée ni transmise. La pizzeria voit la position des livreurs en service ; le client voit celle du livreur qui lui apporte sa commande, et uniquement pendant cette livraison.</p>
+        <p>Les positions sont conservées <strong>trente jours</strong>, puis supprimées. Ce délai correspond à celui pendant lequel un client peut contester une livraison. Aucun historique des déplacements n’est constitué au-delà.</p>
+        <p>Ces données ne sont utilisées ni pour évaluer le comportement du livreur, ni pour mesurer sa vitesse, ni pour contrôler ses temps de pause, ni pour fonder un avertissement ou une sanction. Le droit suisse interdit les systèmes destinés à surveiller le comportement des travailleurs à leur poste de travail (art. 26 de l’ordonnance 3 relative à la loi sur le travail).</p>
+        <p>Le livreur garde l’application ouverte et la localisation active pendant toute la durée de son service, et signale immédiatement tout dysfonctionnement qui empêcherait la transmission. Il peut demander à consulter les données qui le concernent, en demander la rectification si elles sont inexactes, et poser toute question sur leur traitement au responsable, qui doit lui répondre.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>8. Téléphone personnel et indemnité</h3>
+        <p>Le livreur utilise son propre téléphone pour l’application de suivi des livraisons et pour l’application de planning. C’est précisément pour cette raison que le suivi ne fonctionne que pendant le service : en dehors, le téléphone redevient entièrement privé.</p>
+        <p>Nara Pizza verse à ce titre une indemnité mensuelle, destinée à couvrir l’abonnement de données et l’usure de l’appareil. Elle est due pour tout mois comportant au moins un service. Les frais imposés par l’exécution du travail sont à la charge de l’employeur ; aucun accord ne peut en mettre tout ou partie à la charge du livreur (art. 327a al. 3 du Code des obligations).</p>
+        <p>Le livreur dont le téléphone ne permet pas de faire fonctionner les applications, ou qui ne souhaite pas les installer sur son appareil personnel, le signale au responsable. Un téléphone de service lui est alors remis pour la durée de ses services.</p>
       </section>
 
       <section class="regulation-section">
@@ -2026,7 +2212,7 @@
     const regulationGateMessage = document.getElementById("regulationGateMessage");
     const regulationAcceptanceList = document.getElementById("regulationAcceptanceList");
     let deferredInstallPrompt = null;
-    const REGULATION_VERSION = "1.0";
+    const REGULATION_VERSION = "1.1";
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
@@ -2036,7 +2222,8 @@
       kitchen: document.getElementById("kitchenSection"),
       regulationAdmin: document.getElementById("regulationAdminSection"),
       establishment: document.getElementById("establishmentSection"),
-      help: document.getElementById("helpSection")
+      help: document.getElementById("helpSection"),
+      garage: document.getElementById("garageSection")
     };
 
     const weekForm = document.getElementById("weekForm");
@@ -2059,6 +2246,12 @@
     let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
+    const driverRoleField = document.getElementById("driverRoleField");
+    const driverRoleSelect = document.getElementById("driverRole");
+    const driverRoleNote = document.getElementById("driverRoleNote");
+    const staffSection = document.getElementById("staffSection");
+    const staffList = document.getElementById("staffList");
+    const driversHeading = document.getElementById("driversHeading");
     const driverFormWrap = document.getElementById("driverFormWrap");
     const driverForm = document.getElementById("driverForm");
     const driverFormTitle = document.getElementById("driverFormTitle");
@@ -2127,6 +2320,16 @@
     const reopenPlanButton = document.getElementById("reopenPlanButton");
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
+    const garageForm = document.getElementById("garageForm");
+    const garageList = document.getElementById("garageList");
+    const garageMessage = document.getElementById("garageMessage");
+    const saveGarageButton = document.getElementById("saveGarageButton");
+    const nextServicePanel = document.getElementById("nextServicePanel");
+    const nextServiceTitle = document.getElementById("nextServiceTitle");
+    const nextServiceSubtitle = document.getElementById("nextServiceSubtitle");
+    const nextServiceCount = document.getElementById("nextServiceCount");
+    const nextServiceList = document.getElementById("nextServiceList");
+    const nextServiceWarning = document.getElementById("nextServiceWarning");
     const planningAvailabilityContainer = document.getElementById("planningAvailabilityContainer");
     const toggleAllAvailabilities = document.getElementById("toggleAllAvailabilities");
     const deadlineCountdown = document.getElementById("deadlineCountdown");
@@ -2198,6 +2401,7 @@
     let currentNeedTemplates = [];
     let selectedNeedTemplateId = "";
     let currentDrivers = [];
+    let currentStaff = [];
     let currentDriverPrivateData = new Map();
     let currentManagerAssignments = [];
     let planningDeadlineTimer = null;
@@ -2312,6 +2516,35 @@
 
     function fleetUnitsOfType(type){
       return fleetUnits().filter(unit=>unit.type===type)
+    }
+
+    /* ===================================================================
+       INDISPONIBILITÉS DU PARC
+       Le parc décrit ce que possède l'établissement ; cette liste décrit
+       ses aléas. Une entrée sans date de fin vaut « indisponible jusqu'à
+       nouvel ordre » : c'est le cas le plus fréquent au garage.
+       =================================================================== */
+    let fleetUnavailability = [];
+
+    function isUnitAvailableOn(unitId,date){
+      if(!unitId||!date)return true;
+      return !fleetUnavailability.some(entry=>
+        entry.unitId===unitId
+        && entry.from<=date
+        && (!entry.to||entry.to>=date)
+      )
+    }
+
+    function unavailabilityFor(unitId,date){
+      return fleetUnavailability.find(entry=>
+        entry.unitId===unitId
+        && entry.from<=date
+        && (!entry.to||entry.to>=date)
+      )||null
+    }
+
+    function availableUnitsOfType(type,date){
+      return fleetUnitsOfType(type).filter(unit=>isUnitAvailableOn(unit.id,date))
     }
 
     function fleetUnitById(id){
@@ -2482,6 +2715,8 @@
       if(name==="regulationAdmin")loadRegulationAcceptances();
       if(name==="establishment")prepareEstablishmentSection();
       if(name==="help")prepareHelpSection();
+      if(name==="garage")prepareGarageSection();
+      if(name==="dashboard")refreshNextService();
       window.scrollTo({top:0,behavior:"smooth"})
     }
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
@@ -2738,9 +2973,39 @@
       document.getElementById("driverEmail").readOnly=false;
       document.getElementById("driverPassword").required=true;
       driverPasswordField.classList.remove("hidden");
+
+      // Le rôle ne se choisit que si l'on a soi-même le droit de l'attribuer.
+      driverRoleSelect.value="driver";
+      driverRoleSelect.disabled=false;
+      driverRoleField.classList.toggle("hidden",!isAdminProfile());
+      driverRoleNote.textContent="Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
+
       driverFormTitle.textContent="Ajouter un livreur";
       saveDriverButton.textContent="Créer le livreur";
+      applyRoleToForm();
       clearMessage(driverFormMessage)
+    }
+
+    /* Un responsable n'a ni priorité, ni fiabilité, ni expérience : ces
+       notes ne servent qu'au classement des livreurs. */
+    function applyRoleToForm(){
+      const estLivreur=driverRoleSelect.value==="driver";
+      driverFormWrap.classList.toggle("is-staff",!estLivreur);
+      ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
+        document.getElementById(id).required=estLivreur
+      });
+      const creations={driver:"Créer le livreur",manager:"Créer le responsable",
+                      admin:"Créer l’administrateur"};
+      saveDriverButton.textContent=document.getElementById("driverId").value
+        ? "Enregistrer les modifications"
+        : (creations[driverRoleSelect.value]||"Créer le compte");
+
+      // Le titre du formulaire dit lui aussi ce qu'on est en train de créer.
+      if(!document.getElementById("driverId").value){
+        const titres={driver:"Ajouter un livreur",manager:"Ajouter un responsable",
+                      admin:"Ajouter un administrateur"};
+        driverFormTitle.textContent=titres[driverRoleSelect.value]||"Ajouter un compte"
+      }
     }
 
     function openNewDriverForm(){
@@ -2761,6 +3026,19 @@
       driverPasswordField.classList.add("hidden");
       document.getElementById("driverPassword").required=false;
 
+      const role=profile.role||"driver";
+      driverRoleSelect.value=role;
+      driverRoleField.classList.toggle("hidden",!isAdminProfile());
+
+      const soiMeme=userId===auth.currentUser?.uid;
+      const dernierAdmin=userId===lastActiveAdminId();
+      driverRoleSelect.disabled=soiMeme||dernierAdmin;
+      driverRoleNote.textContent=soiMeme
+        ? "C’est votre propre compte : votre rôle ne peut pas être modifié ici."
+        : dernierAdmin
+          ? "Seul administrateur actif : son rôle ne peut pas être retiré."
+          : "Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
+
       try{
         const privateSnap=await getDoc(doc(db,"driverPrivate",userId));
         if(privateSnap.exists()){
@@ -2775,7 +3053,10 @@
         showMessage(driverFormMessage,`Impossible de charger la fiche confidentielle : ${error.code||error.message}`,"error")
       }
 
-      driverFormTitle.textContent="Modifier le livreur";
+      applyRoleToForm();
+      driverFormTitle.textContent=(profile.role&&profile.role!=="driver")
+        ? "Modifier le responsable"
+        : "Modifier le livreur";
       saveDriverButton.textContent="Enregistrer les modifications";
       driverFormWrap.classList.remove("hidden");
       driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
@@ -2849,6 +3130,8 @@
         loadPlanningAvailabilities(planningWeekSelect.value)
       }
 
+      renderStaff();
+
       if(drivers.length===0){
         driverList.innerHTML='<div class="empty-state">Aucun livreur n’a encore été ajouté.</div>';
         return
@@ -2909,6 +3192,72 @@
 
         card.querySelector(".edit-driver").addEventListener("click",()=>openEditDriverForm(driver.id,driver));
         driverList.appendChild(card)
+      })
+    }
+
+    const ROLE_LABELS = { driver:"Livreur", manager:"Responsable", admin:"Administrateur" };
+
+    function isAdminProfile(){
+      return currentProfile?.role==="admin"
+    }
+
+    function roleBadge(role){
+      const classe=role==="admin"?"is-admin":role==="manager"?"is-manager":"";
+      return `<span class="role-badge ${classe}">${escapeHtml(ROLE_LABELS[role]||role||"—")}</span>`
+    }
+
+    /* On ne doit jamais pouvoir se retirer soi-même la main, ni laisser
+       l'établissement sans aucun administrateur. */
+    function lastActiveAdminId(){
+      const admins=currentStaff.filter(item=>item.role==="admin"&&item.active===true);
+      return admins.length===1?admins[0].id:null
+    }
+
+    function renderStaff(){
+      if(!staffSection)return;
+
+      const ouvrir=document.getElementById("openDriverForm");
+      if(ouvrir){
+        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un livreur"
+      }
+
+      const visible=isAdminProfile();
+      staffSection.classList.toggle("hidden",!visible||currentStaff.length===0);
+      driversHeading.classList.toggle("hidden",!visible||currentStaff.length===0);
+      if(!visible||currentStaff.length===0)return;
+
+      const liste=currentStaff
+        .slice()
+        .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+
+      staffList.innerHTML="";
+
+      liste.forEach(membre=>{
+        const soiMeme=membre.id===auth.currentUser?.uid;
+        const dernierAdmin=membre.id===lastActiveAdminId();
+        const card=document.createElement("article");
+        card.className="staff-card";
+
+        card.innerHTML=`
+          <div>
+            <h3>${escapeHtml(membre.name||"Responsable")}</h3>
+            <p class="driver-meta">${escapeHtml(membre.email||"")}</p>
+            <div class="staff-note">
+              ${soiMeme?"C’est vous. Votre propre rôle ne peut pas être modifié ici."
+                : dernierAdmin?"Seul administrateur actif : son rôle ne peut pas être retiré."
+                : "Ne figure pas dans les propositions de planning."}
+            </div>
+          </div>
+          <div class="staff-actions">
+            ${roleBadge(membre.role)}
+            <span class="status-badge ${membre.active===true?"status-active":"status-inactive"}">${membre.active===true?"Actif":"Désactivé"}</span>
+            ${soiMeme||dernierAdmin?"":'<button class="button button-ghost edit-staff" type="button">Modifier</button>'}
+          </div>
+        `;
+
+        const bouton=card.querySelector(".edit-staff");
+        if(bouton)bouton.addEventListener("click",()=>openEditDriverForm(membre.id,membre));
+        staffList.appendChild(card)
       })
     }
 
@@ -3152,15 +3501,22 @@
       unsubscribeDrivers=onSnapshot(
         collection(db,"users"),
         snapshot=>{
+          // Les livreurs alimentent les plannings ; les responsables ne
+          // doivent jamais s'y retrouver. On sépare les deux listes dès la
+          // lecture, pour qu'aucun écran ne puisse les confondre.
           currentDrivers=[];
+          currentStaff=[];
           snapshot.forEach(docSnap=>{
             const data=docSnap.data();
-            if(data.role==="driver")currentDrivers.push({id:docSnap.id,...data})
+            const entry={id:docSnap.id,...data};
+            if(data.role==="driver")currentDrivers.push(entry);
+            else if(data.role==="manager"||data.role==="admin")currentStaff.push(entry)
           });
 
           // Aucune relecture des affectations ici : elle avait lieu a chaque
           // modification d'un livreur et coutait toute la collection.
-          renderDrivers()
+          renderDrivers();
+          repaintNextService()
         },
         error=>{
           console.error(error);
@@ -5061,7 +5417,7 @@
       });
 
       const written=await commitOperations(operations);
-      if(written)driverStatsLoadedAt=0;
+      if(written){driverStatsLoadedAt=0;nextServiceLoadedAt=0}
       return written
     }
 
@@ -5244,6 +5600,15 @@
       },
       {
         group:"Les véhicules",
+        question:"Un véhicule est au garage. Comment le retirer du planning ?",
+        answer:`<p>Tableau de bord, bouton <strong>Véhicules indisponibles</strong>. Vous choisissez le véhicule, la date à partir de laquelle il ne roule plus, et le motif. La date de fin est facultative : laissez-la vide tant que vous ne savez pas quand il revient, c’est le cas le plus courant.</p>
+          <p>Pendant cette période, il n’est plus attribué automatiquement et disparaît des listes de choix. Le tableau de bord le signale sur le service du jour, pour que personne ne cherche une clé qui n’est pas là.</p>
+          <p>S’il figure déjà sur un planning publié, l’application vous prévient et vous liste les horaires concernés — mais elle ne change rien d’elle-même : vos livreurs ont déjà lu ces horaires, c’est à vous de leur attribuer un autre véhicule.</p>
+          <p>Au retour du véhicule, bouton <strong>Le véhicule est revenu</strong> : il redevient attribuable aussitôt.</p>
+          <p>Ne confondez pas avec la case <em>actif</em> de la fiche, qui sert à retirer définitivement un véhicule du parc, par exemple à la revente.</p>`
+      },
+      {
+        group:"Les véhicules",
         question:"Un bandeau rouge dit qu’un livreur n’a pas de véhicule. Pourquoi ?",
         answer:`<p>Parce qu’il attend un véhicule de l’établissement et qu’aucun exemplaire du bon type n’est libre sur ce service. Deux causes possibles.</p>
           <p>Soit votre parc est plus petit que le nombre de livreurs sur ce créneau : il faut en retirer un, ou accepter qu’il vienne avec son propre véhicule.</p>
@@ -5309,6 +5674,14 @@
         question:"Un livreur a oublié son mot de passe.",
         answer:`<p>Il se débrouille seul : sur l’écran de connexion, « Mot de passe oublié » lui envoie un lien par e-mail. Vous n’avez rien à faire.</p>
           <p>Le message affiché est le même que l’adresse existe ou non — c’est une précaution, pour ne pas révéler qui a un compte.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Comment donner un accès responsable à quelqu’un ?",
+        answer:`<p>Écran <strong>Gérer les livreurs</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
+          <p>Un <strong>responsable</strong> prépare et publie les plannings, gère les livreurs et les besoins. Un <strong>administrateur</strong> fait tout cela, et peut en plus modifier la fiche de l’établissement et attribuer les rôles.</p>
+          <p>Les responsables sont regroupés dans leur propre liste, en haut de l’écran. Ils n’apparaissent jamais dans les propositions de planning : ce ne sont pas des livreurs.</p>
+          <p>Deux sécurités : vous ne pouvez pas modifier votre propre rôle, et le dernier administrateur actif ne peut pas perdre le sien. Sans cela, on peut se verrouiller dehors en un clic.</p>`
       },
       {
         group:"Les livreurs",
@@ -5428,6 +5801,294 @@
       })
     }
 
+    /* ===================================================================
+       LE PROCHAIN SERVICE
+       Un responsable qui ouvre l'application à 17 h veut savoir une seule
+       chose : qui arrive ce soir, à quelle heure, avec quelle voiture.
+       Une seule lecture Firestore, pour un seul jour, mise en cache.
+       =================================================================== */
+    let nextServiceLoadedAt = 0;
+    let nextServiceKey = "";
+    let nextServiceTarget = null;
+    let nextServiceRows = [];
+
+    /* Un service reste « en cours » trois heures après la dernière arrivée :
+       c'est la durée d'un service de livraison. */
+    const SERVICE_TAIL_MINUTES = 180;
+
+    function serviceEndMinutes(service){
+      const plage=service==="midi"?establishmentConfig.midday:establishmentConfig.evening;
+      return minutesOf(plage?.end||(service==="midi"?"12:00":"19:00"))+SERVICE_TAIL_MINUTES
+    }
+
+    /* Le premier service encore devant nous, dans les sept jours. */
+    function findNextService(){
+      const now=new Date();
+      const nowMinutes=now.getHours()*60+now.getMinutes();
+
+      for(let offset=0;offset<7;offset++){
+        const date=shiftedIsoDate(offset);
+        for(const service of ["midi","soir"]){
+          if(!isServiceOpen(date,service))continue;
+          if(offset===0&&nowMinutes>=serviceEndMinutes(service))continue;
+          return {date,service}
+        }
+      }
+      return null
+    }
+
+    function serviceTitle(date,service){
+      const quand=service==="midi"?"midi":"soir";
+      if(date===shiftedIsoDate(0))return service==="midi"?"Aujourd’hui, service de midi":"Ce soir";
+      if(date===shiftedIsoDate(1))return service==="midi"?"Demain midi":"Demain soir";
+      const jour=new Intl.DateTimeFormat("fr-CH",{weekday:"long"}).format(new Date(`${date}T12:00:00`));
+      return `${jour.charAt(0).toUpperCase()}${jour.slice(1)} ${quand}`
+    }
+
+    async function refreshNextService(force){
+      if(!nextServicePanel)return;
+
+      const target=findNextService();
+      if(!target){
+        nextServicePanel.classList.add("hidden");
+        return
+      }
+
+      const key=`${target.date}_${target.service}`;
+      const now=Date.now();
+      if(!force&&key===nextServiceKey&&nextServiceLoadedAt&&now-nextServiceLoadedAt<2*60*1000)return;
+
+      nextServiceKey=key;
+      nextServiceLoadedAt=now;
+      nextServicePanel.classList.remove("hidden");
+      nextServiceTitle.textContent=serviceTitle(target.date,target.service);
+      nextServiceSubtitle.textContent=formatDay(target.date);
+      nextServiceCount.innerHTML="";
+      nextServiceWarning.classList.add("hidden");
+      nextServiceList.innerHTML='<div class="next-service-empty">Chargement…</div>';
+
+      await loadFleetUnavailability();
+
+      let rows=[];
+      try{
+        const snapshot=await getDocs(query(
+          collection(db,"driverAssignments"),
+          where("date","==",target.date)
+        ));
+        snapshot.forEach(docSnap=>{
+          const data=docSnap.data();
+          if(data.active===false)return;
+          if(servicePeriod(data.time)!==target.service)return;
+          rows.push(data)
+        })
+      }catch(error){
+        console.error(error);
+        nextServiceList.innerHTML='<div class="next-service-empty">Les affectations n’ont pas pu être lues.</div>';
+        return
+      }
+
+      nextServiceTarget=target;
+      nextServiceRows=rows;
+      renderNextService(target,rows)
+    }
+
+    /* Les téléphones arrivent par l'abonnement aux livreurs, souvent après
+       le premier dessin du panneau. On le redessine alors, sans relire. */
+    function repaintNextService(){
+      if(!nextServicePanel||nextServicePanel.classList.contains("hidden"))return;
+      if(!nextServiceTarget)return;
+      renderNextService(nextServiceTarget,nextServiceRows)
+    }
+
+    function renderNextService(target,rows){
+      rows.sort((a,b)=>{
+        const heure=(a.time||"").localeCompare(b.time||"");
+        return heure!==0?heure:(a.driverName||"").localeCompare(b.driverName||"","fr")
+      });
+
+      if(rows.length===0){
+        nextServiceList.innerHTML=
+          '<div class="next-service-empty">Aucun livreur affecté sur ce service. '
+          +'Ouvrez l’écran Planning pour le préparer.</div>';
+        nextServiceCount.innerHTML='<span class="service-chip is-bad">Personne</span>';
+        return
+      }
+
+      const statuts=rows.map(driverEffectiveStatus);
+      const acquis=statuts.filter(st=>st==="confirmed"||st==="implied").length;
+      const refus=statuts.filter(st=>st==="refused").length;
+      const attente=statuts.filter(st=>st==="pending").length;
+
+      const chips=[`<span class="service-chip">${rows.length} livreur${rows.length>1?"s":""}</span>`];
+      if(acquis)chips.push(`<span class="service-chip is-ok">${acquis} confirmé${acquis>1?"s":""}</span>`);
+      if(attente)chips.push(`<span class="service-chip is-warn">${attente} sans réponse</span>`);
+      if(refus)chips.push(`<span class="service-chip is-bad">${refus} refus</span>`);
+      nextServiceCount.innerHTML=chips.join("");
+
+      nextServiceList.innerHTML=rows.map((row,index)=>{
+        const statut=statuts[index];
+        const profil=currentDrivers.find(item=>item.id===row.userId)||{};
+        const telephone=normalizePhone(profil.phone);
+        const vehicule=row.vehicleUnitName||row.vehicleRequirement||"";
+        const retard=row.forced&&isTimeShiftOnly(row.forcedCode)?row.forcedReason:"";
+
+        return `
+          <div class="service-row">
+            <span class="service-time">${escapeHtml(row.time||"")}</span>
+            <span class="service-who">
+              <strong>${escapeHtml(row.driverName||"Livreur")}</strong>
+              <small>${escapeHtml([vehicule,retard].filter(Boolean).join(" · ")||"Aucun véhicule attribué")}</small>
+            </span>
+            <span class="service-right">
+              <span class="confirmation-badge confirmation-${statut}">${effectiveStatusLabel(statut)}</span>
+              ${telephone?`<a class="service-call" href="tel:+${escapeHtml(telephone)}">Appeler</a>`:""}
+            </span>
+          </div>`
+      }).join("");
+
+      // Un véhicule au garage : autant que personne ne cherche la clé.
+      const indisponibles=fleetUnits()
+        .map(unit=>({unit,entry:unavailabilityFor(unit.id,target.date)}))
+        .filter(item=>item.entry);
+
+      if(indisponibles.length){
+        const texte=indisponibles
+          .map(item=>item.entry.reason
+            ? `${item.unit.name} (${item.entry.reason})`
+            : item.unit.name)
+          .join(", ");
+        nextServiceCount.insertAdjacentHTML("beforeend",
+          `<span class="service-chip is-warn">${escapeHtml(texte)} indisponible${indisponibles.length>1?"s":""}</span>`)
+      }
+
+      if(refus){
+        nextServiceWarning.textContent=
+          `${refus} refus non remplacé sur ce service. Ouvrez l’écran Planning pour désigner un remplaçant.`;
+        nextServiceWarning.classList.remove("hidden")
+      }else if(attente){
+        nextServiceWarning.textContent=
+          `${attente} livreur${attente>1?"s n’ont":" n’a"} pas encore répondu. `
+          +`Vous pouvez relancer le groupe depuis l’écran Planning.`;
+        nextServiceWarning.classList.remove("hidden")
+      }
+    }
+
+    /* Les indisponibilités sont lues une fois par session et tenues à jour
+       en mémoire : une poignée de documents, rarement modifiés. */
+    let fleetUnavailabilityLoadedAt = 0;
+
+    async function loadFleetUnavailability(force){
+      const now=Date.now();
+      if(!force&&fleetUnavailabilityLoadedAt&&now-fleetUnavailabilityLoadedAt<STATS_CACHE_MS)return;
+
+      try{
+        const snapshot=await getDocs(query(
+          collection(db,"vehicleUnavailability"),
+          where("from",">=",shiftedIsoDate(-120))
+        ));
+        fleetUnavailability=[];
+        snapshot.forEach(docSnap=>fleetUnavailability.push({id:docSnap.id,...docSnap.data()}));
+        fleetUnavailabilityLoadedAt=Date.now()
+      }catch(error){
+        console.error(error);
+        showMessage(appMessage,`Les indisponibilités de véhicules n’ont pas pu être lues : ${error.code||error.message}`,"error")
+      }
+    }
+
+    async function prepareGarageSection(){
+      clearMessage(garageMessage);
+      garageForm.reset();
+      document.getElementById("garageFrom").value=shiftedIsoDate(0);
+
+      const unites=fleetUnits();
+      const select=document.getElementById("garageUnit");
+      select.innerHTML=unites.length
+        ? unites.map(unit=>`<option value="${escapeHtml(unit.id)}">${escapeHtml(unit.name)}</option>`).join("")
+        : '<option value="">Aucun véhicule dans la fiche</option>';
+      saveGarageButton.disabled=unites.length===0;
+
+      garageList.innerHTML='<div class="empty-state">Chargement…</div>';
+      await loadFleetUnavailability(true);
+      renderGarageList()
+    }
+
+    function garagePeriodLabel(entry){
+      const debut=formatDate(entry.from);
+      if(!entry.to)return `Depuis le ${debut}, retour non fixé`;
+      if(entry.to===entry.from)return `Le ${debut}`;
+      return `Du ${debut} au ${formatDate(entry.to)}`
+    }
+
+    function renderGarageList(){
+      const aujourdhui=shiftedIsoDate(0);
+      const liste=fleetUnavailability
+        .slice()
+        .filter(entry=>!entry.to||entry.to>=shiftedIsoDate(-30))
+        .sort((a,b)=>(b.from||"").localeCompare(a.from||""));
+
+      if(liste.length===0){
+        garageList.innerHTML='<div class="empty-state">Aucune indisponibilité déclarée. Tout le parc est disponible.</div>';
+        return
+      }
+
+      garageList.innerHTML="";
+
+      liste.forEach(entry=>{
+        const unit=fleetUnitById(entry.unitId);
+        const enCours=entry.from<=aujourdhui&&(!entry.to||entry.to>=aujourdhui);
+        const row=document.createElement("div");
+        row.className=`garage-row${enCours?" is-now":""}`;
+        row.innerHTML=`
+          <div>
+            <strong>${escapeHtml(unit?unit.name:(entry.unitName||"Véhicule retiré du parc"))}</strong>
+            <small><span class="garage-when">${escapeHtml(garagePeriodLabel(entry))}</span>${entry.reason?` · ${escapeHtml(entry.reason)}`:""}</small>
+            ${enCours?'<small>Indisponible aujourd’hui. Il n’est plus attribué automatiquement.</small>':""}
+          </div>
+          <div class="staff-actions">
+            <button class="button button-ghost garage-remove" type="button">Le véhicule est revenu</button>
+          </div>
+        `;
+        row.querySelector(".garage-remove").addEventListener("click",()=>removeGarageEntry(entry));
+        garageList.appendChild(row)
+      })
+    }
+
+    async function removeGarageEntry(entry){
+      const unit=fleetUnitById(entry.unitId);
+      const nom=unit?unit.name:(entry.unitName||"Ce véhicule");
+      if(!window.confirm(`${nom} est de nouveau disponible ?\n\nL’indisponibilité sera supprimée et le véhicule redeviendra attribuable.`))return;
+
+      try{
+        await deleteDoc(doc(db,"vehicleUnavailability",entry.id));
+        fleetUnavailability=fleetUnavailability.filter(item=>item.id!==entry.id);
+        nextServiceLoadedAt=0;
+        renderGarageList();
+        showMessage(garageMessage,`${nom} est de nouveau disponible.`,"success")
+      }catch(error){
+        console.error(error);
+        showMessage(garageMessage,`Impossible de supprimer : ${error.code||error.message}`,"error")
+      }
+    }
+
+    /* Un véhicule déjà inscrit sur un planning publié ne doit pas être
+       remplacé en douce : on prévient, et le responsable décide. */
+    async function assignmentsUsingUnit(unitId,from,to){
+      const fin=to||shiftedIsoDate(90);
+      const snapshot=await getDocs(query(
+        collection(db,"driverAssignments"),
+        where("date",">=",from),
+        where("date","<=",fin)
+      ));
+      const touchees=[];
+      snapshot.forEach(docSnap=>{
+        const data=docSnap.data();
+        if(data.active===false)return;
+        if(data.vehicleUnitId!==unitId)return;
+        touchees.push(data)
+      });
+      return touchees
+    }
+
     function renderPlanningRuleNote(){
       const note=document.getElementById("planningRuleNote");
       if(!note)return;
@@ -5438,6 +6099,7 @@
     }
 
     function preparePlanningSection(){
+      loadFleetUnavailability();
       clearMessage(planningMessage);
       renderPlanningRuleNote();
       // La liste est remplie AVANT la lecture : evite une lecture a vide
@@ -5521,6 +6183,26 @@
       deadlineDateLabel.textContent=`${formatDate(week.deadlineDate)} ${week.deadlineTime||"23:59"}`;
 
       missingDriversList.innerHTML="";
+
+      if(missingDrivers.length){
+        const liste=missingDrivers.map(driver=>`• ${driver.name||"Livreur"}`).join("\n");
+        const groupMessage=
+          `${establishmentName()} — disponibilités de la semaine du ${formatDate(week.startDate)}\n\n`
+          +`Il manque encore vos disponibilités :\n${liste}\n\n`
+          +`Merci de répondre avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}.\n`
+          +appAddress();
+
+        missingDriversList.appendChild(groupMessageBar(
+          missingDrivers.length>1
+            ? `Un seul message pour les ${missingDrivers.length} livreurs`
+            : "Message prêt à envoyer",
+          groupMessage,
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+        ));
+
+        missingDriversList.appendChild(individualLabel("Ou un message à la fois"))
+      }
+
       missingDrivers.forEach(driver=>{
         const subject=`Disponibilités — semaine du ${formatDate(week.startDate)}`;
         const message=`Bonjour ${driver.name||""}, merci d’indiquer vos disponibilités dans Journia pour la semaine du ${formatDate(week.startDate)}, avant le ${formatDate(week.deadlineDate)} à ${week.deadlineTime||"23:59"}. ${appAddress()}`;
@@ -5561,6 +6243,103 @@
 
     function appAddress(){
       return `${window.location.origin}${window.location.pathname}`
+    }
+
+    /* ===================================================================
+       RELANCE DE GROUPE
+       Les livreurs ont déjà un groupe WhatsApp : c'est là qu'ils lisent.
+       Un message unique, listant ceux qu'on attend, vaut mieux que huit
+       messages individuels — et se colle en un geste.
+       =================================================================== */
+
+    async function copyToClipboard(text){
+      try{
+        if(navigator.clipboard&&navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(text);
+          return true
+        }
+      }catch(error){ /* refus du navigateur : on tente la méthode ancienne */ }
+
+      try{
+        const area=document.createElement("textarea");
+        area.value=text;
+        area.setAttribute("readonly","");
+        area.style.position="fixed";
+        area.style.opacity="0";
+        document.body.appendChild(area);
+        area.select();
+        const done=document.execCommand("copy");
+        document.body.removeChild(area);
+        return done===true
+      }catch(error){
+        return false
+      }
+    }
+
+    function establishmentName(){
+      return (establishmentConfig&&establishmentConfig.name)||"Le planning"
+    }
+
+    /* La barre verte posée au-dessus de la liste individuelle. */
+    function groupMessageBar(title,message,note){
+      const box=document.createElement("div");
+      box.className="relance-group";
+
+      const head=document.createElement("div");
+      head.className="relance-group-head";
+
+      const label=document.createElement("span");
+      label.className="relance-group-title";
+      label.textContent=title;
+      head.appendChild(label);
+
+      const actions=document.createElement("div");
+      actions.className="relance-group-actions";
+
+      // wa.me sans numéro ouvre WhatsApp avec le texte prêt et laisse
+      // choisir la conversation : c'est ce qui permet de viser le groupe.
+      const open=document.createElement("a");
+      open.className="relance-link whatsapp";
+      open.target="_blank";
+      open.rel="noopener";
+      open.href=`https://wa.me/?text=${encodeURIComponent(message)}`;
+      open.textContent="Ouvrir WhatsApp";
+      actions.appendChild(open);
+
+      const copy=document.createElement("button");
+      copy.type="button";
+      copy.className="relance-link sms copy-group-message";
+      copy.textContent="Copier le message";
+      copy.addEventListener("click",async()=>{
+        const done=await copyToClipboard(message);
+        copy.textContent=done?"Message copié":"Copie refusée — sélectionnez le texte";
+        setTimeout(()=>{copy.textContent="Copier le message"},2500)
+      });
+      actions.appendChild(copy);
+
+      head.appendChild(actions);
+      box.appendChild(head);
+
+      const body=document.createElement("div");
+      body.className="relance-group-text";
+      body.textContent=message;
+      box.appendChild(body);
+
+      if(note){
+        const hint=document.createElement("div");
+        hint.className="relance-group-note";
+        hint.textContent=note;
+        box.appendChild(hint)
+      }
+
+      return box
+    }
+
+    function individualLabel(text){
+      const title=document.createElement("div");
+      title.className="relance-individual";
+      title.textContent=text;
+      return title
     }
 
     function relanceRow(driver,subject,message){
@@ -5781,6 +6560,9 @@
       // Disponibilites : reprises du cache si elles viennent d'etre lues.
       const availabilities=await loadAvailabilitiesForWeek(weekId);
 
+      // Un véhicule au garage ne doit pas être attribué par la génération.
+      await loadFleetUnavailability();
+
       // Livreurs et scores : deja en memoire grace a l'abonnement users et au
       // chargement unique de driverPrivate. Avant, cette fonction relisait
       // toute la collection users puis un document par livreur.
@@ -5950,7 +6732,7 @@
           const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
           if(!companyType)return;
 
-          const free=fleetUnitsOfType(companyType).find(unit=>!takenUnits.has(unit.id));
+          const free=availableUnitsOfType(companyType,need.date).find(unit=>!takenUnits.has(unit.id));
           if(!free)return;
 
           takenUnits.add(free.id);
@@ -6150,6 +6932,34 @@
         return
       }
 
+      {
+        const semaine=week?`la semaine du ${formatDate(week.startDate)}`:"la semaine à venir";
+        const lignes=[];
+        waiting.forEach(({driver,count})=>{
+          lignes.push(`• ${driver.name||"Livreur"} — ${count} horaire${count>1?"s":""}`)
+        });
+
+        const tacite=currentPlan.status==="closed"
+          ? `\nSans réponse de votre part sous ${CONTESTATION_HOURS} heures, l’horaire que vous avez vous-même indiqué sera considéré comme accepté.\n`
+          : "";
+
+        const groupMessage=
+          `${establishmentName()} — planning de ${semaine}\n\n`
+          +`Ces horaires attendent encore une réponse :\n${lignes.join("\n")}\n\n`
+          +`Merci de confirmer depuis l’application.\n${tacite}`
+          +appAddress();
+
+        pendingConfirmList.appendChild(groupMessageBar(
+          waiting.size>1
+            ? `Un seul message pour les ${waiting.size} livreurs`
+            : "Message prêt à envoyer",
+          groupMessage,
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+        ));
+
+        pendingConfirmList.appendChild(individualLabel("Ou un message à la fois"))
+      }
+
       waiting.forEach(({driver,count})=>{
         // On retrouve le téléphone dans la fiche du livreur : le plan ne le porte pas.
         const profile=currentDrivers.find(item=>item.id===driver.userId)||{};
@@ -6272,7 +7082,7 @@
                     const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
                     if(!companyType||!fleetUnitsOfType(companyType).length)return "";
                     const taken=usedUnitsForService(currentPlan,slot.date,servicePeriod(slot.time),driver.userId);
-                    const options=fleetUnitsOfType(companyType)
+                    const options=availableUnitsOfType(companyType,slot.date)
                       .filter(unit=>!taken.has(unit.id)||unit.id===driver.vehicleUnitId);
                     return `<select class="vehicle-unit" data-slot="${slotIndex}" data-driver="${index}"
                               ${currentPlan.status==="closed"?"disabled":""}>
@@ -6597,6 +7407,7 @@
         }
 
         renderPlan();
+        nextServiceLoadedAt=0;
         showMessage(planningMessage,`${label} — enregistré.`,"success");
         return true
       }catch(error){
@@ -6916,7 +7727,100 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    document.getElementById("openGarage").addEventListener("click",()=>showSection("garage"));
+
+    garageForm.addEventListener("submit",async event=>{
+      event.preventDefault();
+      clearMessage(garageMessage);
+
+      const unitId=document.getElementById("garageUnit").value;
+      const from=document.getElementById("garageFrom").value;
+      const to=document.getElementById("garageTo").value;
+      const reason=document.getElementById("garageReason").value.trim();
+      const unit=fleetUnitById(unitId);
+
+      if(!unitId||!unit){
+        showMessage(garageMessage,"Choisissez un véhicule du parc.","error");
+        return
+      }
+      if(!from){
+        showMessage(garageMessage,"Indiquez au moins la date de début.","error");
+        return
+      }
+      if(to&&to<from){
+        showMessage(garageMessage,"La date de fin est antérieure à la date de début.","error");
+        return
+      }
+
+      saveGarageButton.disabled=true;
+      saveGarageButton.textContent="Enregistrement…";
+
+      try{
+        // On regarde d'abord ce que cette indisponibilité met en défaut.
+        const touchees=await assignmentsUsingUnit(unitId,from,to);
+        if(touchees.length){
+          const apercu=touchees
+            .slice(0,6)
+            .map(item=>`· ${formatDate(item.date)} à ${item.time} — ${item.driverName||"livreur"}`)
+            .join("\n");
+          const reste=touchees.length-Math.min(6,touchees.length);
+          const suite=window.confirm(
+            `${unit.name} est déjà attribué sur ${touchees.length} horaire${touchees.length>1?"s":""} de cette période :\n\n`
+            +apercu+(reste>0?`\n· et ${reste} autre${reste>1?"s":""}`:"")
+            +`\n\nL’indisponibilité sera enregistrée, mais ces affectations ne seront pas modifiées automatiquement : `
+            +`les livreurs ont déjà lu ces horaires. À vous de leur attribuer un autre véhicule depuis l’écran Planning.\n\nContinuer ?`
+          );
+          if(!suite){
+            showMessage(garageMessage,"Déclaration annulée. Rien n’a été enregistré.","success");
+            return
+          }
+        }
+
+        const reference=await addDoc(collection(db,"vehicleUnavailability"),{
+          unitId,
+          unitName:unit.name||"",
+          from,
+          to:to||"",
+          reason,
+          createdAt:serverTimestamp(),
+          createdBy:auth.currentUser.uid,
+          createdByName:currentProfile.name||""
+        });
+
+        fleetUnavailability.push({
+          id:reference.id,unitId,unitName:unit.name||"",from,to:to||"",reason
+        });
+        nextServiceLoadedAt=0;
+
+        garageForm.reset();
+        document.getElementById("garageFrom").value=shiftedIsoDate(0);
+        renderGarageList();
+
+        showMessage(
+          garageMessage,
+          touchees.length
+            ? `${unit.name} est déclaré indisponible. Pensez à réattribuer les ${touchees.length} horaire${touchees.length>1?"s":""} concerné${touchees.length>1?"s":""}.`
+            : `${unit.name} est déclaré indisponible.`,
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(garageMessage,`Impossible d’enregistrer : ${error.code||error.message}`,"error")
+      }finally{
+        saveGarageButton.disabled=false;
+        saveGarageButton.textContent="Déclarer l’indisponibilité"
+      }
+    });
+
+    driverRoleSelect.addEventListener("change",applyRoleToForm);
     document.getElementById("openHelp").addEventListener("click",()=>showSection("help"));
+    document.getElementById("refreshNextServiceButton").addEventListener("click",async()=>{
+      const bouton=document.getElementById("refreshNextServiceButton");
+      bouton.disabled=true;
+      bouton.textContent="Actualisation…";
+      try{ await refreshNextService(true) }
+      finally{ bouton.disabled=false; bouton.textContent="Actualiser" }
+    });
     document.getElementById("printHelp").addEventListener("click",()=>window.print());
     document.getElementById("helpSearch").addEventListener("input",event=>{
       renderHelp(event.target.value)
@@ -7170,6 +8074,7 @@
 
         availabilityCache.delete(currentPlan.weekId);
         driverStatsLoadedAt=0;
+        nextServiceLoadedAt=0;
         renderPlan();
         showMessage(
           planningMessage,
@@ -7456,6 +8361,7 @@
       const reliability=Number(document.getElementById("driverReliability").value);
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
+      const role=isAdminProfile()?driverRoleSelect.value:"driver";
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -7470,7 +8376,7 @@
 
           await setDoc(doc(db,"users",userId),{
             name,email,phone,vehicle,active,
-            role:"driver",
+            role,
             mustChangePassword:true,
             createdAt:serverTimestamp(),
             createdBy:auth.currentUser.uid,
@@ -7479,18 +8385,23 @@
 
           await signOut(driverCreatorAuth)
         }else{
-          await updateDoc(doc(db,"users",userId),{
+          const champs={
             name,phone,vehicle,active,
             updatedAt:serverTimestamp(),
             updatedBy:auth.currentUser.uid
-          })
+          };
+          // Le rôle n'est transmis que si on a le droit de le changer.
+          if(isAdminProfile()&&!driverRoleSelect.disabled)champs.role=role;
+          await updateDoc(doc(db,"users",userId),champs)
         }
 
-        await setDoc(doc(db,"driverPrivate",userId),{
-          priority,reliability,experience,notes,
-          updatedAt:serverTimestamp(),
-          updatedBy:auth.currentUser.uid
-        },{merge:true});
+        if(role==="driver"){
+          await setDoc(doc(db,"driverPrivate",userId),{
+            priority,reliability,experience,notes,
+            updatedAt:serverTimestamp(),
+            updatedBy:auth.currentUser.uid
+          },{merge:true})
+        }
 
         // Les scores confidentiels viennent de changer : on force leur relecture.
         await loadDriverPrivateData(true);
@@ -7528,7 +8439,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-08-01-k";
+    const APP_VERSION = "2026-11-12-c";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
@@ -7590,6 +8501,9 @@
         needTemplatesSubscribed=false;
         driverPrivateLoaded=false;
         driverStatsLoadedAt=0;
+        fleetUnavailability=[];
+        fleetUnavailabilityLoadedAt=0;
+        nextServiceLoadedAt=0;
         regulationAcceptances=[];
         regulationAcceptancesLoadedAt=0;
         availabilityCache.clear();
