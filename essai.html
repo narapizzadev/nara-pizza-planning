@@ -424,6 +424,19 @@
       .faq-question span:first-child,.faq-search,.back-row{display:none}
     }
 
+    .garage-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end;
+      padding:16px;border:1px solid var(--border);border-radius:14px;background:#fffaf6;margin-bottom:18px}
+    .garage-form .field{margin-bottom:0}
+    .garage-form .form-actions{grid-column:1 / -1;margin-top:4px}
+    @media(max-width:820px){.garage-form{grid-template-columns:1fr}}
+    .garage-list{display:grid;gap:10px}
+    .garage-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .garage-row.is-now{border-color:#f0d7a8;background:#fff8ec}
+    .garage-row strong{display:block}
+    .garage-row small{display:block;color:var(--muted);margin-top:3px}
+    .garage-when{font-weight:700;color:#8a5600}
+    @media(max-width:560px){.garage-row{grid-template-columns:1fr}}
     .fleet-list{display:grid;gap:10px}
     .fleet-row{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(150px,1fr) minmax(110px,0.8fr) auto;
       gap:10px;align-items:center;padding:11px;border:1px solid var(--border);border-radius:12px;background:#fff}
@@ -1153,6 +1166,7 @@
           <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
           <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
           <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
+          <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
           <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
         </div>
 
@@ -1511,6 +1525,46 @@
             <button id="saveEstablishmentButton" class="button button-primary" type="button">Enregistrer la fiche</button>
           </div>
           <div id="establishmentMessage" class="message"></div>
+        </section>
+      </section>
+
+      <section id="garageSection" class="section-view">
+        <div class="back-row">
+          <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Véhicules indisponibles</h2>
+              <p class="muted">Un véhicule déclaré ici n’est plus attribué pendant la période indiquée. Laissez la date de fin vide si vous ne la connaissez pas encore.</p>
+            </div>
+          </div>
+
+          <form id="garageForm" class="garage-form">
+            <div class="field">
+              <label for="garageUnit">Véhicule</label>
+              <select id="garageUnit" required></select>
+            </div>
+            <div class="field">
+              <label for="garageFrom">Indisponible à partir du</label>
+              <input id="garageFrom" type="date" required>
+            </div>
+            <div class="field">
+              <label for="garageTo">Jusqu’au (facultatif)</label>
+              <input id="garageTo" type="date">
+            </div>
+            <div class="field">
+              <label for="garageReason">Motif</label>
+              <input id="garageReason" type="text" maxlength="200" placeholder="Révision, pare-brise, panne…">
+            </div>
+            <div class="form-actions">
+              <button id="saveGarageButton" class="button button-primary" type="submit">Déclarer l’indisponibilité</button>
+            </div>
+          </form>
+
+          <div id="garageMessage" class="message"></div>
+          <div id="garageList" class="garage-list"></div>
         </section>
       </section>
 
@@ -2172,7 +2226,8 @@
       kitchen: document.getElementById("kitchenSection"),
       regulationAdmin: document.getElementById("regulationAdminSection"),
       establishment: document.getElementById("establishmentSection"),
-      help: document.getElementById("helpSection")
+      help: document.getElementById("helpSection"),
+      garage: document.getElementById("garageSection")
     };
 
     const weekForm = document.getElementById("weekForm");
@@ -2269,6 +2324,10 @@
     const reopenPlanButton = document.getElementById("reopenPlanButton");
     const planContainer = document.getElementById("planContainer");
     const planningMessage = document.getElementById("planningMessage");
+    const garageForm = document.getElementById("garageForm");
+    const garageList = document.getElementById("garageList");
+    const garageMessage = document.getElementById("garageMessage");
+    const saveGarageButton = document.getElementById("saveGarageButton");
     const nextServicePanel = document.getElementById("nextServicePanel");
     const nextServiceTitle = document.getElementById("nextServiceTitle");
     const nextServiceSubtitle = document.getElementById("nextServiceSubtitle");
@@ -2463,6 +2522,35 @@
       return fleetUnits().filter(unit=>unit.type===type)
     }
 
+    /* ===================================================================
+       INDISPONIBILITÉS DU PARC
+       Le parc décrit ce que possède l'établissement ; cette liste décrit
+       ses aléas. Une entrée sans date de fin vaut « indisponible jusqu'à
+       nouvel ordre » : c'est le cas le plus fréquent au garage.
+       =================================================================== */
+    let fleetUnavailability = [];
+
+    function isUnitAvailableOn(unitId,date){
+      if(!unitId||!date)return true;
+      return !fleetUnavailability.some(entry=>
+        entry.unitId===unitId
+        && entry.from<=date
+        && (!entry.to||entry.to>=date)
+      )
+    }
+
+    function unavailabilityFor(unitId,date){
+      return fleetUnavailability.find(entry=>
+        entry.unitId===unitId
+        && entry.from<=date
+        && (!entry.to||entry.to>=date)
+      )||null
+    }
+
+    function availableUnitsOfType(type,date){
+      return fleetUnitsOfType(type).filter(unit=>isUnitAvailableOn(unit.id,date))
+    }
+
     function fleetUnitById(id){
       return fleetUnits().find(unit=>unit.id===id)||null
     }
@@ -2631,6 +2719,7 @@
       if(name==="regulationAdmin")loadRegulationAcceptances();
       if(name==="establishment")prepareEstablishmentSection();
       if(name==="help")prepareHelpSection();
+      if(name==="garage")prepareGarageSection();
       if(name==="dashboard")refreshNextService();
       window.scrollTo({top:0,behavior:"smooth"})
     }
@@ -5515,6 +5604,15 @@
       },
       {
         group:"Les véhicules",
+        question:"Un véhicule est au garage. Comment le retirer du planning ?",
+        answer:`<p>Tableau de bord, bouton <strong>Véhicules indisponibles</strong>. Vous choisissez le véhicule, la date à partir de laquelle il ne roule plus, et le motif. La date de fin est facultative : laissez-la vide tant que vous ne savez pas quand il revient, c’est le cas le plus courant.</p>
+          <p>Pendant cette période, il n’est plus attribué automatiquement et disparaît des listes de choix. Le tableau de bord le signale sur le service du jour, pour que personne ne cherche une clé qui n’est pas là.</p>
+          <p>S’il figure déjà sur un planning publié, l’application vous prévient et vous liste les horaires concernés — mais elle ne change rien d’elle-même : vos livreurs ont déjà lu ces horaires, c’est à vous de leur attribuer un autre véhicule.</p>
+          <p>Au retour du véhicule, bouton <strong>Le véhicule est revenu</strong> : il redevient attribuable aussitôt.</p>
+          <p>Ne confondez pas avec la case <em>actif</em> de la fiche, qui sert à retirer définitivement un véhicule du parc, par exemple à la revente.</p>`
+      },
+      {
+        group:"Les véhicules",
         question:"Un bandeau rouge dit qu’un livreur n’a pas de véhicule. Pourquoi ?",
         answer:`<p>Parce qu’il attend un véhicule de l’établissement et qu’aucun exemplaire du bon type n’est libre sur ce service. Deux causes possibles.</p>
           <p>Soit votre parc est plus petit que le nombre de livreurs sur ce créneau : il faut en retirer un, ou accepter qu’il vienne avec son propre véhicule.</p>
@@ -5773,6 +5871,8 @@
       nextServiceWarning.classList.add("hidden");
       nextServiceList.innerHTML='<div class="next-service-empty">Chargement…</div>';
 
+      await loadFleetUnavailability();
+
       let rows=[];
       try{
         const snapshot=await getDocs(query(
@@ -5850,6 +5950,21 @@
           </div>`
       }).join("");
 
+      // Un véhicule au garage : autant que personne ne cherche la clé.
+      const indisponibles=fleetUnits()
+        .map(unit=>({unit,entry:unavailabilityFor(unit.id,target.date)}))
+        .filter(item=>item.entry);
+
+      if(indisponibles.length){
+        const texte=indisponibles
+          .map(item=>item.entry.reason
+            ? `${item.unit.name} (${item.entry.reason})`
+            : item.unit.name)
+          .join(", ");
+        nextServiceCount.insertAdjacentHTML("beforeend",
+          `<span class="service-chip is-warn">${escapeHtml(texte)} indisponible${indisponibles.length>1?"s":""}</span>`)
+      }
+
       if(refus){
         nextServiceWarning.textContent=
           `${refus} refus non remplacé sur ce service. Ouvrez l’écran Planning pour désigner un remplaçant.`;
@@ -5862,6 +5977,122 @@
       }
     }
 
+    /* Les indisponibilités sont lues une fois par session et tenues à jour
+       en mémoire : une poignée de documents, rarement modifiés. */
+    let fleetUnavailabilityLoadedAt = 0;
+
+    async function loadFleetUnavailability(force){
+      const now=Date.now();
+      if(!force&&fleetUnavailabilityLoadedAt&&now-fleetUnavailabilityLoadedAt<STATS_CACHE_MS)return;
+
+      try{
+        const snapshot=await getDocs(query(
+          collection(db,"vehicleUnavailability"),
+          where("from",">=",shiftedIsoDate(-120))
+        ));
+        fleetUnavailability=[];
+        snapshot.forEach(docSnap=>fleetUnavailability.push({id:docSnap.id,...docSnap.data()}));
+        fleetUnavailabilityLoadedAt=Date.now()
+      }catch(error){
+        console.error(error);
+        showMessage(appMessage,`Les indisponibilités de véhicules n’ont pas pu être lues : ${error.code||error.message}`,"error")
+      }
+    }
+
+    async function prepareGarageSection(){
+      clearMessage(garageMessage);
+      garageForm.reset();
+      document.getElementById("garageFrom").value=shiftedIsoDate(0);
+
+      const unites=fleetUnits();
+      const select=document.getElementById("garageUnit");
+      select.innerHTML=unites.length
+        ? unites.map(unit=>`<option value="${escapeHtml(unit.id)}">${escapeHtml(unit.name)}</option>`).join("")
+        : '<option value="">Aucun véhicule dans la fiche</option>';
+      saveGarageButton.disabled=unites.length===0;
+
+      garageList.innerHTML='<div class="empty-state">Chargement…</div>';
+      await loadFleetUnavailability(true);
+      renderGarageList()
+    }
+
+    function garagePeriodLabel(entry){
+      const debut=formatDate(entry.from);
+      if(!entry.to)return `Depuis le ${debut}, retour non fixé`;
+      if(entry.to===entry.from)return `Le ${debut}`;
+      return `Du ${debut} au ${formatDate(entry.to)}`
+    }
+
+    function renderGarageList(){
+      const aujourdhui=shiftedIsoDate(0);
+      const liste=fleetUnavailability
+        .slice()
+        .filter(entry=>!entry.to||entry.to>=shiftedIsoDate(-30))
+        .sort((a,b)=>(b.from||"").localeCompare(a.from||""));
+
+      if(liste.length===0){
+        garageList.innerHTML='<div class="empty-state">Aucune indisponibilité déclarée. Tout le parc est disponible.</div>';
+        return
+      }
+
+      garageList.innerHTML="";
+
+      liste.forEach(entry=>{
+        const unit=fleetUnitById(entry.unitId);
+        const enCours=entry.from<=aujourdhui&&(!entry.to||entry.to>=aujourdhui);
+        const row=document.createElement("div");
+        row.className=`garage-row${enCours?" is-now":""}`;
+        row.innerHTML=`
+          <div>
+            <strong>${escapeHtml(unit?unit.name:(entry.unitName||"Véhicule retiré du parc"))}</strong>
+            <small><span class="garage-when">${escapeHtml(garagePeriodLabel(entry))}</span>${entry.reason?` · ${escapeHtml(entry.reason)}`:""}</small>
+            ${enCours?'<small>Indisponible aujourd’hui. Il n’est plus attribué automatiquement.</small>':""}
+          </div>
+          <div class="staff-actions">
+            <button class="button button-ghost garage-remove" type="button">Le véhicule est revenu</button>
+          </div>
+        `;
+        row.querySelector(".garage-remove").addEventListener("click",()=>removeGarageEntry(entry));
+        garageList.appendChild(row)
+      })
+    }
+
+    async function removeGarageEntry(entry){
+      const unit=fleetUnitById(entry.unitId);
+      const nom=unit?unit.name:(entry.unitName||"Ce véhicule");
+      if(!window.confirm(`${nom} est de nouveau disponible ?\n\nL’indisponibilité sera supprimée et le véhicule redeviendra attribuable.`))return;
+
+      try{
+        await deleteDoc(doc(db,"vehicleUnavailability",entry.id));
+        fleetUnavailability=fleetUnavailability.filter(item=>item.id!==entry.id);
+        nextServiceLoadedAt=0;
+        renderGarageList();
+        showMessage(garageMessage,`${nom} est de nouveau disponible.`,"success")
+      }catch(error){
+        console.error(error);
+        showMessage(garageMessage,`Impossible de supprimer : ${error.code||error.message}`,"error")
+      }
+    }
+
+    /* Un véhicule déjà inscrit sur un planning publié ne doit pas être
+       remplacé en douce : on prévient, et le responsable décide. */
+    async function assignmentsUsingUnit(unitId,from,to){
+      const fin=to||shiftedIsoDate(90);
+      const snapshot=await getDocs(query(
+        collection(db,"driverAssignments"),
+        where("date",">=",from),
+        where("date","<=",fin)
+      ));
+      const touchees=[];
+      snapshot.forEach(docSnap=>{
+        const data=docSnap.data();
+        if(data.active===false)return;
+        if(data.vehicleUnitId!==unitId)return;
+        touchees.push(data)
+      });
+      return touchees
+    }
+
     function renderPlanningRuleNote(){
       const note=document.getElementById("planningRuleNote");
       if(!note)return;
@@ -5872,6 +6103,7 @@
     }
 
     function preparePlanningSection(){
+      loadFleetUnavailability();
       clearMessage(planningMessage);
       renderPlanningRuleNote();
       // La liste est remplie AVANT la lecture : evite une lecture a vide
@@ -6332,6 +6564,9 @@
       // Disponibilites : reprises du cache si elles viennent d'etre lues.
       const availabilities=await loadAvailabilitiesForWeek(weekId);
 
+      // Un véhicule au garage ne doit pas être attribué par la génération.
+      await loadFleetUnavailability();
+
       // Livreurs et scores : deja en memoire grace a l'abonnement users et au
       // chargement unique de driverPrivate. Avant, cette fonction relisait
       // toute la collection users puis un document par livreur.
@@ -6501,7 +6736,7 @@
           const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
           if(!companyType)return;
 
-          const free=fleetUnitsOfType(companyType).find(unit=>!takenUnits.has(unit.id));
+          const free=availableUnitsOfType(companyType,need.date).find(unit=>!takenUnits.has(unit.id));
           if(!free)return;
 
           takenUnits.add(free.id);
@@ -6851,7 +7086,7 @@
                     const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
                     if(!companyType||!fleetUnitsOfType(companyType).length)return "";
                     const taken=usedUnitsForService(currentPlan,slot.date,servicePeriod(slot.time),driver.userId);
-                    const options=fleetUnitsOfType(companyType)
+                    const options=availableUnitsOfType(companyType,slot.date)
                       .filter(unit=>!taken.has(unit.id)||unit.id===driver.vehicleUnitId);
                     return `<select class="vehicle-unit" data-slot="${slotIndex}" data-driver="${index}"
                               ${currentPlan.status==="closed"?"disabled":""}>
@@ -7496,6 +7731,91 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    document.getElementById("openGarage").addEventListener("click",()=>showSection("garage"));
+
+    garageForm.addEventListener("submit",async event=>{
+      event.preventDefault();
+      clearMessage(garageMessage);
+
+      const unitId=document.getElementById("garageUnit").value;
+      const from=document.getElementById("garageFrom").value;
+      const to=document.getElementById("garageTo").value;
+      const reason=document.getElementById("garageReason").value.trim();
+      const unit=fleetUnitById(unitId);
+
+      if(!unitId||!unit){
+        showMessage(garageMessage,"Choisissez un véhicule du parc.","error");
+        return
+      }
+      if(!from){
+        showMessage(garageMessage,"Indiquez au moins la date de début.","error");
+        return
+      }
+      if(to&&to<from){
+        showMessage(garageMessage,"La date de fin est antérieure à la date de début.","error");
+        return
+      }
+
+      saveGarageButton.disabled=true;
+      saveGarageButton.textContent="Enregistrement…";
+
+      try{
+        // On regarde d'abord ce que cette indisponibilité met en défaut.
+        const touchees=await assignmentsUsingUnit(unitId,from,to);
+        if(touchees.length){
+          const apercu=touchees
+            .slice(0,6)
+            .map(item=>`· ${formatDate(item.date)} à ${item.time} — ${item.driverName||"livreur"}`)
+            .join("\n");
+          const reste=touchees.length-Math.min(6,touchees.length);
+          const suite=window.confirm(
+            `${unit.name} est déjà attribué sur ${touchees.length} horaire${touchees.length>1?"s":""} de cette période :\n\n`
+            +apercu+(reste>0?`\n· et ${reste} autre${reste>1?"s":""}`:"")
+            +`\n\nL’indisponibilité sera enregistrée, mais ces affectations ne seront pas modifiées automatiquement : `
+            +`les livreurs ont déjà lu ces horaires. À vous de leur attribuer un autre véhicule depuis l’écran Planning.\n\nContinuer ?`
+          );
+          if(!suite){
+            showMessage(garageMessage,"Déclaration annulée. Rien n’a été enregistré.","success");
+            return
+          }
+        }
+
+        const reference=await addDoc(collection(db,"vehicleUnavailability"),{
+          unitId,
+          unitName:unit.name||"",
+          from,
+          to:to||"",
+          reason,
+          createdAt:serverTimestamp(),
+          createdBy:auth.currentUser.uid,
+          createdByName:currentProfile.name||""
+        });
+
+        fleetUnavailability.push({
+          id:reference.id,unitId,unitName:unit.name||"",from,to:to||"",reason
+        });
+        nextServiceLoadedAt=0;
+
+        garageForm.reset();
+        document.getElementById("garageFrom").value=shiftedIsoDate(0);
+        renderGarageList();
+
+        showMessage(
+          garageMessage,
+          touchees.length
+            ? `${unit.name} est déclaré indisponible. Pensez à réattribuer les ${touchees.length} horaire${touchees.length>1?"s":""} concerné${touchees.length>1?"s":""}.`
+            : `${unit.name} est déclaré indisponible.`,
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(garageMessage,`Impossible d’enregistrer : ${error.code||error.message}`,"error")
+      }finally{
+        saveGarageButton.disabled=false;
+        saveGarageButton.textContent="Déclarer l’indisponibilité"
+      }
+    });
+
     driverRoleSelect.addEventListener("change",applyRoleToForm);
     document.getElementById("openHelp").addEventListener("click",()=>showSection("help"));
     document.getElementById("refreshNextServiceButton").addEventListener("click",async()=>{
@@ -8123,7 +8443,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-12-a · ESSAI";
+    const APP_VERSION = "2026-11-12-b · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8193,6 +8513,9 @@
         needTemplatesSubscribed=false;
         driverPrivateLoaded=false;
         driverStatsLoadedAt=0;
+        fleetUnavailability=[];
+        fleetUnavailabilityLoadedAt=0;
+        nextServiceLoadedAt=0;
         regulationAcceptances=[];
         regulationAcceptancesLoadedAt=0;
         availabilityCache.clear();
@@ -8222,6 +8545,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-12-a. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-12-b. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
