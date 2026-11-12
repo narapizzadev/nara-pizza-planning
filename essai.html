@@ -1545,7 +1545,7 @@
           <div class="panel-header">
             <div>
               <h2>Règlement interne des livreurs</h2>
-              <p class="muted">Version active : 1.0. Chaque nouvelle version devra être acceptée à nouveau.</p>
+              <p class="muted">Version active : 1.1. Chaque nouvelle version devra être acceptée à nouveau.</p>
             </div>
             <button class="button button-secondary open-regulation-modal" type="button">Lire le règlement</button>
           </div>
@@ -1739,7 +1739,7 @@
     <section id="driverRegulationGate" class="dv-body hidden">
       <div class="dv-secthead">
         <h2>Règlement interne des livreurs</h2>
-        <p class="dv-sub">Version 1.0 — à lire et accepter une seule fois, avant d’envoyer vos disponibilités.</p>
+        <p class="dv-sub">Version 1.1 — à lire et accepter une seule fois, avant d’envoyer vos disponibilités.</p>
       </div>
 
       <div class="dv-action is-send" style="margin-bottom:6px">
@@ -1755,7 +1755,29 @@
         <ul>
           <li>Une disponibilité n’est pas encore un horaire confirmé.</li>
           <li>Le planning publié devient contraignant.</li>
+          <li>Après publication, vous avez 12 heures pour signaler un problème sur un horaire.</li>
+          <li>Sans réponse dans ce délai, les horaires correspondant à vos disponibilités sont considérés comme acceptés.</li>
+          <li>Un horaire placé hors de vos disponibilités demande toujours votre accord explicite.</li>
           <li>Tout échange ou remplacement doit être validé par le manager.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Géolocalisation pendant le service</h3>
+        <ul>
+          <li>Pendant votre service, l’application de livraison transmet votre position à la pizzeria et au client de la commande en cours.</li>
+          <li>Elle sert à informer le client, à répartir les commandes et à vous porter secours. Jamais à évaluer votre conduite ni vos pauses.</li>
+          <li>Hors service, aucune position n’est transmise : vous fermez l’application en terminant.</li>
+          <li>Les positions sont effacées après 30 jours.</li>
+        </ul>
+      </article>
+
+      <article class="dv-rule">
+        <h3>Votre téléphone</h3>
+        <ul>
+          <li>Vous utilisez votre téléphone pour le travail : une indemnité mensuelle vous est versée pour le forfait et l’usure.</li>
+          <li>Si votre appareil ne convient pas, ou si vous préférez ne pas installer les applications dessus, dites-le : un téléphone de service vous sera remis.</li>
+          <li>Le téléphone ne se manipule jamais en mouvement.</li>
         </ul>
       </article>
 
@@ -1880,7 +1902,7 @@
         <article class="dv-rule">
           <h3>Règlement interne</h3>
           <ul>
-            <li>Version 1.0 — résumé opérationnel et procédures rapides.</li>
+            <li>Version 1.1 — résumé opérationnel et procédures rapides.</li>
             <li>Retard, client absent, adresse incorrecte, panne, accident, agression, fin de service.</li>
           </ul>
           <div style="margin-top:12px">
@@ -1965,7 +1987,7 @@
       <div class="regulation-modal-header">
         <div>
           <h2 id="regulationModalTitle">Règlement interne des livreurs</h2>
-          <p class="muted">Version 1.0 — résumé opérationnel consultable à tout moment.</p>
+          <p class="muted">Version 1.1 — résumé opérationnel consultable à tout moment.</p>
         </div>
         <button id="closeRegulationModal" class="regulation-modal-close" type="button" aria-label="Fermer">×</button>
       </div>
@@ -1973,6 +1995,8 @@
       <section class="regulation-section">
         <h3>1. Disponibilités, planning et affectations</h3>
         <p>Le livreur déclare chaque semaine ses disponibilités et ses moyens de livraison. Une disponibilité n’est pas encore un horaire confirmé. Le planning publié devient contraignant. Les échanges de service et les remplacements doivent être approuvés par le manager.</p>
+        <p>Lorsque le planning d’une semaine est publié, le livreur dispose de <strong>douze heures</strong> pour signaler un problème sur l’un de ses horaires, depuis l’application ou auprès du responsable. Passé ce délai, les horaires qu’il n’a pas contestés sont réputés acceptés et deviennent contraignants, au même titre que ceux qu’il a confirmés explicitement.</p>
+        <p>Cette règle ne s’applique qu’aux horaires compris dans les disponibilités que le livreur a lui-même déclarées, y compris lorsque son heure d’arrivée réelle a été reprise telle qu’il l’avait indiquée. Un horaire placé en dehors de ses disponibilités déclarées exige au contraire une réponse explicite de sa part : le silence ne vaut jamais accord dans ce cas. Si le planning est rouvert et republié après modification, un nouveau délai de douze heures recommence.</p>
       </section>
 
       <section class="regulation-section">
@@ -1998,6 +2022,22 @@
       <section class="regulation-section">
         <h3>6. Comportement et incidents</h3>
         <p>Harcèlement, discrimination, menaces, violence et publication de données internes sont interdits. Tout accident, chute, dommage, menace, perte de clé, vol, contravention ou incident significatif doit être signalé avant la fin du service, sauf urgence médicale.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>7. Géolocalisation pendant le service</h3>
+        <p>Nara Pizza utilise une application de suivi des livraisons qui transmet la position du livreur à la pizzeria et au client pendant la commande en cours. Elle sert à informer le client de l’avancement de sa livraison, à répartir les commandes entre les livreurs disponibles, et à porter assistance rapidement en cas de panne, d’accident ou de difficulté sur la route.</p>
+        <p>La position n’est transmise que pendant le temps de travail, lorsque l’application est ouverte. Le livreur l’ouvre en prenant son service et la ferme en le terminant. En dehors de ces périodes, aucune position n’est collectée ni transmise. La pizzeria voit la position des livreurs en service ; le client voit celle du livreur qui lui apporte sa commande, et uniquement pendant cette livraison.</p>
+        <p>Les positions sont conservées <strong>trente jours</strong>, puis supprimées. Ce délai correspond à celui pendant lequel un client peut contester une livraison. Aucun historique des déplacements n’est constitué au-delà.</p>
+        <p>Ces données ne sont utilisées ni pour évaluer le comportement du livreur, ni pour mesurer sa vitesse, ni pour contrôler ses temps de pause, ni pour fonder un avertissement ou une sanction. Le droit suisse interdit les systèmes destinés à surveiller le comportement des travailleurs à leur poste de travail (art. 26 de l’ordonnance 3 relative à la loi sur le travail).</p>
+        <p>Le livreur garde l’application ouverte et la localisation active pendant toute la durée de son service, et signale immédiatement tout dysfonctionnement qui empêcherait la transmission. Il peut demander à consulter les données qui le concernent, en demander la rectification si elles sont inexactes, et poser toute question sur leur traitement au responsable, qui doit lui répondre.</p>
+      </section>
+
+      <section class="regulation-section">
+        <h3>8. Téléphone personnel et indemnité</h3>
+        <p>Le livreur utilise son propre téléphone pour l’application de suivi des livraisons et pour l’application de planning. C’est précisément pour cette raison que le suivi ne fonctionne que pendant le service : en dehors, le téléphone redevient entièrement privé.</p>
+        <p>Nara Pizza verse à ce titre une indemnité mensuelle, destinée à couvrir l’abonnement de données et l’usure de l’appareil. Elle est due pour tout mois comportant au moins un service. Les frais imposés par l’exécution du travail sont à la charge de l’employeur ; aucun accord ne peut en mettre tout ou partie à la charge du livreur (art. 327a al. 3 du Code des obligations).</p>
+        <p>Le livreur dont le téléphone ne permet pas de faire fonctionner les applications, ou qui ne souhaite pas les installer sur son appareil personnel, le signale au responsable. Un téléphone de service lui est alors remis pour la durée de ses services.</p>
       </section>
 
       <section class="regulation-section">
@@ -2122,7 +2162,7 @@
     const regulationGateMessage = document.getElementById("regulationGateMessage");
     const regulationAcceptanceList = document.getElementById("regulationAcceptanceList");
     let deferredInstallPrompt = null;
-    const REGULATION_VERSION = "1.0";
+    const REGULATION_VERSION = "1.1";
     const sections = {
       dashboard: document.getElementById("dashboardSection"),
       createWeek: document.getElementById("createWeekSection"),
@@ -8083,7 +8123,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-11-d · ESSAI";
+    const APP_VERSION = "2026-11-12-a · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8182,6 +8222,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-11-d. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-12-a. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
