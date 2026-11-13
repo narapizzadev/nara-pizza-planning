@@ -1253,7 +1253,7 @@
           <div id="driverFormWrap" class="driver-form-wrap hidden">
             <div class="panel-header">
               <div>
-                <h3 id="driverFormTitle">Ajouter un livreur</h3>
+                <h3 id="driverFormTitle">Ajouter un employé</h3>
                 <p class="muted">Le mot de passe provisoire est demandé uniquement lors de la création du compte.</p>
               </div>
             </div>
@@ -1289,7 +1289,7 @@
                 <div id="driverPositionField" class="field">
                   <label for="driverPosition">Poste de travail</label>
                   <select id="driverPosition"></select>
-                  <p class="form-note">Ce que cette personne fait dans la maison. Le rôle, lui, dit ce qu’elle peut faire dans l’application.</p>
+                  <p class="form-note">Son métier : livreur, caissier, cuisine. Le rôle, à droite, dit tout autre chose : ce qu’elle a le droit de faire dans l’application.</p>
                 </div>
 
                 <div id="driverPlanningRow" class="checkbox-row hidden">
@@ -1300,7 +1300,7 @@
                 <div id="driverRoleField" class="field hidden">
                   <label for="driverRole">Rôle dans l’application</label>
                   <select id="driverRole">
-                    <option value="driver">Livreur — envoie ses disponibilités</option>
+                    <option value="driver">Employé — envoie ses disponibilités et confirme ses horaires</option>
                     <option value="manager">Responsable — prépare et publie les plannings</option>
                     <option value="admin">Administrateur — responsable, plus la fiche et les rôles</option>
                   </select>
@@ -1340,7 +1340,7 @@
 
               <div class="form-actions">
                 <button id="cancelDriverForm" class="button button-ghost" type="button">Annuler</button>
-                <button id="saveDriverButton" class="button button-primary" type="submit">Créer le livreur</button>
+                <button id="saveDriverButton" class="button button-primary" type="submit">Créer l’employé</button>
               </div>
             </form>
 
@@ -3073,8 +3073,8 @@
       driverRoleField.classList.toggle("hidden",!isAdminProfile());
       driverRoleNote.textContent="Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
 
-      driverFormTitle.textContent="Ajouter un livreur";
-      saveDriverButton.textContent="Créer le livreur";
+      driverFormTitle.textContent="Ajouter un employé";
+      saveDriverButton.textContent="Créer l’employé";
       applyRoleToForm();
       clearMessage(driverFormMessage)
     }
@@ -3094,7 +3094,7 @@
       ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
         document.getElementById(id).required=estLivreur
       });
-      const creations={driver:"Créer le livreur",manager:"Créer le responsable",
+      const creations={driver:"Créer l’employé",manager:"Créer le responsable",
                       admin:"Créer l’administrateur"};
       saveDriverButton.textContent=document.getElementById("driverId").value
         ? "Enregistrer les modifications"
@@ -3102,7 +3102,7 @@
 
       // Le titre du formulaire dit lui aussi ce qu'on est en train de créer.
       if(!document.getElementById("driverId").value){
-        const titres={driver:"Ajouter un livreur",manager:"Ajouter un responsable",
+        const titres={driver:"Ajouter un employé",manager:"Ajouter un responsable",
                       admin:"Ajouter un administrateur"};
         driverFormTitle.textContent=titres[driverRoleSelect.value]||"Ajouter un compte"
       }
@@ -3159,7 +3159,7 @@
       applyRoleToForm();
       driverFormTitle.textContent=(profile.role&&profile.role!=="driver")
         ? "Modifier le responsable"
-        : "Modifier le livreur";
+        : "Modifier l’employé";
       saveDriverButton.textContent="Enregistrer les modifications";
       driverFormWrap.classList.remove("hidden");
       driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
@@ -3298,7 +3298,7 @@
       })
     }
 
-    const ROLE_LABELS = { driver:"Livreur", manager:"Responsable", admin:"Administrateur" };
+    const ROLE_LABELS = { driver:"Employé", manager:"Responsable", admin:"Administrateur" };
 
     function isAdminProfile(){
       return currentProfile?.role==="admin"
@@ -3321,7 +3321,7 @@
 
       const ouvrir=document.getElementById("openDriverForm");
       if(ouvrir){
-        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un livreur"
+        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un employé"
       }
 
       const visible=isAdminProfile();
@@ -5847,7 +5847,7 @@
       {
         group:"Les livreurs",
         question:"Comment donner un accès responsable à quelqu’un ?",
-        answer:`<p>Écran <strong>Gérer les employés</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
+        answer:`<p>Écran <strong>Gérer les employés</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Employé, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
           <p>Un <strong>responsable</strong> prépare et publie les plannings, gère les livreurs et les besoins. Un <strong>administrateur</strong> fait tout cela, et peut en plus modifier la fiche de l’établissement et attribuer les rôles.</p>
           <p>Les responsables sont regroupés dans leur propre liste, en haut de l’écran. Ils n’apparaissent jamais dans les propositions de planning : ce ne sont pas des livreurs.</p>
           <p>Deux sécurités : vous ne pouvez pas modifier votre propre rôle, et le dernier administrateur actif ne peut pas perdre le sien. Sans cela, on peut se verrouiller dehors en un clic.</p>`
@@ -8643,7 +8643,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-12-d · ESSAI";
+    const APP_VERSION = "2026-11-12-e · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8745,6 +8745,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-12-d. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-12-e. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
