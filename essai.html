@@ -1041,6 +1041,16 @@
     .dv-comment.is-open{display:block}
     .dv-comment input{width:100%;padding:11px 12px;border:1px solid var(--dv-line);
       border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:14px;min-height:44px}
+    .dv-phone{margin-top:12px}
+    .dv-phone label{display:block;margin-bottom:6px;font-weight:700;font-size:14px}
+    .dv-phone input{width:100%;padding:13px 14px;border:1px solid var(--dv-line);border-radius:12px;
+      background:var(--dv-card);color:var(--dv-text);font:inherit}
+    .dv-phone .dv-sub{margin-top:7px}
+    .dv-phone-row{display:flex;gap:9px;margin-top:10px}
+    .dv-askphone{margin:0 0 14px;padding:14px 16px;border-radius:16px;
+      border:1px solid #f0d7a8;background:#fff8ec;color:#8a5600}
+    .dv-askphone strong{display:block;margin-bottom:4px}
+    .dv-askphone button{margin-top:10px}
     .dv-methods{display:flex;gap:8px;flex-wrap:wrap}
     .dv-savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));
       padding-top:12px;margin-top:16px}
@@ -1229,6 +1239,7 @@
               <h2>Gérer les employés</h2>
               <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
             </div>
+            <button id="emailTeam" class="button button-secondary" type="button">Écrire à toute l’équipe</button>
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un compte</button>
           </div>
 
@@ -1339,6 +1350,7 @@
               </label>
 
               <div class="form-actions">
+                <button id="sendPasswordLink" class="button button-secondary hidden" type="button">Envoyer un lien de mot de passe</button>
                 <button id="cancelDriverForm" class="button button-ghost" type="button">Annuler</button>
                 <button id="saveDriverButton" class="button button-primary" type="submit">Créer l’employé</button>
               </div>
@@ -1942,6 +1954,12 @@
       <div id="driverMessage" class="message"></div>
 
       <section id="dvTabPlanning" class="dv-panel is-active">
+        <div id="driverAskPhone" class="dv-askphone hidden">
+          <strong>Il manque votre numéro de téléphone</strong>
+          <span>Le responsable doit pouvoir vous joindre un soir de service. Une minute, et c’est fait.</span>
+          <button id="driverAskPhoneButton" class="dv-btn dv-btn-primary" type="button">Ajouter mon numéro</button>
+        </div>
+
         <div id="driverActionCard" class="dv-action is-idle">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
           <div class="dv-action-body">
@@ -2039,7 +2057,16 @@
             <li id="driverProfileEmail">—</li>
             <li>Version de l’application : <span id="driverAppVersion">—</span></li>
           </ul>
-          <div style="margin-top:12px">
+          <div class="dv-phone">
+            <label for="driverOwnPhone">Mon numéro de téléphone</label>
+            <input id="driverOwnPhone" type="tel" placeholder="+41 79 000 00 00" maxlength="30" autocomplete="tel">
+            <p class="dv-sub">Pour que le responsable puisse vous joindre un soir de service. Lui seul le voit.</p>
+            <div class="dv-phone-row">
+              <button id="driverSavePhone" class="dv-btn dv-btn-primary" type="button">Enregistrer mon numéro</button>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
             <button id="driverLogoutButton" class="dv-btn dv-btn-quiet" type="button">Se déconnecter</button>
           </div>
         </article>
@@ -2282,6 +2309,7 @@
     let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
+    const sendPasswordLinkButton = document.getElementById("sendPasswordLink");
     const driverPositionSelect = document.getElementById("driverPosition");
     const driverPlanningRow = document.getElementById("driverPlanningRow");
     const driverInPlanning = document.getElementById("driverInPlanning");
@@ -2852,6 +2880,7 @@
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
       document.getElementById("driverTopbarUser").textContent=
         positionLabel(positionOf(currentProfile?.position));
+      refreshDriverPhone();
       setDriverTab("planning");
 
       // Mot de passe provisoire : rien d'autre n'est accessible tant qu'il n'a pas été changé.
@@ -3066,6 +3095,7 @@
       driverPasswordField.classList.remove("hidden");
 
       // Le rôle ne se choisit que si l'on a soi-même le droit de l'attribuer.
+      sendPasswordLinkButton.classList.add("hidden");
       fillPositionSelect(defaultPositionId());
       driverInPlanning.checked=false;
       driverRoleSelect.value="driver";
@@ -3125,6 +3155,10 @@
       document.getElementById("driverActive").checked=profile.active===true;
       driverPasswordField.classList.add("hidden");
       document.getElementById("driverPassword").required=false;
+
+      sendPasswordLinkButton.classList.remove("hidden");
+      sendPasswordLinkButton.dataset.email=profile.email||"";
+      sendPasswordLinkButton.dataset.userId=userId;
 
       fillPositionSelect(positionOf(profile.position));
       driverInPlanning.checked=profile.inPlanning===true;
@@ -3362,6 +3396,115 @@
         if(bouton)bouton.addEventListener("click",()=>openEditDriverForm(membre.id,membre));
         staffList.appendChild(card)
       })
+    }
+
+    /* ===================================================================
+       METTRE EN ROUTE UN COMPTE
+       Deux gestes qui évitent de distribuer des mots de passe à la main :
+       un courriel de bienvenue à toute l'équipe, et un lien par lequel
+       chacun choisit lui-même son mot de passe.
+       =================================================================== */
+
+    async function sendPasswordLink(){
+      const email=sendPasswordLinkButton.dataset.email||"";
+      const userId=sendPasswordLinkButton.dataset.userId||"";
+
+      if(!email){
+        showMessage(driverFormMessage,"Cette fiche n’a pas d’adresse e-mail.","error");
+        return
+      }
+
+      if(!window.confirm(
+        `Envoyer à ${email} un lien pour choisir son mot de passe ?\n\n`
+        +`Le message vient de Firebase et peut arriver dans les indésirables. `
+        +`Prévenez la personne qu'il va partir.`
+      ))return;
+
+      sendPasswordLinkButton.disabled=true;
+      const libelle=sendPasswordLinkButton.textContent;
+      sendPasswordLinkButton.textContent="Envoi…";
+
+      try{
+        await sendPasswordResetEmail(auth,email);
+
+        // Le lien lui fait choisir son mot de passe : l'obligation de le
+        // changer à la première connexion n'a plus d'objet.
+        if(userId){
+          try{
+            await updateDoc(doc(db,"users",userId),{
+              mustChangePassword:false,
+              updatedAt:serverTimestamp()
+            })
+          }catch(error){ console.warn("Indicateur de mot de passe non mis à jour.",error) }
+        }
+
+        showMessage(
+          driverFormMessage,
+          `Lien envoyé à ${email}. Dites-lui de regarder ses indésirables si rien n’arrive.`,
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(driverFormMessage,`Impossible d’envoyer : ${error.code||error.message}`,"error")
+      }finally{
+        sendPasswordLinkButton.disabled=false;
+        sendPasswordLinkButton.textContent=libelle
+      }
+    }
+
+    /* Le courriel de bienvenue : une seule rédaction, tout le monde en copie
+       cachée pour que personne ne récupère le carnet d'adresses des autres. */
+    function teamEmailDraft(){
+      const destinataires=[...currentDrivers,...currentStaff]
+        .filter(item=>item.active===true&&item.email)
+        .map(item=>item.email);
+
+      const maison=establishmentName();
+      const adresse=appAddress();
+
+      const sujet=`${maison} — vos disponibilités passent par Journia`;
+      const corps=
+`Bonjour,
+
+À partir de maintenant, les disponibilités et le planning passent par Journia.
+
+Adresse de l'application : ${adresse}
+Votre identifiant est cette adresse e-mail.
+
+Vous allez recevoir un second message pour choisir votre mot de passe. S'il n'arrive pas, regardez dans vos indésirables.
+
+Une fois connecté, prenez une minute pour ajouter votre numéro de téléphone : onglet Aide, section Mon compte. C'est ce qui permet de vous joindre un soir de service.
+
+Merci,
+${currentProfile?.name||""}`;
+
+      return {destinataires,sujet,corps}
+    }
+
+    async function writeToTeam(){
+      const {destinataires,sujet,corps}=teamEmailDraft();
+
+      if(destinataires.length===0){
+        showMessage(appMessage,"Aucune adresse e-mail dans l’équipe.","error");
+        return
+      }
+
+      const lien=`mailto:?bcc=${encodeURIComponent(destinataires.join(","))}`
+        +`&subject=${encodeURIComponent(sujet)}`
+        +`&body=${encodeURIComponent(corps)}`;
+
+      // Certains logiciels de courrier refusent les adresses très longues :
+      // on met aussi le tout dans le presse-papier, au cas où.
+      const copie=await copyToClipboard(`${destinataires.join(", ")}\n\n${sujet}\n\n${corps}`);
+
+      window.open(lien,"_self");
+
+      showMessage(
+        appMessage,
+        `Votre logiciel de courrier s’ouvre avec ${destinataires.length} destinataires en copie cachée.`
+        +(copie?" Le message est aussi dans le presse-papier, si l’ouverture échoue.":""),
+        "success"
+      )
     }
 
     /* Scores confidentiels : petite collection, chargee une seule fois par session. */
@@ -5244,6 +5387,54 @@
       return Date.now()>=deadline?"implied":"pending"
     }
 
+    /* ===================================================================
+       LE NUMÉRO DE TÉLÉPHONE, SAISI PAR L'INTÉRESSÉ
+       Demander dix-huit numéros par messages et les recopier est une perte
+       de temps, et une source de fautes de frappe. Chacun saisit le sien.
+       =================================================================== */
+    function refreshDriverPhone(){
+      const champ=document.getElementById("driverOwnPhone");
+      const invitation=document.getElementById("driverAskPhone");
+      if(!champ)return;
+
+      const numero=(currentProfile?.phone||"").trim();
+      if(document.activeElement!==champ)champ.value=numero;
+      if(invitation)invitation.classList.toggle("hidden",numero.length>0)
+    }
+
+    async function saveDriverPhone(){
+      const champ=document.getElementById("driverOwnPhone");
+      const bouton=document.getElementById("driverSavePhone");
+      const numero=champ.value.trim();
+
+      // Assez souple pour accepter les formats écrits à la main, assez
+      // strict pour refuser une saisie manifestement fautive.
+      if(numero&&!/^[+0-9][0-9\s().\-]{6,}$/.test(numero)){
+        driverToast("Ce numéro ne semble pas valide. Exemple : +41 79 000 00 00","bad");
+        return
+      }
+
+      bouton.disabled=true;
+      const libelle=bouton.textContent;
+      bouton.textContent="Enregistrement…";
+
+      try{
+        await updateDoc(doc(db,"users",auth.currentUser.uid),{
+          phone:numero,
+          updatedAt:serverTimestamp()
+        });
+        currentProfile={...currentProfile,phone:numero};
+        refreshDriverPhone();
+        driverToast(numero?"Votre numéro est enregistré.":"Numéro effacé.","ok")
+      }catch(error){
+        console.error(error);
+        driverToast(`Impossible d’enregistrer : ${error.code||error.message}`,"bad")
+      }finally{
+        bouton.disabled=false;
+        bouton.textContent=libelle
+      }
+    }
+
     function renderCurrentDriverAssignments(){
       const assignments=currentDriverAssignments
         .filter(assignment=>assignment.weekId===currentDriverWeekId&&assignment.active!==false)
@@ -5434,6 +5625,7 @@
     }
 
     function refreshDriverScreen(){
+      refreshDriverPhone();
       renderDriverWeekTabs();
       renderCurrentDriverAssignments();
       renderSelectedAvailabilityWeek()
@@ -5828,6 +6020,23 @@
         question:"Comment créer un compte livreur ?",
         answer:`<p>Écran <strong>Gérer les employés</strong>, bouton « Ajouter un compte ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
           <p>À sa première connexion, il est obligé de le changer. Vous ne connaissez donc jamais son mot de passe définitif, et c’est voulu.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Comment mettre toute l’équipe en route sans distribuer dix-huit mots de passe ?",
+        answer:`<p>Deux boutons, sur l’écran <strong>Gérer les employés</strong>.</p>
+          <p><strong>Écrire à toute l’équipe</strong> ouvre votre logiciel de courrier avec tous les comptes actifs en copie cachée — personne ne voit l’adresse des autres — et un message déjà rédigé : l’adresse de l’application, le fait qu’un lien de mot de passe va suivre, et la demande d’ajouter son numéro de téléphone.</p>
+          <p>Puis, sur chaque fiche, <strong>Envoyer un lien de mot de passe</strong>. La personne reçoit un courriel et choisit elle-même son mot de passe : vous n’en connaissez aucun, et vous n’avez rien à transmettre.</p>
+          <p>Ce second message vient de Firebase et atterrit assez souvent dans les indésirables. Prévenez-les, c’est la cause numéro un des appels le premier soir.</p>
+          <p>Vous pouvez toujours créer un compte avec un mot de passe provisoire si vous préférez le donner de vive voix. Les deux méthodes coexistent.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Comment récupérer les numéros de téléphone de mon équipe ?",
+        answer:`<p>Vous n’avez pas à les saisir. Chacun entre le sien depuis son application : onglet <strong>Aide</strong>, section <strong>Mon compte</strong>, champ « Mon numéro de téléphone ».</p>
+          <p>Tant qu’il manque, un encadré orange s’affiche sur son écran d’accueil et l’invite à l’ajouter. Il disparaît dès que c’est fait.</p>
+          <p>Vous pouvez aussi le saisir vous-même depuis sa fiche, mais c’est dix-huit numéros à recopier, avec les fautes de frappe que cela suppose.</p>
+          <p>À quoi ça sert : le bouton <strong>Appeler</strong> sur le service du jour, et les relances individuelles par SMS ou WhatsApp. Sans numéro, il vous reste la relance de groupe, qui fonctionne par copier-coller.</p>`
       },
       {
         group:"Les livreurs",
@@ -7917,6 +8126,19 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    sendPasswordLinkButton.addEventListener("click",sendPasswordLink);
+    document.getElementById("emailTeam").addEventListener("click",writeToTeam);
+    document.getElementById("driverSavePhone").addEventListener("click",saveDriverPhone);
+    document.getElementById("driverOwnPhone").addEventListener("keydown",event=>{
+      if(event.key==="Enter"){event.preventDefault();saveDriverPhone()}
+    });
+    document.getElementById("driverAskPhoneButton").addEventListener("click",()=>{
+      document.getElementById("dvNavHelp").click();
+      const champ=document.getElementById("driverOwnPhone");
+      champ.scrollIntoView?.({behavior:"smooth",block:"center"});
+      champ.focus()
+    });
+
     document.getElementById("openGarage").addEventListener("click",()=>showSection("garage"));
 
     garageForm.addEventListener("submit",async event=>{
@@ -8643,7 +8865,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-12-e · ESSAI";
+    const APP_VERSION = "2026-11-13-b · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -8745,6 +8967,6 @@
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-12-e. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-13-b. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
