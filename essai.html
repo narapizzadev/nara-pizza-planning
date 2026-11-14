@@ -649,6 +649,7 @@
     .relance-list{display:grid;gap:8px;margin-top:12px}
     .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
       border:1px solid var(--border);border-radius:12px;background:#fff}
+    .shortage-line{display:block;margin-top:5px;font-weight:600}
     .relance-name{font-weight:700;flex:1;min-width:120px}
     .relance-open{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--text);
       cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:#e0d6cc;
@@ -2892,6 +2893,14 @@
 
     function fleetUnits(){
       return (establishmentConfig.fleet||[]).filter(unit=>unit&&unit.id&&unit.active!==false)
+    }
+
+    /* « aucun scooter » se lit mieux que « aucun company_scooter ». */
+    function typeDeVehicule(type,pluriel){
+      const mots={company_car:["voiture","voitures"],company_scooter:["scooter","scooters"]};
+      const paire=mots[type];
+      if(!paire)return deliveryMethodLabel(type);
+      return pluriel?paire[1]:paire[0]
     }
 
     function fleetUnitsOfType(type){
@@ -9274,10 +9283,29 @@ ${currentProfile?.name||""}`;
                 (driver.weeklyDeliveryMethods||[]).some(isCompanyMethod)&&!driver.vehicleUnitId
               );
               if(!waiting.length)return "";
+
+              // « Votre parc ne suffit pas » ne dit pas quoi faire. Un parc
+              // où aucun scooter n'a été déclaré et un parc dont tous les
+              // scooters roulent déjà demandent deux gestes différents.
+              const detail=driver=>{
+                const types=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+                const declares=types.filter(type=>fleetUnitsOfType(type).length);
+                if(!declares.length){
+                  return `aucun ${types.map(type=>typeDeVehicule(type)).join(" ni ")} n’est déclaré dans votre parc`
+                }
+                const libres=declares.filter(type=>availableUnitsOfType(type,slot.date).length);
+                if(!libres.length){
+                  return `tous vos ${declares.map(type=>typeDeVehicule(type,true)).join(" et ")} sont indisponibles ce jour-là`
+                }
+                return `tous vos ${libres.map(type=>typeDeVehicule(type,true)).join(" et ")} sont déjà pris sur ce service`
+              };
+
               return `<div class="vehicle-shortage">
-                ${waiting.length} personne${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service :
-                ${waiting.map(driver=>escapeHtml(driver.name)).join(", ")}.
-                Votre parc ne suffit pas, ou ils utiliseront un véhicule personnel.
+                ${waiting.length} personne${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service.
+                ${waiting.map(driver=>
+                  `<span class="shortage-line"><strong>${escapeHtml(driver.name)}</strong> : ${escapeHtml(detail(driver))}.</span>`
+                ).join("")}
+                <span class="shortage-line">À défaut, ${waiting.length>1?"ils utiliseront":"il utilisera"} un véhicule personnel.</span>
               </div>`
             })()}
 
@@ -10596,7 +10624,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-j · ESSAI";
+    const APP_VERSION = "2026-11-14-k · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10698,6 +10726,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-j. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-k. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
