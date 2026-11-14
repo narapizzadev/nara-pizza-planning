@@ -7690,20 +7690,69 @@ ${currentProfile?.name||""}`;
         .find(autre=>autre.status!=="closed")||currentWeeks[0];
 
       if(!semaine){
-        zone.innerHTML='<div class="wizard-note">La semaine vient d’être ouverte, elle arrive…</div>';
+        zone.innerHTML='<div class="wizard-note">La semaine vient d\u2019\u00eatre ouverte, elle arrive\u2026</div>';
         document.getElementById("wizardNext").disabled=true;
         return
       }
 
       // Un seul chiffre pour toute la semaine ne correspond a aucune
-      // realite : le samedi soir ne ressemble pas au mardi midi. On
-      // demande donc quatre nombres, qui couvrent l'essentiel de l'ecart,
-      // et tout reste ajustable service par service ensuite.
+      // realite : le samedi soir ne ressemble pas au mardi midi, et un
+      // caissier ne se compte pas comme un livreur. On demande donc
+      // quatre nombres par metier, et tout reste ajustable service par
+      // service ensuite.
       const services=wizardServicesDeLaSemaine(semaine);
       const groupes=wizardGroupesDeBesoin(services);
+      const metiers=positions();
 
-      if(!wizardBrouillon.parGroupe)wizardBrouillon.parGroupe={...BESOINS_PAR_DEFAUT};
-      const quantites=wizardBrouillon.parGroupe;
+      if(!wizardBrouillon.parPoste)wizardBrouillon.parPoste={};
+      metiers.forEach((poste,rang)=>{
+        if(wizardBrouillon.parPoste[poste.id])return;
+        // Seul le premier metier part avec des nombres : demander deux
+        // caissiers par service parce qu'on demande deux livreurs serait
+        // une invention. Les autres partent a zero, a lui de choisir.
+        wizardBrouillon.parPoste[poste.id]=rang===0
+          ? {...BESOINS_PAR_DEFAUT}
+          : {semaineMidi:0,semaineSoir:0,finMidi:0,finSoir:0}
+      });
+
+      if(!wizardBrouillon.posteChoisi
+        ||!metiers.some(poste=>poste.id===wizardBrouillon.posteChoisi)){
+        wizardBrouillon.posteChoisi=metiers[0].id
+      }
+
+      if(metiers.length>1){
+        const barre=document.createElement("div");
+        barre.className="wizard-shortcuts";
+        barre.id="wizardPostePills";
+        metiers.forEach(poste=>{
+          const total=groupes.reduce((somme,groupe)=>
+            somme+groupe.services.length*(wizardBrouillon.parPoste[poste.id][groupe.clef]||0),0);
+          const pilule=document.createElement("button");
+          pilule.type="button";
+          pilule.dataset.poste=poste.id;
+          pilule.className=`wizard-pill${poste.id===wizardBrouillon.posteChoisi?" is-on":""}`;
+          pilule.textContent=total?`${poste.name} · ${total}`:poste.name;
+          pilule.addEventListener("click",()=>{
+            wizardBrouillon.posteChoisi=poste.id;
+            wizardRendre()
+          });
+          barre.appendChild(pilule)
+        });
+        zone.appendChild(barre)
+      }
+
+      const quantites=wizardBrouillon.parPoste[wizardBrouillon.posteChoisi];
+      const metier=metiers.find(poste=>poste.id===wizardBrouillon.posteChoisi);
+
+      if(metiers.length>1){
+        const quelMetier=document.createElement("p");
+        quelMetier.className="wizard-hint";
+        quelMetier.id="wizardPosteHint";
+        quelMetier.style.margin="0 0 4px";
+        quelMetier.innerHTML=`Ces nombres concernent le poste
+          <strong>${escapeHtml(metier.name)}</strong>. Touchez un autre m\u00e9tier ci-dessus pour le r\u00e9gler \u00e0 son tour.`;
+        zone.appendChild(quelMetier)
+      }
 
       groupes.filter(groupe=>groupe.services.length).forEach(groupe=>{
         const ligne=document.createElement("div");
@@ -7712,15 +7761,15 @@ ${currentProfile?.name||""}`;
 
         const texte=document.createElement("span");
         texte.innerHTML=`<strong>${escapeHtml(groupe.titre)}</strong>
-          <small>${escapeHtml(groupe.jours)} · ${groupe.services.length} service${groupe.services.length>1?"s":""}</small>`;
+          <small>${escapeHtml(groupe.jours)} \u00b7 ${groupe.services.length} service${groupe.services.length>1?"s":""}</small>`;
         ligne.appendChild(texte);
 
         const reglage=document.createElement("span");
         reglage.className="wizard-stepper";
 
         const moins=document.createElement("button");
-        moins.type="button";moins.className="wizard-step";moins.textContent="−";
-        moins.setAttribute("aria-label",`Moins de personnes — ${groupe.titre}`);
+        moins.type="button";moins.className="wizard-step";moins.textContent="\u2212";
+        moins.setAttribute("aria-label",`Moins de personnes \u2014 ${groupe.titre}`);
         moins.addEventListener("click",()=>{
           quantites[groupe.clef]=Math.max(0,(quantites[groupe.clef]||0)-1);
           wizardRendre()
@@ -7731,7 +7780,7 @@ ${currentProfile?.name||""}`;
 
         const plus=document.createElement("button");
         plus.type="button";plus.className="wizard-step";plus.textContent="+";
-        plus.setAttribute("aria-label",`Plus de personnes — ${groupe.titre}`);
+        plus.setAttribute("aria-label",`Plus de personnes \u2014 ${groupe.titre}`);
         plus.addEventListener("click",()=>{
           quantites[groupe.clef]=Math.min(20,(quantites[groupe.clef]||0)+1);
           wizardRendre()
@@ -7742,31 +7791,37 @@ ${currentProfile?.name||""}`;
         zone.appendChild(ligne)
       });
 
-      const aPourvoir=groupes.reduce(
-        (total,groupe)=>total+groupe.services.length*(quantites[groupe.clef]||0),0);
+      const aPourvoir=metiers.reduce((total,poste)=>
+        total+groupes.reduce((somme,groupe)=>
+          somme+groupe.services.length*(wizardBrouillon.parPoste[poste.id][groupe.clef]||0),0),0);
 
       const note=document.createElement("div");
       note.className="wizard-note";
       note.id="wizardNeedsNote";
       note.innerHTML=`Cette semaine compte <strong>${services.length} service${services.length>1?"s":""}</strong>
         ouvert${services.length>1?"s":""}. Nous allons donc demander
-        <strong>${aPourvoir} présence${aPourvoir>1?"s":""}</strong> au total.
-        Un service laissé à zéro ne sera pas demandé du tout.`;
+        <strong>${aPourvoir} pr\u00e9sence${aPourvoir>1?"s":""}</strong> au total${metiers.length>1?", tous m\u00e9tiers confondus":""}.
+        Un service laiss\u00e9 \u00e0 z\u00e9ro ne sera pas demand\u00e9 du tout.`;
       zone.appendChild(note);
 
       document.getElementById("wizardNext").disabled=aPourvoir===0;
 
       wizardAction=async()=>{
-        const poste=defaultPositionId();
-        for(const groupe of groupes){
-          const quantite=quantites[groupe.clef]||0;
-          if(quantite===0)continue;
-          for(const service of groupe.services){
-            const deja=currentNeeds.find(besoin=>
-              besoin.weekId===semaine.id&&besoin.date===service.date&&besoin.time===service.time);
-            if(deja)continue;
-            await creerBesoin({week:semaine,date:service.date,time:service.time,
-              positionId:poste,quantity:quantite,notes:""})
+        for(const poste of metiers){
+          const parGroupe=wizardBrouillon.parPoste[poste.id];
+          for(const groupe of groupes){
+            const quantite=parGroupe[groupe.clef]||0;
+            if(quantite===0)continue;
+            for(const service of groupe.services){
+              const deja=currentNeeds.find(besoin=>
+                besoin.weekId===semaine.id
+                && besoin.date===service.date
+                && besoin.time===service.time
+                && positionOf(besoin.positionId)===poste.id);
+              if(deja)continue;
+              await creerBesoin({week:semaine,date:service.date,time:service.time,
+                positionId:poste.id,quantity:quantite,notes:""})
+            }
           }
         }
         wizardAller(1)
@@ -10529,7 +10584,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-h · ESSAI";
+    const APP_VERSION = "2026-11-14-i · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10631,6 +10686,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-h. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-i. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
