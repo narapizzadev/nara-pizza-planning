@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2b211b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stock">
+<title>Journia Stock</title>
+<style>
+  /* Une colonne sur téléphone, deux sur tablette : bandeau vert de la maison, onglets Stock / Commande / Journal,
+     lignes d'articles avec compteur − / + ; la fiche article s'ouvre en fenêtre. */
+  :root {
+    --vert: #2b211b; --jaune: #f0a05a; --violet: #d9722a;
+    --creme: #fffaf5; --blanc: #fff; --texte: #17171a; --gris: #6e6e76; --bord: #e9dfd4;
+    --ok: #1e7a3e; --ok-fond: #e5f3ea; --bas: #8a5c00; --bas-fond: #fdf0cc;
+    --rupture: #b3261e; --rupture-fond: #fde6e3; --compter: #1a4f8a; --compter-fond: #eef4fc;
+    --titre: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --corps: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: var(--corps); background: var(--creme); color: var(--texte); font-size: 15px; line-height: 1.45; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--jaune); outline-offset: 2px; }
+  .cache { display: none !important; }
+  .jn-nav { background: #17171a; color: #fff; font-size: 13.5px; display: flex; gap: 14px; align-items: center;
+    padding: calc(7px + env(safe-area-inset-top, 0px)) 14px 7px; }
+  .jn-nav a { color: #f0a05a; text-decoration: none; font-weight: 600; }
+  .jn-nav span { opacity: .7; }
+  @media print { .jn-nav { display: none; } }
+  .in { max-width: 1000px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+  header { background: var(--vert); color: var(--creme); padding-top: env(safe-area-inset-top); }
+  header .in { padding-block: 14px 0; display: grid; gap: 8px; }
+  .marque { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+  .marque small { display: block; font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--jaune); }
+  h1 { font-family: var(--titre); font-weight: 700; font-size: 30px; letter-spacing: .5px; margin: 0; line-height: 1.05; }
+  .liens { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
+  .badge { font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(242,194,48,.5); }
+  .liens button { background: none; border: 0; color: var(--creme); text-decoration: underline; padding: 0; }
+  .onglets { display: flex; gap: 4px; }
+  .onglet { background: none; border: 0; color: #d8c9bb; padding: 9px 14px 11px; border-bottom: 3px solid transparent; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .onglet[aria-selected="true"] { color: var(--creme); border-bottom-color: var(--jaune); }
+  .pastille { background: var(--jaune); color: var(--vert); border-radius: 999px; font-size: 11.5px; padding: 0 7px; min-width: 21px; text-align: center; font-variant-numeric: tabular-nums; }
+  .collant { position: sticky; top: 0; z-index: 5; }
+
+  main .in { padding-block: 16px 110px; display: grid; gap: 14px; }
+  .msg { border-radius: 10px; padding: 11px 14px; font-size: 14px; margin: 0; }
+  .msg.info { background: #fcefe1; color: var(--vert); }
+  .msg.avert { background: #fff6d6; color: #6b4e00; }
+  .msg.erreur { background: #fdecea; color: #8c1d18; }
+  .msg pre { white-space: pre-wrap; background: rgba(0,0,0,.05); padding: 8px 10px; border-radius: 8px; font-size: 12.5px; margin: 8px 0 0; }
+  .msg .btn { margin-top: 10px; }
+  #messages { display: grid; gap: 8px; }
+
+  .outils { display: grid; gap: 10px; }
+  .filtres { display: flex; gap: 6px; flex-wrap: wrap; }
+  .puce { border: 1px solid var(--bord); background: var(--blanc); border-radius: 999px; padding: 6px 13px; font-size: 13.5px; display: inline-flex; gap: 6px; align-items: center; }
+  .puce b { font-variant-numeric: tabular-nums; }
+  .puce[aria-pressed="true"] { background: var(--vert); color: var(--creme); border-color: var(--vert); }
+  .recherche { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 220px); gap: 8px; }
+  .champ { width: 100%; min-width: 0; border: 1.5px solid var(--bord); background: var(--blanc); border-radius: 9px; padding: 9px 11px; font-size: 15px; }
+  .legende { font-size: 12px; color: var(--gris); display: flex; gap: 6px 12px; flex-wrap: wrap; }
+
+  .groupes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 430px), 1fr)); align-items: start; }
+  .groupe h2 { font-family: var(--titre); font-weight: 700; font-size: 18px; letter-spacing: .5px; text-transform: uppercase; color: var(--violet); margin: 0 0 6px; }
+  .liste { background: var(--blanc); border: 1px solid var(--bord); border-radius: 14px; overflow: hidden; }
+  .ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px 9px 14px; border-top: 1px solid var(--bord); }
+  .ligne:first-child { border-top: 0; }
+  .info { min-width: 0; display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 4px 0; }
+  .nom { font-weight: 500; overflow-wrap: anywhere; }
+  .sous { font-size: 12px; color: var(--gris); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .etat { font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; border-radius: 4px; padding: 1px 6px; }
+  .etat.ok { color: var(--ok); background: var(--ok-fond); }
+  .etat.bas { color: var(--bas); background: var(--bas-fond); }
+  .etat.rupture { color: var(--rupture); background: var(--rupture-fond); }
+  .etat.compter { color: var(--compter); background: var(--compter-fond); }
+  .compteur { display: flex; align-items: center; gap: 4px; }
+  .compteur button { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid var(--bord); background: var(--creme); font-size: 22px; line-height: 1; display: grid; place-items: center; touch-action: manipulation; }
+  .compteur button:active { background: var(--jaune); }
+  .compteur button:disabled { opacity: .35; cursor: default; }
+  .qte { min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; }
+  .qte strong { display: block; font-size: 19px; font-weight: 600; line-height: 1.1; }
+  .qte small { font-size: 11px; color: var(--gris); }
+  .qte.attente strong { color: var(--violet); }
+  .compter-btn { border: 1.5px dashed var(--compter); color: var(--compter); background: none; border-radius: 9px; padding: 9px 14px; font-size: 13.5px; font-weight: 600; }
+  .vide { padding: 24px 16px; text-align: center; color: var(--gris); }
+  .vide .btn { margin-top: 12px; }
+
+  .btn { border: 1.5px solid var(--vert); background: var(--blanc); color: var(--vert); border-radius: 999px; padding: 9px 18px; font-weight: 600; font-size: 14px; }
+  .btn.principal { background: var(--vert); color: var(--creme); }
+  .btn.jaune { background: var(--jaune); border-color: var(--jaune); color: var(--vert); }
+  .btn.discret { border-color: var(--bord); color: var(--gris); }
+  .btn.danger { border-color: var(--rupture); color: var(--rupture); }
+  .btn.danger.arme { background: var(--rupture); color: var(--blanc); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .flottant { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 6; box-shadow: 0 6px 18px rgba(0,0,0,.2); padding: 13px 20px; }
+
+  .commande .tete { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--bord); flex-wrap: wrap; }
+  .commande h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .commande .art { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; padding: 9px 14px; border-top: 1px solid var(--bord); }
+  .commande .art:first-of-type { border-top: 0; }
+  .commande .art .sous { display: block; }
+  .besoin { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+  .besoin.flou { color: var(--gris); font-weight: 400; font-size: 13px; }
+  .commande textarea { display: block; width: calc(100% - 28px); margin: 0 14px 14px; min-height: 140px; font-size: 13px; }
+
+  .journal .ligne { grid-template-columns: 62px minmax(0, 1fr) auto; }
+  .delta { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .delta.plus { color: var(--ok); } .delta.moins { color: var(--rupture); } .delta.inv { color: var(--violet); }
+  .quand { font-size: 12px; color: var(--gris); text-align: right; font-variant-numeric: tabular-nums; }
+
+  .connexion { max-width: 420px; margin: 40px auto; background: var(--blanc); border: 1px solid var(--bord); border-radius: 14px; padding: 22px; display: grid; gap: 12px; }
+  .connexion h2 { font-family: var(--titre); font-weight: 700; font-size: 22px; text-transform: uppercase; color: var(--vert); margin: 0; }
+  .connexion p { margin: 0; color: var(--gris); font-size: 13.5px; }
+  label.f { display: grid; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--gris); min-width: 0; }
+  label.f .champ { color: var(--texte); font-weight: 400; }
+  .mdp { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+
+  dialog { border: 0; padding: 0; border-radius: 16px; background: var(--blanc); color: var(--texte); width: min(540px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); }
+  dialog::backdrop { background: rgba(10, 30, 20, .55); }
+  dialog form { display: grid; gap: 14px; padding: 20px; }
+  dialog h3 { margin: 0; font-family: var(--titre); font-weight: 700; font-size: 22px; text-transform: uppercase; color: var(--vert); }
+  .deux { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .aide { font-size: 12px; color: var(--gris); margin: -6px 0 0; }
+  .actions { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+  .actions .droite { display: flex; gap: 8px; margin-left: auto; }
+
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(86px + env(safe-area-inset-bottom)); background: var(--texte); color: var(--creme); padding: 10px 16px; border-radius: 9px; font-size: 14px; z-index: 20; max-width: calc(100vw - 32px); }
+  @media (max-width: 480px) {
+    .deux { grid-template-columns: 1fr; }
+    .recherche { grid-template-columns: 1fr; }
+    .compteur button { width: 40px; height: 40px; }
+    .qte { min-width: 52px; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<nav class="jn-nav" aria-label="Journia"><a id="jn-retour" href="./">← Journia</a><span>Stock</span></nav>
+<header class="collant">
+  <div class="in">
+    <div class="marque">
+      <div><small id="jn-maison">Journia</small><h1>Stock</h1></div>
+      <div class="liens"><span class="badge" id="mode">…</span><span id="maj"></span><button type="button" id="deconnexion" class="cache">Déconnexion</button></div>
+    </div>
+    <nav class="onglets cache" role="tablist" id="onglets">
+      <button class="onglet" role="tab" data-onglet="stock" aria-selected="true">Stock</button>
+      <button class="onglet" role="tab" data-onglet="commande" aria-selected="false">Commande <span class="pastille cache" id="nbCommande">0</span></button>
+      <button class="onglet" role="tab" data-onglet="journal" aria-selected="false">Journal</button>
+    </nav>
+  </div>
+</header>
+
+<section class="connexion cache" id="ecran-connexion">
+  <h2>Connexion</h2>
+  <p>Réservé aux responsables. C’est le même compte que pour Journia Planning.</p>
+  <label class="f">E-mail<input class="champ" type="email" id="login-email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email"></label>
+  <label class="f">Mot de passe<span class="mdp"><input class="champ" type="password" id="login-mdp" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false"><button type="button" class="btn discret" id="mdp-voir">Afficher</button></span></label>
+  <div id="login-msg"></div>
+  <button class="btn principal" type="button" id="login-btn">Se connecter</button>
+</section>
+
+<main id="ecran-app" class="cache">
+  <div class="in">
+    <div id="messages" aria-live="polite"></div>
+
+    <section data-section="stock">
+      <div class="outils">
+        <div class="filtres" id="filtres"></div>
+        <div class="recherche">
+          <input class="champ" id="recherche" type="search" placeholder="Chercher un article ou un fournisseur" aria-label="Chercher">
+          <select class="champ" id="categorie" aria-label="Catégorie"></select>
+        </div>
+        <div class="legende"><span><span class="etat rupture">Rupture</span> plus rien</span><span><span class="etat bas">Bas</span> au seuil ou en dessous</span><span><span class="etat compter">À compter</span> pas encore inventorié</span></div>
+      </div>
+      <div class="groupes" id="listeStock" style="margin-top:14px"></div>
+    </section>
+
+    <section data-section="commande" class="cache">
+      <p class="msg info">Articles au seuil ou en dessous, par fournisseur. La quantité proposée ramène au <b>stock idéal</b> indiqué sur la fiche de l’article.</p>
+      <div class="groupes" id="listeCommande" style="margin-top:14px"></div>
+    </section>
+
+    <section data-section="journal" class="cache">
+      <div id="listeJournal"></div>
+    </section>
+  </div>
+</main>
+
+<button class="btn jaune flottant cache" id="ajouter">+ Ajouter un article</button>
+
+<dialog id="fiche">
+  <form id="ficheForm" method="dialog" novalidate>
+    <h3 id="ficheTitre">Article</h3>
+    <label class="f">Nom de l’article<input class="champ" id="f-nom" autocomplete="off"></label>
+    <div class="deux">
+      <label class="f">Catégorie<select class="champ" id="f-cat"></select></label>
+      <label class="f">Unité<input class="champ" id="f-unite" list="unites" placeholder="paquet, kg, pce…" autocomplete="off"></label>
+    </div>
+    <label class="f">Fournisseur<input class="champ" id="f-fourn" list="fournisseurs" autocomplete="off"></label>
+    <div class="deux">
+      <label class="f">Stock compté<input class="champ" id="f-qte" inputmode="decimal" placeholder="à compter" autocomplete="off"></label>
+      <label class="f">Seuil d’alerte<input class="champ" id="f-seuil" inputmode="decimal" placeholder="—" autocomplete="off"></label>
+    </div>
+    <label class="f">Stock idéal (après livraison)<input class="champ" id="f-ideal" inputmode="decimal" placeholder="—" autocomplete="off"></label>
+    <p class="aide">Changer le stock compté enregistre un inventaire dans le journal.</p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="supprimer">Supprimer</button>
+      <div class="droite">
+        <button type="button" class="btn discret" id="annuler">Annuler</button>
+        <button type="submit" class="btn principal">Enregistrer</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+<datalist id="unites"><option value="paquet"><option value="portion"><option value="pce"><option value="kg"><option value="g"><option value="L"><option value="carton"><option value="sachet"><option value="boîte"><option value="bouteille"><option value="fût"></datalist>
+<datalist id="fournisseurs"></datalist>
+<div class="toast cache" id="toast" role="status" aria-live="polite"></div>
+
+<script src="journia-config.js"></script>
+<script>
+(() => {
+  // ---------- Ce qui change d'une maison à l'autre vient de journia-config.js ----------
+  const CONF = window.JOURNIA || {};
+  const MAISON = String(CONF.etablissement || "").trim();
+  const ADRESSE = String(CONF.adresse || "").trim();
+  const DEPART = Array.isArray(CONF.stock && CONF.stock.depart) ? CONF.stock.depart : [];
+  const CATS = [...new Set((Array.isArray(CONF.stock && CONF.stock.categories) ? CONF.stock.categories : [])
+    .concat(DEPART.map((c) => c[0])).concat(["Autre"]))];
+  const REGLE = "    // Journia Stock : réservé aux responsables\n    match /stock-articles/{id} {\n      allow read, write: if isManager();\n    }\n    match /stock-mouvements/{id} {\n      allow read, write: if isManager();\n    }";
+  const SDK = "https://www.gstatic.com/firebasejs/10.12.2/";
+
+  const $ = (id) => document.getElementById(id);
+  const nf = new Intl.NumberFormat("fr-CH", { maximumFractionDigits: 2 });
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const arrondi = (n) => Math.round(n * 100) / 100;
+  const lireNombre = (v) => { const t = String(v).trim().replace(",", "."); if (t === "") return null; const n = Number(t); return Number.isFinite(n) && n >= 0 ? arrondi(n) : NaN; };
+  const slug = (s) => s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const E = { articles: new Map(), mouvements: [], charge: false, qui: "", onglet: "stock", filtre: "tout", cat: "tout", q: "", attente: new Map(), edition: null };
+  let store = null;
+
+  // ---------- Stockage : Firestore en ligne, navigateur en local ----------
+  function storeLocal() {
+    const CLE = "journia-stock-local";
+    let st; try { st = JSON.parse(localStorage.getItem(CLE)); } catch (e) { st = null; }
+    st = st || { articles: {}, mouvements: [] };
+    const sa = [], sm = [];
+    const emettre = () => {
+      const a = Object.entries(st.articles).map(([id, d]) => Object.assign({ id }, d));
+      const m = st.mouvements.slice().sort((x, y) => y.at - x.at).slice(0, 80);
+      sa.forEach((f) => f(a)); sm.forEach((f) => f(m));
+    };
+    const sauver = () => { try { localStorage.setItem(CLE, JSON.stringify(st)); } catch (e) { /* stockage plein ou bloqué */ } emettre(); };
+    const nid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    return {
+      local: true,
+      surArticles(f) { sa.push(f); setTimeout(emettre, 0); },
+      surMouvements(f) { sm.push(f); setTimeout(emettre, 0); },
+      async creer(d) { st.articles[nid()] = d; sauver(); },
+      async modifier(id, p) { if (st.articles[id]) Object.assign(st.articles[id], p); sauver(); },
+      async ajuster(id, delta, p) { const a = st.articles[id]; if (!a) return; a.qty = Math.max(0, arrondi((a.qty || 0) + delta)); Object.assign(a, p); sauver(); },
+      async supprimer(id) { delete st.articles[id]; sauver(); },
+      async noter(m) { st.mouvements.push(Object.assign({ id: nid() }, m)); sauver(); },
+      async importer(liste) { liste.forEach((x) => { st.articles[x.id] = x.d; }); sauver(); },
+      async nettoyer(limite) { const n = st.mouvements.length; st.mouvements = st.mouvements.filter((m) => m.at >= limite); if (st.mouvements.length !== n) sauver(); }
+    };
+  }
+  function storeFirestore(fb) {
+    const db = fb.db, A = db.collection("stock-articles"), M = db.collection("stock-mouvements");
+    const inc = (n) => window.firebase.firestore.FieldValue.increment(n);
+    return {
+      local: false,
+      surArticles(f, err) { A.onSnapshot({ includeMetadataChanges: true }, (s) => f(s.docs.map((d) => Object.assign({ id: d.id }, d.data())), s.metadata), err); },
+      surMouvements(f, err) { M.orderBy("at", "desc").limit(80).onSnapshot((s) => f(s.docs.map((d) => Object.assign({ id: d.id }, d.data()))), err); },
+      async creer(d) { await A.add(d); },
+      async modifier(id, p) { await A.doc(id).update(p); },
+      async ajuster(id, delta, p) { await A.doc(id).update(Object.assign({}, p, { qty: inc(delta) })); },
+      async supprimer(id) { await A.doc(id).delete(); },
+      async noter(m) { await M.add(m); },
+      async importer(liste) { for (let i = 0; i < liste.length; i += 8) { const b = db.batch(); liste.slice(i, i + 8).forEach((x) => b.set(A.doc(x.id), x.d)); await b.commit(); } },
+      async nettoyer(limite) { const s = await M.where("at", "<", limite).limit(200).get(); if (s.empty) return; const b = db.batch(); s.docs.forEach((d) => b.delete(d.ref)); await b.commit(); }
+    };
+  }
+
+  // ---------- Petits outils ----------
+  const qteVue = (a) => { const p = E.attente.get(a.id); return a.qty == null ? null : Math.max(0, arrondi(a.qty + (p ? p.delta : 0))); };
+  function etat(a) { const q = qteVue(a); if (q == null) return "compter"; if (q <= 0) return "rupture"; if (a.min != null && q <= a.min) return "bas"; return "ok"; }
+  const NOM_ETAT = { ok: "OK", bas: "Bas", rupture: "Rupture", compter: "À compter" };
+  const aCommander = (a) => { const e = etat(a); return e === "rupture" || e === "bas"; };
+  const fmt = (q, u) => (q == null ? "—" : nf.format(q) + (u ? " " + u : ""));
+  function categories() { const autres = [...new Set([...E.articles.values()].map((a) => a.cat).filter((c) => c && !CATS.includes(c)))].sort(); return CATS.concat(autres); }
+  function toast(t) { const el = $("toast"); el.textContent = t; el.classList.remove("cache"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.add("cache"), 2800); }
+  function message(html, type, duree) {
+    const d = document.createElement("div"); d.className = "msg " + (type || "info"); d.innerHTML = html; $("messages").appendChild(d);
+    if (duree) setTimeout(() => d.remove(), duree);
+    return d;
+  }
+  function refus(e) { return e && (e.code === "permission-denied" || /permission/i.test(String(e.message))); }
+  function erreurEcriture(e) {
+    if (refus(e)) message("Enregistrement refusé par Firebase. Soit votre compte n’est pas un compte de responsable, soit la règle du stock manque. Dans ce cas : console Firebase, Firestore Database &gt; Règles, ajoutez ce bloc à côté des autres, puis Publier :<pre>" + esc(REGLE) + "</pre>", "erreur");
+    else toast("Enregistrement impossible pour le moment. Vérifiez le Wi-Fi et réessayez.");
+  }
+  const chaines = new Map();
+  function enFile(cle, fn) { const p = (chaines.get(cle) || Promise.resolve()).then(fn, fn); chaines.set(cle, p.catch(() => {})); return p; }
+  async function noter(a, delta, qty, type) { try { await store.noter({ pid: a.id || "", nom: a.name, unite: a.unit || "", delta, qty, type, at: Date.now(), par: E.qui }); } catch (e) { /* le journal n'est pas bloquant */ } }
+
+  // ---------- − / + : on regroupe les appuis rapides en une seule écriture ----------
+  function appui(id, d) {
+    const a = E.articles.get(id); if (!a || a.qty == null) return;
+    const p = E.attente.get(id) || { delta: 0, minuterie: null };
+    if (arrondi(a.qty + p.delta + d) < 0) return;
+    p.delta = arrondi(p.delta + d);
+    clearTimeout(p.minuterie); p.minuterie = setTimeout(() => vider(id), 700);
+    E.attente.set(id, p); rendre();
+  }
+  function vider(id) {
+    const p = E.attente.get(id); if (!p) return Promise.resolve();
+    clearTimeout(p.minuterie);
+    return enFile(id, async () => {
+      const a = E.articles.get(id);
+      if (!a || !p.delta) { E.attente.delete(id); rendre(); return; }
+      const apres = Math.max(0, arrondi((a.qty || 0) + p.delta));
+      try {
+        await store.ajuster(id, p.delta, { majLe: Date.now(), majPar: E.qui });
+        E.attente.delete(id);
+        noter(a, p.delta, apres, p.delta > 0 ? "entree" : "sortie");
+      } catch (e) { E.attente.delete(id); erreurEcriture(e); }
+      rendre();
+    });
+  }
+
+  // ---------- Affichage ----------
+  function rendre() {
+    const arts = [...E.articles.values()];
+    const n = { tout: arts.length, commande: arts.filter(aCommander).length, compter: arts.filter((a) => etat(a) === "compter").length };
+    $("nbCommande").textContent = n.commande; $("nbCommande").classList.toggle("cache", !n.commande);
+    $("ajouter").classList.toggle("cache", !(E.charge && E.onglet === "stock"));
+
+    $("filtres").innerHTML = [["tout", "Tout", n.tout], ["commande", "À commander", n.commande], ["compter", "À compter", n.compter]]
+      .map(([k, l, c]) => `<button class="puce" data-filtre="${k}" aria-pressed="${E.filtre === k}">${l} <b>${c}</b></button>`).join("");
+    const cats = categories(), sel = $("categorie");
+    sel.innerHTML = `<option value="tout">Toutes les catégories</option>` + cats.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    sel.value = cats.includes(E.cat) ? E.cat : "tout";
+
+    const q = E.q.trim().toLowerCase();
+    const vus = arts.filter((a) => (E.filtre !== "commande" || aCommander(a)) && (E.filtre !== "compter" || etat(a) === "compter")
+      && (E.cat === "tout" || a.cat === E.cat) && (!q || `${a.name} ${a.supplier || ""}`.toLowerCase().includes(q)));
+    let h = "";
+    if (!E.charge) h = `<div class="liste"><div class="vide">Chargement du stock…</div></div>`;
+    else if (!arts.length) h = `<div class="liste"><div class="vide">Le stock est vide.<br>${DEPART.length ? `Importez la liste de départ (${DEPART.reduce((s, c) => s + c[2].length, 0)} articles), ou ajoutez les articles un par un.<br><button class="btn principal" id="importer">Importer la liste de départ</button>` : "Ajoutez vos articles un par un avec le bouton en bas de l’écran."}</div></div>`;
+    else if (!vus.length) h = `<div class="liste"><div class="vide">Aucun article ne correspond.</div></div>`;
+    for (const c of cats.concat([""])) {
+      const it = vus.filter((a) => (c ? a.cat === c : !cats.includes(a.cat))).sort((x, y) => x.name.localeCompare(y.name, "fr"));
+      if (it.length) h += `<div class="groupe"><h2>${esc(c || "Sans catégorie")}</h2><div class="liste">${it.map(ligne).join("")}</div></div>`;
+    }
+    $("listeStock").innerHTML = h;
+    rendreCommande(arts); rendreJournal();
+    $("fournisseurs").innerHTML = [...new Set(arts.map((a) => a.supplier).filter(Boolean))].sort().map((s) => `<option value="${esc(s)}">`).join("");
+  }
+  function ligne(a) {
+    const e = etat(a), q = qteVue(a);
+    const sous = [`<span class="etat ${e}">${NOM_ETAT[e]}</span>`];
+    if (a.min != null) sous.push(`<span>seuil ${nf.format(a.min)}</span>`);
+    if (a.supplier) sous.push(`<span>${esc(a.supplier)}</span>`);
+    const droite = q == null
+      ? `<button class="compter-btn" data-act="fiche" data-id="${a.id}" data-focus="qte">Compter</button>`
+      : `<div class="compteur"><button data-act="moins" data-id="${a.id}" aria-label="Retirer 1 : ${esc(a.name)}" ${q <= 0 ? "disabled" : ""}>−</button><div class="qte${E.attente.has(a.id) ? " attente" : ""}"><strong>${nf.format(q)}</strong><small>${esc(a.unit || "")}</small></div><button data-act="plus" data-id="${a.id}" aria-label="Ajouter 1 : ${esc(a.name)}">+</button></div>`;
+    return `<div class="ligne"><button class="info" data-act="fiche" data-id="${a.id}"><span class="nom">${esc(a.name)}</span><span class="sous">${sous.join("")}</span></button>${droite}</div>`;
+  }
+  const aPrevoir = (a) => (a.par != null ? Math.max(0, arrondi(a.par - qteVue(a))) : null);
+  function rendreCommande(arts) {
+    const it = arts.filter(aCommander);
+    if (!it.length) { $("listeCommande").innerHTML = `<div class="liste"><div class="vide">${E.charge ? "Rien à commander : tous les articles comptés sont au-dessus de leur seuil." : "Chargement…"}</div></div>`; return; }
+    const par = new Map();
+    it.forEach((a) => { const k = a.supplier || "Fournisseur non renseigné"; if (!par.has(k)) par.set(k, []); par.get(k).push(a); });
+    $("listeCommande").innerHTML = [...par.keys()].sort((x, y) => x.localeCompare(y, "fr")).map((k) =>
+      `<div class="liste commande"><div class="tete"><h2>${esc(k)}</h2><button class="btn" data-copier="${esc(k)}">Copier la commande</button></div>${
+        par.get(k).sort((x, y) => x.name.localeCompare(y.name, "fr")).map((a) => { const n = aPrevoir(a); return `<div class="art"><div><div>${esc(a.name)}</div><span class="sous">en stock ${fmt(qteVue(a), a.unit)} · seuil ${a.min != null ? nf.format(a.min) : "—"}</span></div><div class="besoin${n == null ? " flou" : ""}">${n == null ? "stock idéal à définir" : fmt(n, a.unit)}</div></div>`; }).join("")
+      }</div>`).join("");
+  }
+  function texteCommande(k) {
+    const it = [...E.articles.values()].filter((a) => aCommander(a) && (a.supplier || "Fournisseur non renseigné") === k).sort((x, y) => x.name.localeCompare(y.name, "fr"));
+    return [`Commande${MAISON ? " " + MAISON : ""} — ${new Date().toLocaleDateString("fr-CH")}`, `Fournisseur : ${k}`, "",
+      ...it.map((a) => { const n = aPrevoir(a); return `- ${a.name} : ${n == null ? "quantité à préciser" : fmt(n, a.unit)}`; }),
+      ...(MAISON ? ["", [MAISON, ADRESSE].filter(Boolean).join(", ")] : [])].join("\n");
+  }
+  const TYPE = { entree: "Entrée", sortie: "Sortie", inventaire: "Inventaire", creation: "Nouvel article", suppression: "Supprimé", import: "Import" };
+  function rendreJournal() {
+    if (!E.mouvements.length) { $("listeJournal").innerHTML = `<div class="liste"><div class="vide">${E.charge ? "Aucun mouvement pour l’instant." : "Chargement…"}</div></div>`; return; }
+    $("listeJournal").innerHTML = `<div class="liste journal">${E.mouvements.map((m) => {
+      const inv = m.type === "inventaire" || m.type === "creation";
+      const cls = m.type === "suppression" ? "" : inv ? "inv" : m.delta > 0 ? "plus" : "moins";
+      const d = m.type === "suppression" ? "—" : inv ? "= " + nf.format(m.qty ?? 0) : (m.delta > 0 ? "+" : "−") + nf.format(Math.abs(m.delta));
+      const t = new Date(m.at), qui = m.par ? String(m.par).split("@")[0] : "";
+      return `<div class="ligne"><span class="delta ${cls}">${d}</span><div style="min-width:0"><div class="nom">${esc(m.nom)}</div><div class="sous"><span>${TYPE[m.type] || ""}${m.type !== "suppression" && m.qty != null ? " · reste " + fmt(m.qty, m.unite) : ""}</span>${qui ? `<span>${esc(qui)}</span>` : ""}</div></div><div class="quand">${t.toLocaleDateString("fr-CH", { day: "2-digit", month: "2-digit" })}<br>${t.toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" })}</div></div>`;
+    }).join("")}</div>`;
+  }
+
+  // ---------- Onglets et clics ----------
+  function onglet(o) {
+    E.onglet = o;
+    document.querySelectorAll(".onglet").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.onglet === o)));
+    document.querySelectorAll("[data-section]").forEach((s) => s.classList.toggle("cache", s.dataset.section !== o));
+    try { localStorage.setItem("journia-stock-onglet", o); } catch (e) { /* sans stockage */ }
+    rendre();
+  }
+  $("onglets").addEventListener("click", (e) => { const b = e.target.closest(".onglet"); if (b) onglet(b.dataset.onglet); });
+  $("filtres").addEventListener("click", (e) => { const b = e.target.closest("[data-filtre]"); if (!b) return; E.filtre = E.filtre === b.dataset.filtre ? "tout" : b.dataset.filtre; rendre(); });
+  $("recherche").addEventListener("input", (e) => { E.q = e.target.value; rendre(); });
+  $("categorie").addEventListener("change", (e) => { E.cat = e.target.value; rendre(); });
+  $("listeStock").addEventListener("click", (e) => {
+    if (e.target.id === "importer") return importer(e.target);
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    if (b.dataset.act === "plus") appui(b.dataset.id, 1);
+    else if (b.dataset.act === "moins") appui(b.dataset.id, -1);
+    else ouvrirFiche(b.dataset.id, b.dataset.focus);
+  });
+  $("listeCommande").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copier]"); if (!b) return;
+    const t = texteCommande(b.dataset.copier);
+    try { await navigator.clipboard.writeText(t); toast("Commande copiée : colle-la dans WhatsApp ou un e-mail."); }
+    catch (err) { const bloc = b.closest(".commande"); let ta = bloc.querySelector("textarea"); if (!ta) { ta = document.createElement("textarea"); ta.className = "champ"; ta.readOnly = true; bloc.appendChild(ta); } ta.value = t; ta.focus(); ta.select(); toast("Le texte est sélectionné : copie-le."); }
+  });
+  $("ajouter").addEventListener("click", () => ouvrirFiche(null));
+
+  async function importer(b) {
+    b.disabled = true; b.textContent = "Import…";
+    const liste = [];
+    DEPART.forEach(([cat, unit, noms]) => noms.forEach((name) => liste.push({ id: slug(cat.slice(0, 4) + "-" + name), d: { name, cat, unit, supplier: "", qty: null, min: null, par: null, majLe: Date.now(), majPar: E.qui } })));
+    try { await store.importer(liste); toast(liste.length + " articles importés. Vous pouvez commencer l’inventaire."); }
+    catch (e) { b.disabled = false; b.textContent = "Importer la liste de départ"; erreurEcriture(e); }
+  }
+
+  // ---------- Fiche article ----------
+  const fiche = $("fiche");
+  function ouvrirFiche(id, focus) {
+    const a = id ? E.articles.get(id) : null;
+    E.edition = id;
+    $("ficheTitre").textContent = a ? a.name : "Nouvel article";
+    $("f-cat").innerHTML = categories().map((c) => `<option>${esc(c)}</option>`).join("");
+    $("f-nom").value = a ? a.name : "";
+    $("f-cat").value = a ? a.cat || CATS[0] : E.cat !== "tout" ? E.cat : CATS[0];
+    $("f-unite").value = a ? a.unit || "" : "";
+    $("f-fourn").value = a ? a.supplier || "" : "";
+    const q = a ? qteVue(a) : null;
+    $("f-qte").value = q != null ? String(q).replace(".", ",") : "";
+    $("f-seuil").value = a && a.min != null ? String(a.min).replace(".", ",") : "";
+    $("f-ideal").value = a && a.par != null ? String(a.par).replace(".", ",") : "";
+    const s = $("supprimer"); s.classList.toggle("cache", !a); s.classList.remove("arme"); s.textContent = "Supprimer";
+    fiche.showModal();
+    const cible = focus === "qte" ? $("f-qte") : a ? null : $("f-nom");
+    if (cible) setTimeout(() => cible.focus(), 40);
+  }
+  $("annuler").addEventListener("click", () => fiche.close());
+  $("supprimer").addEventListener("click", async () => {
+    const b = $("supprimer");
+    if (!b.classList.contains("arme")) { b.classList.add("arme"); b.textContent = "Confirmer la suppression"; return; }
+    const a = E.articles.get(E.edition); fiche.close(); if (!a) return;
+    await enFile(a.id, async () => { try { await store.supprimer(a.id); noter(a, 0, null, "suppression"); toast(a.name + " supprimé."); } catch (e) { erreurEcriture(e); } });
+  });
+  $("ficheForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("f-nom").value.trim();
+    if (!name) { $("f-nom").focus(); toast("Donne un nom à l’article."); return; }
+    const qty = lireNombre($("f-qte").value), min = lireNombre($("f-seuil").value), par = lireNombre($("f-ideal").value);
+    if ([qty, min, par].some(Number.isNaN)) { toast("Les quantités sont des nombres positifs, par exemple 2,5."); return; }
+    const corps = { name, cat: $("f-cat").value, unit: $("f-unite").value.trim(), supplier: $("f-fourn").value.trim(), min, par, majLe: Date.now(), majPar: E.qui };
+    const id = E.edition; fiche.close();
+    if (!id) {
+      try { await store.creer(Object.assign({}, corps, { qty })); noter({ name, unit: corps.unit }, 0, qty, "creation"); toast(name + " ajouté."); }
+      catch (err) { erreurEcriture(err); }
+      return;
+    }
+    if (E.attente.has(id)) await vider(id);
+    await enFile(id, async () => {
+      const a = E.articles.get(id); if (!a) return;
+      try {
+        await store.modifier(id, Object.assign({}, corps, { qty }));
+        if (qty !== a.qty && qty != null) noter(Object.assign({ id }, corps), arrondi(qty - (a.qty || 0)), qty, "inventaire");
+        toast("Fiche enregistrée.");
+      } catch (err) { erreurEcriture(err); }
+    });
+  });
+
+  // ---------- Démarrage ----------
+  function demarrer(s) {
+    store = s;
+    $("ecran-connexion").classList.add("cache"); $("ecran-app").classList.remove("cache"); $("onglets").classList.remove("cache");
+    let o = "stock"; try { o = localStorage.getItem("journia-stock-onglet") || "stock"; } catch (e) { /* sans stockage */ }
+    onglet(["stock", "commande", "journal"].includes(o) ? o : "stock");
+    const attente = setTimeout(() => { if (!E.charge) message("Le stock ne répond pas encore. Vérifiez le Wi-Fi ; la page se mettra à jour toute seule.", "avert", 8000); }, 10000);
+    let nettoye = false;
+    store.surArticles((liste, meta) => {
+      E.articles = new Map(liste.map((a) => [a.id, a]));
+      if (!E.charge && !(meta && meta.fromCache && !liste.length)) { E.charge = true; clearTimeout(attente); }
+      $("maj").textContent = meta && meta.fromCache ? "hors ligne" : "à jour " + new Date().toLocaleTimeString("fr-CH", { hour: "2-digit", minute: "2-digit" });
+      if (!nettoye && E.charge) { nettoye = true; store.nettoyer(Date.now() - 120 * 864e5).catch(() => {}); }
+      rendre();
+    }, (e) => {
+      clearTimeout(attente); E.charge = true;
+      if (refus(e)) message("Lecture refusée par Firebase. Soit votre compte n’est pas un compte de responsable, soit la règle du stock manque. Dans la console Firebase, Firestore Database &gt; Règles, ajoutez ce bloc à côté des autres règles, puis Publier :<pre>" + esc(REGLE) + "</pre>Rechargez ensuite cette page.", "erreur");
+      else message("Le stock ne peut pas être chargé : " + esc(e && e.message || e), "erreur");
+      rendre();
+    });
+    store.surMouvements((m) => { E.mouvements = m; if (E.onglet === "journal") rendreJournal(); }, () => {});
+    if (store.local) message("Mode local : le stock reste dans ce navigateur, pour tester. En ligne, il est partagé entre tous vos appareils.", "info", 9000);
+  }
+
+  function chargerScript(src) { return new Promise((ok, ko) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => ko(new Error(src)); document.head.appendChild(s); }); }
+  const MSG_CONNEXION = {
+    "auth/invalid-credential": "E-mail ou mot de passe incorrect. Vérifiez les majuscules (le clavier de la tablette en ajoute parfois une au début).",
+    "auth/invalid-login-credentials": "E-mail ou mot de passe incorrect. Vérifiez les majuscules du mot de passe.",
+    "auth/wrong-password": "Mot de passe incorrect. Vérifiez les majuscules.",
+    "auth/user-not-found": "Aucun compte avec cet e-mail.",
+    "auth/invalid-email": "L’adresse e-mail n’est pas valide. Vérifiez qu’il n’y a pas d’espace ou de faute.",
+    "auth/missing-password": "Indiquez votre mot de passe.",
+    "auth/too-many-requests": "Trop d’essais : la connexion est bloquée quelques minutes. Réessayez plus tard.",
+    "auth/network-request-failed": "Pas de connexion internet, ou le réseau bloque Firebase. Vérifiez le Wi-Fi et réessayez.",
+    "auth/web-storage-unsupported": "Ce navigateur bloque l’enregistrement de la session (navigation privée ou navigateur intégré). Ouvrez la page dans Chrome ou Safari, hors navigation privée."
+  };
+
+  (async () => {
+    const conf = CONF.firebase;
+    if (MAISON) { $("jn-maison").textContent = MAISON; document.title = "Stock — " + MAISON; }
+    if (CONF.retour) $("jn-retour").href = CONF.retour;
+    if (!conf || !conf.projectId) { $("mode").textContent = "Mode local"; E.qui = ""; demarrer(storeLocal()); return; }
+    $("mode").textContent = "En ligne";
+    let fb;
+    try {
+      await chargerScript(SDK + "firebase-app-compat.js");
+      await Promise.all([chargerScript(SDK + "firebase-firestore-compat.js"), chargerScript(SDK + "firebase-auth-compat.js")]);
+      const app = window.firebase.apps.length ? window.firebase.app() : window.firebase.initializeApp(conf);
+      fb = { db: app.firestore(), auth: app.auth() };
+      try { await fb.db.enablePersistence({ synchronizeTabs: true }); } catch (e) { /* mode hors ligne non disponible sur ce navigateur */ }
+    } catch (e) {
+      $("ecran-connexion").classList.remove("cache");
+      $("login-msg").innerHTML = `<p class="msg erreur">Impossible de charger le module de connexion. Vérifiez internet, ou ouvrez la page dans Chrome ou Safari.</p>`;
+      return;
+    }
+    let lance = false;
+    fb.auth.onAuthStateChanged((u) => {
+      $("deconnexion").classList.toggle("cache", !u);
+      if (u) { E.qui = u.email || ""; if (!lance) { lance = true; demarrer(storeFirestore(fb)); } }
+      else if (lance) location.reload();
+      else { $("ecran-connexion").classList.remove("cache"); $("login-email").focus(); }
+    });
+    $("login-btn").addEventListener("click", async () => {
+      const b = $("login-btn"); $("login-msg").innerHTML = ""; b.disabled = true; b.textContent = "Connexion…";
+      try { await fb.auth.signInWithEmailAndPassword($("login-email").value.trim().toLowerCase(), $("login-mdp").value); }
+      catch (e) { $("login-msg").innerHTML = `<p class="msg erreur">${esc(MSG_CONNEXION[e && e.code] || "Connexion impossible" + (e && e.code ? " (" + e.code + ")" : "") + ".")}</p>`; }
+      b.disabled = false; b.textContent = "Se connecter";
+    });
+    $("login-mdp").addEventListener("keydown", (e) => { if (e.key === "Enter") $("login-btn").click(); });
+    $("deconnexion").addEventListener("click", () => fb.auth.signOut());
+  })();
+  $("mdp-voir").addEventListener("click", () => { const i = $("login-mdp"), v = i.type === "password"; i.type = v ? "text" : "password"; $("mdp-voir").textContent = v ? "Masquer" : "Afficher"; });
+})();
+</script>
+</body>
+</html>
