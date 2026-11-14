@@ -52,6 +52,13 @@
     .topbar-title small{margin-top:2px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45vw}
     .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .install-help-button{white-space:nowrap}
+    .mainnav{position:sticky;top:0;z-index:19;display:flex;gap:4px;overflow-x:auto;
+      padding:7px 14px;background:#fff;border-bottom:1px solid var(--border)}
+    .mainnav-link{flex:0 0 auto;border:0;background:none;padding:9px 14px;border-radius:999px;
+      font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+    .mainnav-link:hover{background:#f6f3f0;color:var(--text)}
+    .mainnav-link.is-current{background:var(--soft);color:var(--orange-dark)}
+    @media(max-width:620px){.mainnav{padding:6px 10px}.mainnav-link{padding:9px 11px;font-size:13px}}
     .install-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.48)}
     .install-modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
     .install-modal-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
@@ -287,6 +294,230 @@
     }
     .layout{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:28px 0 48px}.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:22px}
     .profile-card{background:var(--soft);border-radius:14px;padding:14px 16px;min-width:230px}.profile-card p{margin-bottom:4px}.profile-card small{color:var(--muted)}
+    .setup-guide{margin-bottom:22px;border-color:#c6dcf7;background:linear-gradient(180deg,#f6faff,#fff)}
+    .setup-guide .panel-header{margin-bottom:6px}
+    .setup-progress{height:7px;border-radius:999px;background:#e6eef9;overflow:hidden;margin:14px 0 18px}
+    .setup-progress span{display:block;height:100%;background:#1a4f8a;transition:width .3s}
+    .setup-steps{display:grid;gap:10px}
+    .setup-step{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:13px 15px;border:1px solid var(--border);border-radius:12px;background:#fff}
+    .setup-step.is-done{background:#f7fbf8;border-color:#cfe8da}
+    .setup-step.is-next{border-color:#1a4f8a;box-shadow:0 0 0 3px rgba(26,79,138,.08)}
+    .setup-mark{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;
+      font-weight:700;font-size:14px;background:#eef3f9;color:#1a4f8a}
+    .setup-step.is-done .setup-mark{background:#dff0e6;color:#0f6b4a}
+    .setup-step strong{display:block}
+    .setup-step small{display:block;color:var(--muted);margin-top:3px;line-height:1.4}
+    .setup-optional{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;
+      font-size:11px;font-weight:700;background:#f0f0f3;color:var(--muted);vertical-align:middle}
+    .setup-done-note{padding:14px 16px;border:1px solid #cfe8da;border-radius:12px;background:#f7fbf8;
+      color:#0f6b4a;font-weight:600}
+    @media(max-width:620px){
+      .setup-step{grid-template-columns:34px minmax(0,1fr)}
+      .setup-step .button{grid-column:2;justify-self:start}
+    }
+    /* ===================================================================
+       ASSISTANT DE MISE EN SERVICE
+       Premier contact d'un nouveau client. Une question à la fois, plein
+       écran, rien d'autre à l'écran : ni menu, ni section, ni tentation
+       d'aller voir ailleurs avant d'avoir répondu.
+       =================================================================== */
+    .wizard{position:fixed;inset:0;z-index:60;overflow-y:auto;
+      background:radial-gradient(1200px 600px at 15% -10%,#fde8d4 0%,transparent 60%),
+                 radial-gradient(900px 500px at 100% 110%,#dce9fb 0%,transparent 55%),
+                 #fffaf5}
+    .wizard.hidden{display:none}
+    .wizard-shell{max-width:760px;margin:0 auto;padding:22px 20px 60px;min-height:100%;
+      display:flex;flex-direction:column}
+    .wizard-head{display:flex;align-items:center;gap:16px;margin-bottom:34px}
+    .wizard-logo{font-weight:800;font-size:19px;letter-spacing:-.4px;color:var(--orange-dark)}
+    /* Les points de progression tiennent sur une seule ligne quelle que
+       soit la largeur : une barre de progression qui revient à la ligne
+       ne dit plus rien du chemin parcouru. */
+    .wizard-dots{display:flex;gap:5px;flex:1;flex-wrap:nowrap;overflow:hidden}
+    .wizard-dot{flex:1 1 8px;max-width:28px;height:5px;border-radius:999px;background:#eadbc9}
+    .wizard-dot.is-done{background:var(--orange)}
+    .wizard-dot.is-now{background:var(--orange-dark);flex-grow:1.6}
+    .wizard-quit{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;
+      cursor:pointer;text-decoration:underline;padding:4px}
+    .wizard-body{flex:1}
+    .wizard-eyebrow{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--orange-dark)}
+    .wizard-question{margin:0 0 12px;font-size:32px;line-height:1.15;letter-spacing:-.6px}
+    .wizard-hint{margin:0 0 26px;color:var(--muted);font-size:16px;line-height:1.55;max-width:60ch}
+    .wizard-answers{display:grid;gap:12px;margin-bottom:26px}
+    .wizard-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;
+      width:100%;text-align:left;padding:18px 20px;border:2px solid #efe1d2;border-radius:16px;
+      background:#fff;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+    .wizard-card:hover{border-color:var(--orange)}
+    .wizard-card.is-chosen{border-color:var(--orange-dark);box-shadow:0 0 0 4px rgba(242,140,69,.16)}
+    .wizard-card-icon{font-size:26px;line-height:1}
+    .wizard-card strong{display:block;font-size:17px}
+    .wizard-card small{display:block;margin-top:4px;color:var(--muted);line-height:1.45}
+    .wizard-card-check{justify-self:end;width:26px;height:26px;border-radius:50%;border:2px solid #e3d3c1;
+      display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+    .wizard-card.is-chosen .wizard-card-check{background:var(--orange-dark);border-color:var(--orange-dark)}
+    .wizard-field{display:grid;gap:7px}
+    .wizard-field label{font-weight:600;font-size:14px}
+    .wizard-field input,.wizard-field select{width:100%;padding:16px 16px;border:2px solid #efe1d2;
+      border-radius:14px;background:#fff;color:var(--text);font:inherit;font-size:17px}
+    .wizard-field input:focus,.wizard-field select:focus{outline:0;border-color:var(--orange-dark)}
+    .wizard-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+    .wizard-shortcuts{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+    .wizard-chip{border:2px solid #efe1d2;background:#fff;border-radius:999px;padding:9px 16px;
+      font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    .wizard-chip:hover{border-color:var(--orange)}
+    .wizard-day{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;
+      padding:10px 12px;border:2px solid #efe1d2;border-radius:14px;background:#fff}
+    .wizard-day strong{font-size:15px}
+    .wizard-pill{border:2px solid #efe1d2;background:#fff;border-radius:999px;padding:7px 14px;
+      font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+    .wizard-pill.is-on{background:var(--orange);border-color:var(--orange);color:#fff}
+    .wizard-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+    .wizard-row.has-pill{grid-template-columns:minmax(0,1fr) auto auto}
+    .wizard-row input{padding:13px 14px;border:2px solid #efe1d2;border-radius:12px;font:inherit;width:100%}
+    .wizard-remove{border:0;background:none;color:var(--muted);font:inherit;font-size:20px;
+      cursor:pointer;padding:0 8px;line-height:1}
+    .wizard-add{border:2px dashed #e3d3c1;background:none;border-radius:14px;padding:14px;
+      font:inherit;font-weight:700;color:var(--orange-dark);cursor:pointer;width:100%}
+    .wizard-foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .wizard-cta{border:0;border-radius:14px;padding:17px 34px;font:inherit;font-size:17px;font-weight:700;
+      background:var(--orange-dark);color:#fff;cursor:pointer}
+    .wizard-cta:disabled{background:#e6d5c4;cursor:default}
+    .wizard-back{border:0;background:none;color:var(--muted);font:inherit;font-size:15px;cursor:pointer;
+      text-decoration:underline;padding:8px}
+    .wizard-need{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:15px 18px;border:2px solid #efe1d2;border-radius:16px;background:#fff}
+    .wizard-need strong{display:block;font-size:17px}
+    .wizard-need small{display:block;margin-top:3px;color:var(--muted)}
+    .wizard-stepper{display:flex;align-items:center;gap:12px}
+    .wizard-stepper b{min-width:28px;text-align:center;font-size:21px}
+    .wizard-step{width:40px;height:40px;border-radius:50%;border:2px solid #efe1d2;background:#fff;
+      font:inherit;font-size:22px;line-height:1;color:var(--orange-dark);cursor:pointer}
+    .wizard-step:hover{border-color:var(--orange)}
+    .wizard-recap{display:grid;gap:9px;padding:20px;border:2px solid #efe1d2;border-radius:16px;background:#fff}
+    .wizard-recap div{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:12px;
+      padding-bottom:9px;border-bottom:1px solid #f3eae1}
+    .wizard-recap div:last-child{border:0;padding-bottom:0}
+    .wizard-recap span{color:var(--muted);font-size:14px}
+    .wizard-note{padding:16px 18px;border-radius:14px;background:#fff;border:2px solid #dce9fb;
+      color:#1a4f8a;line-height:1.5;margin-bottom:22px}
+    .wizard-count{display:inline-flex;align-items:baseline;gap:10px;margin-bottom:22px}
+    .wizard-count b{font-size:46px;line-height:1;color:var(--orange-dark)}
+    .wizard-people{display:grid;gap:8px;margin-bottom:20px}
+    .wizard-person{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;
+      padding:12px 15px;border:2px solid #efe1d2;border-radius:14px;background:#fff}
+    .wizard-person small{color:var(--muted);display:block}
+    @media(max-width:620px){
+      .wizard-question{font-size:26px}
+      .wizard-day{grid-template-columns:minmax(0,1fr) auto auto}
+      .wizard-recap div{grid-template-columns:minmax(0,1fr)}
+      .wizard-cta{width:100%;text-align:center}
+    }
+    .deadline-extend{margin-top:16px;padding:18px 20px;border:1px solid #f0d7a8;border-radius:14px;
+      background:#fff8ec}
+    .deadline-extend strong{display:block;margin-bottom:5px}
+    .deadline-extend small{display:block;color:var(--muted);line-height:1.5}
+    .deadline-extend-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .deadline-extend-actions input[type="date"]{padding:11px 13px;border:1px solid var(--border);
+      border-radius:10px;font:inherit;background:var(--white)}
+
+    /* =================================================================
+       RELECTURE D'ENSEMBLE — espace responsable
+       Trois couleurs d'état, toujours les mêmes : rouge = un trou à
+       boucher, ambre = quelque chose attend, vert = c'est tenu.
+       ================================================================= */
+    :root{--bad:#b42318;--bad-soft:#fdecec;--bad-line:#f3c4c4;
+      --warn:#8a5600;--warn-soft:#fff6e6;--warn-line:#f0d7a8;
+      --ok:#0f6b4a;--ok-soft:#e8f8ee;--ok-line:#bfe8cf;
+      --info:#1a4f8a;--info-soft:#eef4fc;--info-line:#c6dcf7}
+    .back-row{display:none}
+    #appView .topbar{position:static;display:flex;grid-template-columns:none;align-items:center;
+      justify-content:space-between;gap:12px;padding:8px 16px}
+    #appView .topbar-brand{width:auto}
+    #appView .topbar-brand img{width:46px}
+    #appView .topbar-title strong{font-size:16px}
+    /* L'en-tête du responsable a ses propres classes : les règles
+       historiques de .topbar-actions empilaient les boutons sur mobile et
+       mangeaient un quart de l'écran. */
+    #appView .topbar{flex-wrap:nowrap;flex-direction:row}
+    #appView .topbar-brand{flex:1 1 auto;min-width:0}
+    .mgr-actions{display:flex;gap:8px;flex:0 0 auto}
+    .mgr-actions .button{padding:8px 13px;font-size:13px;min-height:0;width:auto;white-space:nowrap}
+    @media(max-width:430px){.mgr-actions .button{padding:7px 10px;font-size:12px}}
+    .mainnav{box-shadow:0 1px 0 rgba(0,0,0,.03)}
+    .mainnav-link{display:inline-flex;align-items:center;gap:7px;position:relative}
+    .mainnav-ico{font-size:15px;line-height:1}
+    .mainnav-badge{min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--bad);color:#fff;
+      font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+    .mainnav-badge.is-soft{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+    .mainnav-badge.hidden{display:none}
+    .hello{margin-bottom:18px}
+    .hello h2{margin:0 0 4px;font-size:26px;letter-spacing:-.4px}
+    .hello p{margin:0}
+    .hello #helloDate::first-letter{text-transform:uppercase}
+    @media(max-width:620px){.hello-account{display:none}.hello h2{font-size:22px}}
+
+    .alerts{display:grid;gap:10px;margin-bottom:20px}
+    .alerts.hidden{display:none}
+    .alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:13px;align-items:center;
+      padding:13px 16px;border-radius:14px;border:1px solid var(--line,var(--border));background:#fff}
+    .alert-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px}
+    .alert strong{display:block}
+    .alert small{display:block;margin-top:2px;line-height:1.4;color:var(--muted)}
+    .alert .button{padding:9px 14px;font-size:14px;white-space:nowrap}
+    .alert.is-bad{background:var(--bad-soft);border-color:var(--bad-line)}
+    .alert.is-bad strong{color:var(--bad)}.alert.is-bad .alert-ico{background:#fff;color:var(--bad)}
+    .alert.is-warn{background:var(--warn-soft);border-color:var(--warn-line)}
+    .alert.is-warn strong{color:var(--warn)}.alert.is-warn .alert-ico{background:#fff}
+    .alert.is-info{background:var(--info-soft);border-color:var(--info-line)}
+    .alert.is-info strong{color:var(--info)}.alert.is-info .alert-ico{background:#fff}
+    .alert.is-ok{background:var(--ok-soft);border-color:var(--ok-line);grid-template-columns:auto minmax(0,1fr)}
+    .alert.is-ok strong{color:var(--ok)}.alert.is-ok .alert-ico{background:#fff}
+    @media(max-width:620px){.alert{grid-template-columns:auto minmax(0,1fr)}.alert .button{grid-column:2;justify-self:start}}
+
+    .week-steps{list-style:none;display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0;padding:0}
+    .week-steps.hidden{display:none}
+    .week-step{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:13px;
+      font-weight:700;border:1px solid var(--border);background:#fff;color:var(--muted)}
+    .week-step b{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;
+      font-size:11px;background:#eee;color:var(--muted)}
+    .week-step.is-done{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+    .week-step.is-done b{background:var(--ok);color:#fff}
+    .week-step.is-now{background:var(--soft);border-color:var(--orange);color:var(--orange-dark)}
+    .week-step.is-now b{background:var(--orange-dark);color:#fff}
+    .plan-steps{margin:0 0 16px}
+    .rule-details{margin-bottom:14px}
+    .rule-details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600}
+    .rule-details .form-note{margin-top:8px}
+    /* Une semaine publiée ne collecte plus rien : relancer huit personnes
+       pour des disponibilités qui ne serviront pas est du bruit. */
+    #planningSection.is-published #planningDeadlineDashboard,
+    #planningSection.is-published #missingDriversContainer,
+    #planningSection.is-published #deadlineExtend,
+    #planningSection.is-published #availabilityHeader,
+    #planningSection.is-published #planningAvailabilityContainer{display:none}
+    .plan-slot.is-short{border-color:var(--bad-line)}
+
+    .driver-filters{display:grid;gap:10px;margin-bottom:14px}
+    .driver-filters input[type="search"]{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;
+      font:inherit;background:#fff}
+    .driver-filter-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .driver-filter-positions{display:contents}
+    .filter-chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 13px;font:inherit;
+      font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+    .filter-chip.is-on{background:var(--soft);border-color:var(--orange);color:var(--orange-dark)}
+    .driver-filter-count{margin:0;font-size:13px}
+    .driver-card{grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px 16px;padding:14px 16px}
+    .driver-card .driver-score-panel{grid-column:1 / -1}
+    .driver-card h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+    .driver-post{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--info-soft);color:var(--info)}
+    .driver-flag{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--warn-soft);
+      color:var(--warn);border:1px solid var(--warn-line)}
+    .driver-card.is-inactive{opacity:.62}
+    .driver-more summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;margin-top:4px}
+    .driver-more .driver-stat-grid{margin-top:10px}
+    .service-row{grid-template-columns:62px minmax(0,1fr) auto}
     .next-service{margin-bottom:22px;border-color:#f0cdaa;background:linear-gradient(180deg,#fffaf5,#fff)}
     .next-service .panel-header{margin-bottom:12px;align-items:flex-start}
     .next-service h3{font-size:21px}
@@ -316,6 +547,29 @@
       .service-right{grid-column:1 / -1;justify-content:flex-start}
     }
     .dashboard-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+    /* La zone d'action : ce qu'il y a a faire maintenant, en haut, avant
+       tout le reste. Un backoffice qui se contente d'aligner des menus
+       laisse a l'utilisateur le soin de deviner son propre ordre du jour. */
+    .action-panel{margin-bottom:22px;border-color:#f0cdaa;
+      background:linear-gradient(180deg,#fff5e9,#fff)}
+    .action-eyebrow{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.09em;
+      text-transform:uppercase;color:var(--orange-dark)}
+    .action-panel h3{margin:0 0 7px;font-size:24px;letter-spacing:-.3px}
+    .action-panel>p.muted{margin:0;line-height:1.55}
+    .action-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .dash-group{margin-bottom:8px}
+    .dash-group>h4{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.09em;
+      text-transform:uppercase;color:var(--muted)}
+    /* Les réglages se font une fois et ne se refont plus. Les laisser
+       ouverts en permanence donne le même poids à ce qu'on touche chaque
+       lundi et à ce qu'on ne touchera plus. */
+    .dash-toggle{border:0;background:none;padding:0;font:inherit;letter-spacing:inherit;
+      text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+    .dash-toggle:hover{color:var(--orange-dark)}
+    .dash-caret{display:inline-block;font-size:13px;transition:transform .18s}
+    .dash-group.is-closed .dash-caret{transform:rotate(-90deg)}
+    .dash-group.is-closed .dashboard-grid{display:none}
+    .dash-group .dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:22px}
     .dashboard-button{width:100%;display:flex;align-items:flex-start;gap:14px;text-align:left;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:14px;padding:18px}
     .dashboard-button:hover{border-color:var(--orange);background:#fff8f2}.dashboard-icon{font-size:26px;line-height:1;flex:0 0 auto}
     .dashboard-button span:last-child{display:flex;flex-direction:column;align-items:flex-start;flex:1}.dashboard-button small{margin-top:5px;color:var(--muted);font-weight:normal;line-height:1.35}
@@ -492,7 +746,23 @@
     .relance-list{display:grid;gap:8px;margin-top:12px}
     .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
       border:1px solid var(--border);border-radius:12px;background:#fff}
+    .plan-slot.is-flagged{box-shadow:0 0 0 3px rgba(180,35,24,.25)}
+    .refusals{margin:18px 0;padding:18px 20px;border:1px solid #f3c4c4;border-radius:14px;
+      background:#fdf2f2}
+    .refusals>strong{display:block;font-size:17px;color:var(--error)}
+    .refusals>p{margin:6px 0 0;line-height:1.5}
+    .refusals-list{display:grid;gap:9px;margin-top:14px}
+    .refusal-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 14px;
+      border:1px solid #f3c4c4;border-radius:12px;background:#fff}
+    .refusal-row>span{flex:1;min-width:200px}
+    .refusal-row strong{display:block}
+    .refusal-row small{display:block;color:var(--muted);margin-top:2px}
+    .shortage-line{display:block;margin-top:5px;font-weight:600}
     .relance-name{font-weight:700;flex:1;min-width:120px}
+    .relance-open{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--text);
+      cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:#e0d6cc;
+      text-underline-offset:3px}
+    .relance-open:hover{color:var(--orange-dark);text-decoration-color:var(--orange)}
     .relance-actions{display:flex;gap:7px;flex-wrap:wrap}
     .relance-link{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
       text-decoration:none;font-weight:700;font-size:13px;border:1px solid var(--border);background:#fafafa;color:var(--text)}
@@ -786,8 +1056,7 @@
   
     /* Correctif final de l’en-tête mobile */
     @media (max-width: 768px){
-      #driverView .topbar,
-      #appView .topbar{
+      #driverView .topbar{
         display:flex!important;
         flex-direction:column!important;
         align-items:stretch!important;
@@ -800,8 +1069,7 @@
         overflow:hidden!important;
       }
 
-      #driverView .topbar-brand,
-      #appView .topbar-brand{
+      #driverView .topbar-brand{
         width:100%!important;
         max-width:100%!important;
         display:flex!important;
@@ -810,8 +1078,7 @@
         min-width:0!important;
       }
 
-      #driverView .topbar-actions,
-      #appView .topbar-actions{
+      #driverView .topbar-actions{
         width:100%!important;
         max-width:100%!important;
         display:grid!important;
@@ -824,8 +1091,7 @@
         box-sizing:border-box!important;
       }
 
-      #driverView .topbar-actions .button,
-      #appView .topbar-actions .button{
+      #driverView .topbar-actions .button{
         position:static!important;
         inset:auto!important;
         float:none!important;
@@ -848,33 +1114,28 @@
         text-align:center!important;
       }
 
-      #driverView .topbar-title strong,
-      #appView .topbar-title strong{
+      #driverView .topbar-title strong{
         font-size:18px!important;
         line-height:1.15!important;
       }
 
-      #driverView .topbar-title small,
-      #appView .topbar-title small{
+      #driverView .topbar-title small{
         max-width:100%!important;
         font-size:13px!important;
       }
 
-      #driverView .topbar-brand img,
-      #appView .topbar-brand img{
+      #driverView .topbar-brand img{
         width:58px!important;
         flex:0 0 auto!important;
       }
     }
 
     @media (max-width: 380px){
-      #driverView .topbar-actions,
-      #appView .topbar-actions{
+      #driverView .topbar-actions{
         grid-template-columns:1fr!important;
       }
 
-      #driverView .topbar-actions .button,
-      #appView .topbar-actions .button{
+      #driverView .topbar-actions .button{
         font-size:14px!important;
       }
     }
@@ -946,6 +1207,19 @@
     .dv-action.is-send{background:var(--dv-brand-soft);border-color:var(--dv-brand-line);color:var(--dv-brand-ink)}
     .dv-action.is-ok{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);color:var(--dv-ok-ink)}
     .dv-action.is-idle{color:var(--dv-muted)}
+    .dv-next{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      padding:15px 16px;border-radius:16px;border:1px solid var(--dv-ok-line);background:var(--dv-ok-soft);
+      color:var(--dv-ok-ink)}
+    .dv-next.hidden{display:none}
+    .dv-next small{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;opacity:.8}
+    .dv-next strong{display:block;font-size:20px;font-weight:700;margin-top:2px}
+    .dv-next strong::first-letter{text-transform:uppercase}
+    .dv-next-when span{display:block;font-size:13px;opacity:.85;margin-top:1px}
+    .dv-next-what{display:flex;gap:7px;flex-wrap:wrap}
+    .dv-next-chip{padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;
+      background:var(--dv-card);border:1px solid var(--dv-ok-line);color:var(--dv-text)}
+    .dv-action.hidden{display:none}
+    .dv-action+.dv-action,.dv-action+.dv-next,.dv-next+.dv-secthead{margin-top:10px}
     .dv-action-link{margin-top:10px;font-size:13px;font-weight:600;text-decoration:underline;
       background:none;border:none;padding:0;color:inherit;display:block}
 
@@ -1041,6 +1315,16 @@
     .dv-comment.is-open{display:block}
     .dv-comment input{width:100%;padding:11px 12px;border:1px solid var(--dv-line);
       border-radius:11px;background:var(--dv-card);color:var(--dv-text);font-size:14px;min-height:44px}
+    .dv-phone{margin-top:12px}
+    .dv-phone label{display:block;margin-bottom:6px;font-weight:700;font-size:14px}
+    .dv-phone input{width:100%;padding:13px 14px;border:1px solid var(--dv-line);border-radius:12px;
+      background:var(--dv-card);color:var(--dv-text);font:inherit}
+    .dv-phone .dv-sub{margin-top:7px}
+    .dv-phone-row{display:flex;gap:9px;margin-top:10px}
+    .dv-askphone{margin:0 0 14px;padding:14px 16px;border-radius:16px;
+      border:1px solid #f0d7a8;background:#fff8ec;color:#8a5600}
+    .dv-askphone strong{display:block;margin-bottom:4px}
+    .dv-askphone button{margin-top:10px}
     .dv-methods{display:flex;gap:8px;flex-wrap:wrap}
     .dv-savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));
       padding-top:12px;margin-top:16px}
@@ -1126,18 +1410,57 @@
         <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
         <div class="topbar-title"><strong>Journia</strong><small id="topbarUser">—</small></div>
       </div>
-      <div class="topbar-actions">
+      <div class="mgr-actions">
         <button class="button button-ghost install-help-button" type="button">Installer</button>
-        <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
+        <button id="logoutButton" class="button button-ghost" type="button">Sortir</button>
       </div>
     </header>
 
+    <!-- Aller voir la fiche d'un employé depuis l'écran de planning ne doit
+         pas coûter un aller-retour par le tableau de bord. La barre reste
+         sous l'en-tête sur tous les écrans. -->
+    <nav id="mainNav" class="mainnav" aria-label="Navigation principale">
+      <button class="mainnav-link" data-vers="dashboard" type="button"><span class="mainnav-ico">🏠</span>Accueil<span class="mainnav-badge hidden" data-badge="dashboard"></span></button>
+      <button class="mainnav-link" data-vers="createWeek" type="button"><span class="mainnav-ico">📅</span>Semaines</button>
+      <button class="mainnav-link" data-vers="needs" type="button"><span class="mainnav-ico">🕒</span>Besoins</button>
+      <button class="mainnav-link" data-vers="planning" type="button"><span class="mainnav-ico">🧩</span>Planning<span class="mainnav-badge hidden" data-badge="planning"></span></button>
+      <button class="mainnav-link" data-vers="kitchen" type="button"><span class="mainnav-ico">🖨️</span>Cuisine</button>
+      <button class="mainnav-link" data-vers="drivers" type="button"><span class="mainnav-ico">👥</span>Employés<span class="mainnav-badge is-soft hidden" data-badge="drivers"></span></button>
+      <button class="mainnav-link" data-vers="establishment" type="button"><span class="mainnav-ico">🏪</span>Fiche</button>
+    </nav>
+
     <main class="layout">
       <section id="dashboardSection" class="section-view active">
-        <div class="page-header">
-          <div><h2>Tableau de bord manager</h2><p class="muted">Préparez les semaines, les livreurs et les besoins opérationnels.</p></div>
-          <div class="profile-card"><p>Bonjour <strong id="profileName">—</strong></p><small><span id="profileEmail">—</span> · <span id="profileRole">—</span></small></div>
+        <div class="hello">
+          <h2>Bonjour <span id="profileName">—</span></h2>
+          <p class="muted"><span id="helloDate"></span><span class="hello-account"> · <span id="profileEmail">—</span> · <span id="profileRole">—</span></span></p>
         </div>
+
+        <!-- Ce qui demande un geste aujourd'hui, avant tout le reste. -->
+        <section id="alertsPanel" class="alerts hidden" aria-live="polite"></section>
+
+        <section id="setupGuide" class="panel setup-guide hidden">
+          <div class="panel-header">
+            <div>
+              <h3>Mise en service</h3>
+              <p class="muted">Les étapes à suivre dans l’ordre pour que l’application corresponde à votre maison. Ce bloc disparaîtra tout seul une fois le nécessaire fait.</p>
+            </div>
+            <span id="setupCount" class="service-chip"></span>
+          </div>
+          <div class="form-actions" style="justify-content:flex-start;margin-bottom:4px">
+            <button id="setupResume" class="button button-ghost hidden" type="button">Me guider pas à pas</button>
+          </div>
+          <div class="setup-progress"><span id="setupProgressBar" style="width:0%"></span></div>
+          <div id="setupSteps" class="setup-steps"></div>
+        </section>
+
+        <section id="actionPanel" class="panel action-panel hidden">
+          <p id="actionEyebrow" class="action-eyebrow"></p>
+          <h3 id="actionTitle">—</h3>
+          <p id="actionDetail" class="muted"></p>
+          <ol id="weekSteps" class="week-steps hidden"></ol>
+          <div id="actionButtons" class="action-buttons"></div>
+        </section>
 
         <section id="nextServicePanel" class="panel next-service hidden">
           <div class="panel-header">
@@ -1154,16 +1477,36 @@
           <div id="nextServiceWarning" class="service-warn hidden"></div>
         </section>
 
-        <div class="dashboard-grid">
-          <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités des livreurs</small></span></button>
-          <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les livreurs</strong><small>Consulter les profils et préparer les comptes</small></span></button>
-          <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Préparer les heures et le nombre de livreurs</small></span></button>
-          <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Comparer besoins, disponibilités et classement</small></span></button>
-          <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
-          <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
-          <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
-          <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
-          <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
+        <div class="dash-group">
+          <h4>La semaine</h4>
+          <div class="dashboard-grid">
+            <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités de votre équipe</small></span></button>
+            <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Les heures et le nombre de personnes par service</small></span></button>
+            <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Générer, ajuster, valider et publier</small></span></button>
+            <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>La feuille à afficher et à imprimer</small></span></button>
+          </div>
+        </div>
+
+        <div class="dash-group">
+          <h4>Mon équipe</h4>
+          <div class="dashboard-grid">
+            <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les employés</strong><small>Comptes, postes et notes internes</small></span></button>
+            <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement interne</strong><small>La version en vigueur et qui l’a accepté</small></span></button>
+          </div>
+        </div>
+
+        <div class="dash-group" id="settingsGroup">
+          <h4>
+            <button id="toggleSettings" class="dash-toggle" type="button" aria-expanded="true">
+              <span class="dash-caret">▾</span> Réglages
+            </button>
+          </h4>
+          <div class="dashboard-grid" id="settingsGrid">
+            <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
+            <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
+            <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
+            <button id="openWizard" class="dashboard-button" type="button"><span class="dashboard-icon">🧭</span><span><strong>Me guider pas à pas</strong><small>Revoir la configuration question par question</small></span></button>
+          </div>
         </div>
 
         <section class="panel">
@@ -1218,9 +1561,10 @@
         <section class="panel">
           <div class="driver-toolbar">
             <div>
-              <h2>Gérer les livreurs</h2>
+              <h2>Gérer les employés</h2>
               <p class="muted">Ajoutez les comptes et gérez les informations opérationnelles et confidentielles.</p>
             </div>
+            <button id="emailTeam" class="button button-secondary" type="button">Écrire à toute l’équipe</button>
             <button id="openDriverForm" class="button button-primary" type="button">Ajouter un compte</button>
           </div>
 
@@ -1235,9 +1579,17 @@
           </div>
 
           <div id="driversHeading" class="panel-header hidden" style="margin-bottom:12px">
-            <div><h3>Livreurs</h3></div>
+            <div><h3>Équipe</h3></div>
           </div>
 
+          <div class="driver-filters">
+            <input id="driverSearch" type="search" placeholder="Chercher un nom, un numéro, une adresse…" aria-label="Chercher un employé">
+            <div class="driver-filter-chips">
+              <button id="driverFilterActive" class="filter-chip is-on" type="button" aria-pressed="true">Actifs seulement</button>
+              <span id="driverFilterPositions" class="driver-filter-positions"></span>
+            </div>
+            <p id="driverFilterCount" class="muted driver-filter-count"></p>
+          </div>
           <div id="driverList" class="driver-list">
             <div class="empty-state">Chargement des livreurs…</div>
           </div>
@@ -1245,7 +1597,7 @@
           <div id="driverFormWrap" class="driver-form-wrap hidden">
             <div class="panel-header">
               <div>
-                <h3 id="driverFormTitle">Ajouter un livreur</h3>
+                <h3 id="driverFormTitle">Ajouter un employé</h3>
                 <p class="muted">Le mot de passe provisoire est demandé uniquement lors de la création du compte.</p>
               </div>
             </div>
@@ -1274,14 +1626,26 @@
                 </div>
 
                 <div class="field">
-                  <label for="driverVehicle">Véhicule</label>
-                  <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
+                  <label for="driverVehicle">Véhicule habituel (note)</label>
+                  <input id="driverVehicle" type="text" placeholder="Voiture et scooter, vélo…">
+                  <small class="muted">Une note pour vous, sans effet sur le planning : ce sont les moyens que l’employé coche chaque semaine avec ses disponibilités qui comptent.</small>
+                </div>
+
+                <div id="driverPositionField" class="field">
+                  <label for="driverPosition">Poste de travail</label>
+                  <select id="driverPosition"></select>
+                  <p class="form-note">Son métier : livreur, caissier, cuisine. Le rôle, à droite, dit tout autre chose : ce qu’elle a le droit de faire dans l’application.</p>
+                </div>
+
+                <div id="driverPlanningRow" class="checkbox-row hidden">
+                  <input id="driverInPlanning" type="checkbox">
+                  <span>Apparaît dans les plannings. À cocher pour un responsable qui travaille aussi en service.</span>
                 </div>
 
                 <div id="driverRoleField" class="field hidden">
                   <label for="driverRole">Rôle dans l’application</label>
                   <select id="driverRole">
-                    <option value="driver">Livreur — envoie ses disponibilités</option>
+                    <option value="driver">Employé — envoie ses disponibilités et confirme ses horaires</option>
                     <option value="manager">Responsable — prépare et publie les plannings</option>
                     <option value="admin">Administrateur — responsable, plus la fiche et les rôles</option>
                   </select>
@@ -1320,8 +1684,9 @@
               </label>
 
               <div class="form-actions">
+                <button id="sendPasswordLink" class="button button-secondary hidden" type="button">Envoyer un lien de mot de passe</button>
                 <button id="cancelDriverForm" class="button button-ghost" type="button">Annuler</button>
-                <button id="saveDriverButton" class="button button-primary" type="submit">Créer le livreur</button>
+                <button id="saveDriverButton" class="button button-primary" type="submit">Créer l’employé</button>
               </div>
             </form>
 
@@ -1398,8 +1763,13 @@
                     <select id="needTime" required></select>
                   </div>
 
+                  <div class="field" id="needPositionField">
+                    <label for="needPosition">Poste</label>
+                    <select id="needPosition"></select>
+                  </div>
+
                   <div class="field">
-                    <label for="needQuantity">Nombre de livreurs</label>
+                    <label for="needQuantity">Nombre de personnes</label>
                     <input id="needQuantity" type="number" min="1" max="50" value="1" required>
                   </div>
                 </div>
@@ -1494,7 +1864,19 @@
           </div>
           <div id="establishmentMethods" class="delivery-methods-grid"></div>
 
-          <div class="panel-header" style="margin-top:22px">
+          <div class="panel-header" id="positionsAnchor" style="margin-top:22px">
+            <div>
+              <h3>Postes de travail</h3>
+              <p class="muted">Les métiers de votre maison : livreur, caissier, cuisine, téléphoniste. Chaque employé en occupe un, et chaque besoin en demande un.</p>
+              <p class="muted">Cochez « véhicule » pour les postes qui en exigent un. Un caissier ne se verra alors jamais demander de moyen de livraison, et ne sera jamais écarté faute de véhicule.</p>
+            </div>
+          </div>
+          <div id="positionList" class="fleet-list"></div>
+          <div class="form-actions" style="justify-content:flex-start;margin-top:10px">
+            <button id="addPosition" class="button button-ghost" type="button">Ajouter un poste</button>
+          </div>
+
+          <div class="panel-header" id="fleetAnchor" style="margin-top:22px">
             <div>
               <h3>Parc de véhicules de l’établissement</h3>
               <p class="muted">Vos voitures et scooters, un par ligne. L’application évitera d’attribuer le même véhicule à deux livreurs sur le même service.</p>
@@ -1649,13 +2031,6 @@
         </section>
       </section>
 
-      <div id="appMessage" class="message"></div>
-      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
-    </main>
-  </section>
-
-
-
       <section id="planningSection" class="section-view">
         <div class="back-row">
           <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
@@ -1671,7 +2046,11 @@
             </div>
           </div>
 
-          <div id="planningRuleNote" class="form-note"></div>
+          <ol id="planSteps" class="week-steps plan-steps hidden"></ol>
+          <details class="rule-details">
+            <summary>Comment l’application choisit</summary>
+            <div id="planningRuleNote" class="form-note"></div>
+          </details>
 
           <div class="planning-controls">
             <div class="field">
@@ -1720,6 +2099,25 @@
               </div>
             </div>
 
+            <!-- Passé le délai, l'employé voit « Délai dépassé » et ne peut
+                 plus rien envoyer. Si le responsable attend encore des
+                 réponses, il lui faut un moyen de rouvrir la saisie sans
+                 aller fouiller dans la fiche de la semaine. -->
+            <div id="deadlineExtend" class="deadline-extend hidden">
+              <div>
+                <strong>Le délai est passé, et il manque des réponses.</strong>
+                <small>Vos employés voient « Délai dépassé » et ne peuvent plus rien envoyer.
+                  Prolongez le délai pour rouvrir la saisie : ils n’ont rien d’autre à faire que répondre.</small>
+              </div>
+              <div class="deadline-extend-actions">
+                <button class="button button-ghost extend-quick" data-jours="1" type="button">Jusqu’à demain</button>
+                <button class="button button-ghost extend-quick" data-jours="2" type="button">Jusqu’à après-demain</button>
+                <input type="date" id="extendDate" aria-label="Nouvelle date limite">
+                <button id="extendButton" class="button button-primary" type="button">Prolonger</button>
+              </div>
+              <div id="extendMessage" class="message"></div>
+            </div>
+
             <div id="missingDriversContainer" class="missing-drivers hidden">
               <strong>Disponibilités manquantes</strong>
               <p class="muted">Un seul message pour tout le groupe, ou un message par livreur. Rien ne part sans votre geste.</p>
@@ -1728,11 +2126,11 @@
 
             <div id="pendingConfirmContainer" class="missing-drivers hidden">
               <strong>Horaires non confirmés</strong>
-              <p class="muted">Ces livreurs ont reçu leurs horaires mais n’ont pas encore répondu. Relancez le groupe en un geste.</p>
+              <p class="muted">Ces personnes ont reçu leurs horaires mais n’ont pas encore répondu. Relancez le groupe en un geste.</p>
               <div id="pendingConfirmList" class="relance-list"></div>
             </div>
 
-            <div class="panel-header">
+            <div class="panel-header" id="availabilityHeader">
               <div>
                 <h3>Disponibilités reçues</h3>
                 <p class="muted">Les réponses de la semaine sélectionnée apparaissent ici avant de générer le planning. Cliquez sur un nom pour voir le détail de sa semaine.</p>
@@ -1744,12 +2142,56 @@
             </div>
           </section>
 
+          <!-- Un refus laisse un creneau decouvert sans que rien ne le
+               signale en haut de l'ecran. Il faut le dire avant la liste,
+               et mener directement au creneau concerne. -->
+          <div id="refusalsPanel" class="refusals hidden">
+            <strong id="refusalsTitle">—</strong>
+            <p class="muted">Un refus laisse le créneau découvert. Remplacez la personne, ou prenez quelqu’un dans la liste d’attente.</p>
+            <div id="refusalsList" class="refusals-list"></div>
+          </div>
+
           <div id="planContainer" class="plan-list">
             <div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>
           </div>
         </section>
       </section>
 
+      <div id="appMessage" class="message"></div>
+      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
+    </main>
+  </section>
+
+
+
+
+
+  <!-- =================================================================
+       ASSISTANT DE MISE EN SERVICE
+       Volontairement hors de #appView : quand il est affiché, l'application
+       entière est masquée. Pas de menu, pas de section, pas d'autre chemin
+       que de répondre à la question posée.
+       ================================================================= -->
+  <section id="wizard" class="wizard hidden">
+    <div class="wizard-shell">
+      <header class="wizard-head">
+        <span class="wizard-logo">Journia</span>
+        <div id="wizardDots" class="wizard-dots"></div>
+        <button id="wizardQuit" class="wizard-quit" type="button">Plus tard</button>
+      </header>
+      <div class="wizard-body">
+        <p id="wizardPhase" class="wizard-eyebrow"></p>
+        <h1 id="wizardQuestion" class="wizard-question"></h1>
+        <p id="wizardHint" class="wizard-hint"></p>
+        <div id="wizardAnswers" class="wizard-answers"></div>
+        <div id="wizardMessage" class="message"></div>
+        <div class="wizard-foot">
+          <button id="wizardNext" class="wizard-cta" type="button">Continuer</button>
+          <button id="wizardBack" class="wizard-back hidden" type="button">Revenir</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="driverView" class="driver-app-shell dv-shell hidden">
 
@@ -1906,6 +2348,12 @@
       <div id="driverMessage" class="message"></div>
 
       <section id="dvTabPlanning" class="dv-panel is-active">
+        <div id="driverAskPhone" class="dv-askphone hidden">
+          <strong>Il manque votre numéro de téléphone</strong>
+          <span>Le responsable doit pouvoir vous joindre un soir de service. Une minute, et c’est fait.</span>
+          <button id="driverAskPhoneButton" class="dv-btn dv-btn-primary" type="button">Ajouter mon numéro</button>
+        </div>
+
         <div id="driverActionCard" class="dv-action is-idle">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
           <div class="dv-action-body">
@@ -1913,6 +2361,10 @@
             <span>Un instant, nous récupérons votre semaine.</span>
           </div>
         </div>
+
+        <div id="driverActionSecond" class="dv-action is-send hidden"></div>
+
+        <div id="driverNextShift" class="dv-next hidden"></div>
 
         <div class="dv-secthead">
           <h2 id="driverPageTitle">Mon planning</h2>
@@ -2003,7 +2455,16 @@
             <li id="driverProfileEmail">—</li>
             <li>Version de l’application : <span id="driverAppVersion">—</span></li>
           </ul>
-          <div style="margin-top:12px">
+          <div class="dv-phone">
+            <label for="driverOwnPhone">Mon numéro de téléphone</label>
+            <input id="driverOwnPhone" type="tel" placeholder="+41 79 000 00 00" maxlength="30" autocomplete="tel">
+            <p class="dv-sub">Pour que le responsable puisse vous joindre un soir de service. Lui seul le voit.</p>
+            <div class="dv-phone-row">
+              <button id="driverSavePhone" class="dv-btn dv-btn-primary" type="button">Enregistrer mon numéro</button>
+            </div>
+          </div>
+
+          <div style="margin-top:16px">
             <button id="driverLogoutButton" class="dv-btn dv-btn-quiet" type="button">Se déconnecter</button>
           </div>
         </article>
@@ -2246,6 +2707,10 @@
     let editingWeekId = "";
 
     const driverList = document.getElementById("driverList");
+    const sendPasswordLinkButton = document.getElementById("sendPasswordLink");
+    const driverPositionSelect = document.getElementById("driverPosition");
+    const driverPlanningRow = document.getElementById("driverPlanningRow");
+    const driverInPlanning = document.getElementById("driverInPlanning");
     const driverRoleField = document.getElementById("driverRoleField");
     const driverRoleSelect = document.getElementById("driverRole");
     const driverRoleNote = document.getElementById("driverRoleNote");
@@ -2263,6 +2728,8 @@
     const needForm = document.getElementById("needForm");
     const needDate = document.getElementById("needDate");
     const needTime = document.getElementById("needTime");
+    const needPosition = document.getElementById("needPosition");
+    const needPositionField = document.getElementById("needPositionField");
     const needQuantity = document.getElementById("needQuantity");
     const needNotes = document.getElementById("needNotes");
     const needList = document.getElementById("needList");
@@ -2499,6 +2966,55 @@
     }
 
     /* ===================================================================
+       POSTES DE TRAVAIL
+       Le poste dit ce qu'une personne fait dans la maison — livreur,
+       caissier, cuisine. À ne pas confondre avec le rôle, qui dit ce
+       qu'elle a le droit de faire dans l'application.
+
+       Une installation qui n'a rien déclaré se comporte comme avant :
+       tout le monde est livreur et doit avoir un véhicule.
+       =================================================================== */
+    const DEFAULT_POSITION = { id:"livreur", name:"Livreur", requiresVehicle:true, active:true };
+
+    function positions(){
+      const list=(establishmentConfig.positions||[]).filter(item=>item&&item.id&&item.active!==false);
+      return list.length?list:[DEFAULT_POSITION]
+    }
+
+    function positionById(id){
+      return positions().find(item=>item.id===id)||null
+    }
+
+    function defaultPositionId(){
+      return positions()[0].id
+    }
+
+    /* Un document sans poste date d'avant cette notion : c'est un livreur. */
+    function positionOf(value){
+      const id=value||DEFAULT_POSITION.id;
+      return positionById(id)?id:defaultPositionId()
+    }
+
+    function positionLabel(id){
+      const poste=positionById(id);
+      return poste?poste.name:"Livreur"
+    }
+
+    function positionRequiresVehicle(id){
+      const poste=positionById(id);
+      return poste?poste.requiresVehicle!==false:true
+    }
+
+    function newPositionId(){
+      return "p"+Math.random().toString(36).slice(2,9)
+    }
+
+    /* Plusieurs postes déclarés : l'information mérite d'être affichée. */
+    function severalPositions(){
+      return positions().length>1
+    }
+
+    /* ===================================================================
        PARC DE VÉHICULES
        Les moyens de livraison sont des TYPES ; le parc contient les
        EXEMPLAIRES réels. Un exemplaire ne peut servir qu'à un livreur
@@ -2512,6 +3028,14 @@
 
     function fleetUnits(){
       return (establishmentConfig.fleet||[]).filter(unit=>unit&&unit.id&&unit.active!==false)
+    }
+
+    /* « aucun scooter » se lit mieux que « aucun company_scooter ». */
+    function typeDeVehicule(type,pluriel){
+      const mots={company_car:["voiture","voitures"],company_scooter:["scooter","scooters"]};
+      const paire=mots[type];
+      if(!paire)return deliveryMethodLabel(type);
+      return pluriel?paire[1]:paire[0]
     }
 
     function fleetUnitsOfType(type){
@@ -2701,7 +3225,7 @@
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
-    function showSection(name){
+    function showSection(name,ancre){
       currentSectionName=name;
       Object.values(sections).forEach(s=>s.classList.remove("active"));
       sections[name].classList.add("active");
@@ -2716,7 +3240,19 @@
       if(name==="establishment")prepareEstablishmentSection();
       if(name==="help")prepareHelpSection();
       if(name==="garage")prepareGarageSection();
-      if(name==="dashboard")refreshNextService();
+      if(name==="dashboard"){renderSetupGuide();renderActionPanel();renderSettingsGroup();refreshNextService()}
+
+      document.querySelectorAll(".mainnav-link").forEach(lien=>
+        lien.classList.toggle("is-current",lien.dataset.vers===name));
+
+      // Une ancre : la fiche de l'établissement est longue, et arriver tout
+      // en haut quand on venait chercher les postes de travail oblige à
+      // deviner où ils se trouvent.
+      const cible=ancre&&document.getElementById(ancre);
+      if(cible){
+        cible.scrollIntoView({behavior:"smooth",block:"start"});
+        return
+      }
       window.scrollTo({top:0,behavior:"smooth"})
     }
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
@@ -2725,7 +3261,9 @@
       driverView.classList.add("hidden");
       document.getElementById("profileName").textContent=profile.name||"Utilisateur";
       document.getElementById("profileEmail").textContent=profile.email||"";
-      document.getElementById("profileRole").textContent=profile.role||"";
+      document.getElementById("profileRole").textContent=ROLE_LABELS[profile.role]||profile.role||"";
+      document.getElementById("helloDate").textContent=
+        new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
       loginView.classList.add("hidden");appView.classList.remove("hidden");
       // Seules les donnees indispensables au tableau de bord sont abonnees ici.
@@ -2733,13 +3271,10 @@
       // sont charges uniquement a l'ouverture de leur ecran.
       subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();
 
-      // Première utilisation : on amène directement le responsable sur la fiche.
-      if(!establishmentConfigExists){
-        showSection("establishment");
-        showMessage(appMessage,"Complétez la fiche de l’établissement avant de créer votre première semaine.","error")
-      }else{
-        showSection("dashboard")
-      }
+      // Première utilisation : l'assistant de mise en service prend la main,
+      // plein écran. Déposer quelqu'un dans un formulaire sans lui dire
+      // pourquoi est le meilleur moyen de le perdre dès la première minute.
+      if(!wizardPeutEtreOuvrir())showSection("dashboard")
     }
 
     async function loadUserProfile(user){
@@ -2760,7 +3295,9 @@
       driverGreeting.textContent=`Bonjour ${firstName}`;
       document.getElementById("driverProfileName").textContent=profile.name||"Livreur";
       document.getElementById("driverProfileEmail").textContent=profile.email||user.email||"";
-      document.getElementById("driverTopbarUser").textContent="Espace livreur";
+      document.getElementById("driverTopbarUser").textContent=
+        positionLabel(positionOf(currentProfile?.position));
+      refreshDriverPhone();
       setDriverTab("planning");
 
       // Mot de passe provisoire : rien d'autre n'est accessible tant qu'il n'a pas été changé.
@@ -2910,10 +3447,27 @@
       }
     }
 
+    /* Création d'une semaine, pour le formulaire comme pour l'assistant. */
+    async function creerSemaine({startDate,endDate,deadlineDate,deadlineTime,
+      message="",deliveryMethods,open=true}){
+      const ref=await addDoc(collection(db,"weeks"),{
+        startDate,endDate,deadlineDate,deadlineTime,message,deliveryMethods,
+        status:open?"open":"draft",
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        createdByName:currentProfile.name||""
+      });
+      return ref.id
+    }
+
     function renderWeeks(snapshot){
       currentWeeks=[];
       snapshot.forEach(docSnap=>currentWeeks.push({id:docSnap.id,...docSnap.data()}));
       populateNeedsWeekSelect();
+      renderSetupGuide();
+      renderActionPanel();
+      renderSettingsGroup();
+      wizardRafraichir();
 
       if(currentWeeks.length===0){
         weekList.innerHTML='<div class="empty-state">Aucune semaine créée pour le moment.</div>';
@@ -2975,26 +3529,36 @@
       driverPasswordField.classList.remove("hidden");
 
       // Le rôle ne se choisit que si l'on a soi-même le droit de l'attribuer.
+      sendPasswordLinkButton.classList.add("hidden");
+      fillPositionSelect(defaultPositionId());
+      driverInPlanning.checked=false;
       driverRoleSelect.value="driver";
       driverRoleSelect.disabled=false;
       driverRoleField.classList.toggle("hidden",!isAdminProfile());
       driverRoleNote.textContent="Un responsable prépare les plannings et n’apparaît jamais dans les propositions.";
 
-      driverFormTitle.textContent="Ajouter un livreur";
-      saveDriverButton.textContent="Créer le livreur";
+      driverFormTitle.textContent="Ajouter un employé";
+      saveDriverButton.textContent="Créer l’employé";
       applyRoleToForm();
       clearMessage(driverFormMessage)
     }
 
     /* Un responsable n'a ni priorité, ni fiabilité, ni expérience : ces
        notes ne servent qu'au classement des livreurs. */
+    function fillPositionSelect(selected){
+      driverPositionSelect.innerHTML=positions()
+        .map(poste=>`<option value="${escapeHtml(poste.id)}" ${poste.id===selected?"selected":""}>${escapeHtml(poste.name)}</option>`)
+        .join("")
+    }
+
     function applyRoleToForm(){
       const estLivreur=driverRoleSelect.value==="driver";
       driverFormWrap.classList.toggle("is-staff",!estLivreur);
+      driverPlanningRow.classList.toggle("hidden",estLivreur);
       ["driverPriority","driverReliability","driverExperience"].forEach(id=>{
         document.getElementById(id).required=estLivreur
       });
-      const creations={driver:"Créer le livreur",manager:"Créer le responsable",
+      const creations={driver:"Créer l’employé",manager:"Créer le responsable",
                       admin:"Créer l’administrateur"};
       saveDriverButton.textContent=document.getElementById("driverId").value
         ? "Enregistrer les modifications"
@@ -3002,7 +3566,7 @@
 
       // Le titre du formulaire dit lui aussi ce qu'on est en train de créer.
       if(!document.getElementById("driverId").value){
-        const titres={driver:"Ajouter un livreur",manager:"Ajouter un responsable",
+        const titres={driver:"Ajouter un employé",manager:"Ajouter un responsable",
                       admin:"Ajouter un administrateur"};
         driverFormTitle.textContent=titres[driverRoleSelect.value]||"Ajouter un compte"
       }
@@ -3025,6 +3589,13 @@
       document.getElementById("driverActive").checked=profile.active===true;
       driverPasswordField.classList.add("hidden");
       document.getElementById("driverPassword").required=false;
+
+      sendPasswordLinkButton.classList.remove("hidden");
+      sendPasswordLinkButton.dataset.email=profile.email||"";
+      sendPasswordLinkButton.dataset.userId=userId;
+
+      fillPositionSelect(positionOf(profile.position));
+      driverInPlanning.checked=profile.inPlanning===true;
 
       const role=profile.role||"driver";
       driverRoleSelect.value=role;
@@ -3056,7 +3627,7 @@
       applyRoleToForm();
       driverFormTitle.textContent=(profile.role&&profile.role!=="driver")
         ? "Modifier le responsable"
-        : "Modifier le livreur";
+        : "Modifier l’employé";
       saveDriverButton.textContent="Enregistrer les modifications";
       driverFormWrap.classList.remove("hidden");
       driverFormWrap.scrollIntoView({behavior:"smooth",block:"start"})
@@ -3120,10 +3691,51 @@
       }
     }
 
+    /* La liste des employés : avec vingt comptes dont plusieurs anciens,
+       on ne lit plus rien. Par défaut on ne montre que ceux qui
+       travaillent, et une recherche trouve le reste. */
+    const driverFilter={texte:"",actifs:true,poste:""};
+
+    function employeCorrespond(driver){
+      if(driverFilter.actifs&&driver.active!==true)return false;
+      if(driverFilter.poste&&positionOf(driver.position)!==driverFilter.poste)return false;
+      const cherche=driverFilter.texte.trim().toLowerCase();
+      if(!cherche)return true;
+      return [driver.name,driver.email,driver.phone,driver.vehicle]
+        .some(champ=>String(champ||"").toLowerCase().includes(cherche))
+    }
+
+    function renderDriverFilters(affiches,total){
+      const bouton=document.getElementById("driverFilterActive");
+      if(!bouton)return;
+      bouton.classList.toggle("is-on",driverFilter.actifs);
+      bouton.setAttribute("aria-pressed",String(driverFilter.actifs));
+
+      const zone=document.getElementById("driverFilterPositions");
+      zone.innerHTML="";
+      if(severalPositions()){
+        [{id:"",name:"Tous les postes"},...positions()].forEach(poste=>{
+          const puce=document.createElement("button");
+          puce.type="button";
+          puce.className="filter-chip"+(driverFilter.poste===poste.id?" is-on":"");
+          puce.dataset.poste=poste.id;
+          puce.textContent=poste.name;
+          puce.addEventListener("click",()=>{driverFilter.poste=poste.id;renderDrivers()});
+          zone.appendChild(puce)
+        })
+      }
+
+      const masques=currentDrivers.filter(gens=>gens.active!==true).length;
+      document.getElementById("driverFilterCount").textContent=
+        `${affiches} sur ${total} affiché${affiches>1?"s":""}`
+        +(driverFilter.actifs&&masques?` · ${masques} compte${masques>1?"s":""} désactivé${masques>1?"s":""} masqué${masques>1?"s":""}`:"")
+    }
+
     function renderDrivers(){
-      const drivers=currentDrivers
+      const tous=currentDrivers
         .slice()
         .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+      const drivers=tous.filter(employeCorrespond);
 
       // Les disponibilites ne sont rechargees que si l'ecran planning est ouvert.
       if(currentSectionName==="planning"&&planningWeekSelect?.value){
@@ -3131,9 +3743,14 @@
       }
 
       renderStaff();
+      renderDriverFilters(drivers.length,tous.length);
 
+      if(tous.length===0){
+        driverList.innerHTML='<div class="empty-state">Aucun employé n’a encore été ajouté.</div>';
+        return
+      }
       if(drivers.length===0){
-        driverList.innerHTML='<div class="empty-state">Aucun livreur n’a encore été ajouté.</div>';
+        driverList.innerHTML='<div class="empty-state">Personne ne correspond à cette recherche.</div>';
         return
       }
 
@@ -3143,14 +3760,22 @@
         const score=driverScoreData(driver.id);
         const stats=assignmentStatsForDriver(driver.id);
         const card=document.createElement("article");
-        card.className="driver-card";
+        card.className="driver-card"+(driver.active===true?"":" is-inactive");
+        const telephone=normalizePhone(driver.phone);
 
         card.innerHTML=`
           <div class="driver-overview">
-            <h3>${escapeHtml(driver.name||"Livreur")}</h3>
-            <p class="driver-meta">${escapeHtml(driver.email||"")}</p>
-            <p class="driver-meta">${escapeHtml(driver.phone||"Téléphone non renseigné")} · ${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</p>
-            <p class="driver-data-note">Les données ci-dessous concernent les affectations et confirmations, pas une présence physique pointée.</p>
+            <h3>${escapeHtml(driver.name||"Employé")}
+              ${severalPositions()?`<span class="driver-post">${escapeHtml(positionLabel(positionOf(driver.position)))}</span>`:""}
+              ${telephone?"":'<span class="driver-flag">Sans téléphone</span>'}
+            </h3>
+            <p class="driver-meta">${escapeHtml([driver.phone,driver.email].filter(Boolean).join(" · "))}</p>
+            ${driver.vehicle?`<p class="driver-meta">${escapeHtml(driver.vehicle)}</p>`:""}
+          </div>
+
+          <div class="driver-actions">
+            <span class="status-badge ${driver.active===true?"status-active":"status-inactive"}">${driver.active===true?"Actif":"Désactivé"}</span>
+            <button class="button button-ghost edit-driver" type="button">Modifier</button>
           </div>
 
           <div class="driver-score-panel">
@@ -3161,32 +3786,31 @@
               <span class="score-chip">Score ${score.total}</span>
             </div>
 
-            <div class="driver-stat-grid">
-              <div class="driver-stat-card">
-                <strong>${stats.past.total}</strong>
-                <small>30 derniers jours</small>
-                <div class="driver-stat-detail">
-                  ${stats.past.confirmed} confirmée${stats.past.confirmed>1?"s":""} ·
-                  ${stats.past.refused} refusée${stats.past.refused>1?"s":""} ·
-                  ${stats.past.pending} en attente
+            <details class="driver-more">
+              <summary>Affectations et confirmations</summary>
+              <p class="driver-data-note">Ces chiffres concernent les affectations et confirmations, pas une présence physique pointée.</p>
+              <div class="driver-stat-grid">
+                <div class="driver-stat-card">
+                  <strong>${stats.past.total}</strong>
+                  <small>30 derniers jours</small>
+                  <div class="driver-stat-detail">
+                    ${stats.past.confirmed} confirmée${stats.past.confirmed>1?"s":""} ·
+                    ${stats.past.refused} refusée${stats.past.refused>1?"s":""} ·
+                    ${stats.past.pending} en attente
+                  </div>
+                </div>
+
+                <div class="driver-stat-card">
+                  <strong>${stats.future.total}</strong>
+                  <small>30 prochains jours</small>
+                  <div class="driver-stat-detail">
+                    ${stats.future.confirmed} confirmée${stats.future.confirmed>1?"s":""} ·
+                    ${stats.future.refused} refusée${stats.future.refused>1?"s":""} ·
+                    ${stats.future.pending} en attente
+                  </div>
                 </div>
               </div>
-
-              <div class="driver-stat-card">
-                <strong>${stats.future.total}</strong>
-                <small>30 prochains jours</small>
-                <div class="driver-stat-detail">
-                  ${stats.future.confirmed} confirmée${stats.future.confirmed>1?"s":""} ·
-                  ${stats.future.refused} refusée${stats.future.refused>1?"s":""} ·
-                  ${stats.future.pending} en attente
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="driver-actions">
-            <span class="status-badge ${driver.active===true?"status-active":"status-inactive"}">${driver.active===true?"Actif":"Désactivé"}</span>
-            <button class="button button-ghost edit-driver" type="button">Modifier</button>
+            </details>
           </div>
         `;
 
@@ -3195,7 +3819,7 @@
       })
     }
 
-    const ROLE_LABELS = { driver:"Livreur", manager:"Responsable", admin:"Administrateur" };
+    const ROLE_LABELS = { driver:"Employé", manager:"Responsable", admin:"Administrateur" };
 
     function isAdminProfile(){
       return currentProfile?.role==="admin"
@@ -3218,7 +3842,7 @@
 
       const ouvrir=document.getElementById("openDriverForm");
       if(ouvrir){
-        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un livreur"
+        ouvrir.textContent=isAdminProfile()?"Ajouter un compte":"Ajouter un employé"
       }
 
       const visible=isAdminProfile();
@@ -3259,6 +3883,117 @@
         if(bouton)bouton.addEventListener("click",()=>openEditDriverForm(membre.id,membre));
         staffList.appendChild(card)
       })
+    }
+
+    /* ===================================================================
+       METTRE EN ROUTE UN COMPTE
+       Deux gestes qui évitent de distribuer des mots de passe à la main :
+       un courriel de bienvenue à toute l'équipe, et un lien par lequel
+       chacun choisit lui-même son mot de passe.
+       =================================================================== */
+
+    async function sendPasswordLink(){
+      const email=sendPasswordLinkButton.dataset.email||"";
+      const userId=sendPasswordLinkButton.dataset.userId||"";
+
+      if(!email){
+        showMessage(driverFormMessage,"Cette fiche n’a pas d’adresse e-mail.","error");
+        return
+      }
+
+      if(!window.confirm(
+        `Envoyer à ${email} un lien pour choisir son mot de passe ?\n\n`
+        +`Le message vient de Firebase et peut arriver dans les indésirables. `
+        +`Prévenez la personne qu'il va partir.`
+      ))return;
+
+      sendPasswordLinkButton.disabled=true;
+      const libelle=sendPasswordLinkButton.textContent;
+      sendPasswordLinkButton.textContent="Envoi…";
+
+      try{
+        await sendPasswordResetEmail(auth,email);
+
+        // Le lien lui fait choisir son mot de passe : l'obligation de le
+        // changer à la première connexion n'a plus d'objet.
+        if(userId){
+          try{
+            await updateDoc(doc(db,"users",userId),{
+              mustChangePassword:false,
+              updatedAt:serverTimestamp()
+            })
+          }catch(error){ console.warn("Indicateur de mot de passe non mis à jour.",error) }
+        }
+
+        showMessage(
+          driverFormMessage,
+          `Lien envoyé à ${email}. Dites-lui de regarder ses indésirables si rien n’arrive.`,
+          "success"
+        )
+      }catch(error){
+        console.error(error);
+        showMessage(driverFormMessage,`Impossible d’envoyer : ${error.code||error.message}`,"error")
+      }finally{
+        sendPasswordLinkButton.disabled=false;
+        sendPasswordLinkButton.textContent=libelle
+      }
+    }
+
+    /* Le courriel de bienvenue : une seule rédaction, tout le monde en copie
+       cachée pour que personne ne récupère le carnet d'adresses des autres. */
+    function teamEmailDraft(){
+      const destinataires=[...currentDrivers,...currentStaff]
+        .filter(item=>item.active===true&&item.email)
+        .map(item=>item.email);
+
+      const maison=establishmentName();
+      const adresse=appAddress();
+
+      const sujet=`${maison} — vos disponibilités passent par Journia`;
+      const corps=
+`Bonjour,
+
+À partir de maintenant, les disponibilités et le planning passent par Journia.
+
+Adresse de l'application : ${adresse}
+Votre identifiant est cette adresse e-mail.
+
+Vous allez recevoir un second message pour choisir votre mot de passe. S'il n'arrive pas, regardez dans vos indésirables.
+
+À votre première connexion, l'application vous présente le règlement interne. Lisez-le jusqu'au bout et acceptez-le : tant que ce n'est pas fait, vous ne pouvez ni envoyer vos disponibilités ni voir vos horaires. Votre acceptation est enregistrée avec sa date.
+
+Une fois connecté, prenez une minute pour ajouter votre numéro de téléphone : onglet Aide, section Mon compte. C'est ce qui permet de vous joindre un soir de service.
+
+Merci,
+${currentProfile?.name||""}`;
+
+      return {destinataires,sujet,corps}
+    }
+
+    async function writeToTeam(){
+      const {destinataires,sujet,corps}=teamEmailDraft();
+
+      if(destinataires.length===0){
+        showMessage(appMessage,"Aucune adresse e-mail dans l’équipe.","error");
+        return
+      }
+
+      const lien=`mailto:?bcc=${encodeURIComponent(destinataires.join(","))}`
+        +`&subject=${encodeURIComponent(sujet)}`
+        +`&body=${encodeURIComponent(corps)}`;
+
+      // Certains logiciels de courrier refusent les adresses très longues :
+      // on met aussi le tout dans le presse-papier, au cas où.
+      const copie=await copyToClipboard(`${destinataires.join(", ")}\n\n${sujet}\n\n${corps}`);
+
+      window.open(lien,"_self");
+
+      showMessage(
+        appMessage,
+        `Votre logiciel de courrier s’ouvre avec ${destinataires.length} destinataires en copie cachée.`
+        +(copie?" Le message est aussi dans le presse-papier, si l’ouverture échoue.":""),
+        "success"
+      )
     }
 
     /* Scores confidentiels : petite collection, chargee une seule fois par session. */
@@ -3339,6 +4074,7 @@
         grid.appendChild(card)
       });
 
+      renderPositionList(establishmentConfig.positions||[]);
       renderFleetList(establishmentConfig.fleet||[]);
 
       const methods=document.getElementById("establishmentMethods");
@@ -3379,21 +4115,60 @@
           <button class="button button-ghost fleet-remove" type="button">Retirer</button>
         `;
         row.querySelector(".fleet-remove").addEventListener("click",()=>{
-          const remaining=readFleetList().filter(item=>item.id!==row.dataset.unitId);
+          const remaining=readFleetList(true).filter(item=>item.id!==row.dataset.unitId);
           renderFleetList(remaining)
         });
         list.appendChild(row)
       })
     }
 
-    function readFleetList(){
+    function renderPositionList(list){
+      const container=document.getElementById("positionList");
+      container.innerHTML="";
+
+      if(!list.length){
+        container.innerHTML='<div class="fleet-empty">Aucun poste enregistré. Sans poste déclaré, tout le monde est considéré comme livreur.</div>';
+        return
+      }
+
+      list.forEach(poste=>{
+        const row=document.createElement("div");
+        row.className="fleet-row";
+        row.dataset.positionId=poste.id||newPositionId();
+        row.innerHTML=`
+          <input class="position-name" type="text" placeholder="Exemple : Caissier" value="${escapeHtml(poste.name||"")}" maxlength="40">
+          <label class="checkbox-row" style="margin:0;align-items:center">
+            <input class="position-vehicle" type="checkbox" ${poste.requiresVehicle!==false?"checked":""}>
+            <span>Nécessite un véhicule</span>
+          </label>
+          <span></span>
+          <button class="button button-ghost position-remove" type="button">Retirer</button>
+        `;
+        row.querySelector(".position-remove").addEventListener("click",()=>{
+          const remaining=readPositionList(true).filter(item=>item.id!==row.dataset.positionId);
+          renderPositionList(remaining)
+        });
+        container.appendChild(row)
+      })
+    }
+
+    function readPositionList(keepEmpty){
+      return [...document.querySelectorAll("#positionList .fleet-row")].map(row=>({
+        id:row.dataset.positionId,
+        name:row.querySelector(".position-name").value.trim(),
+        requiresVehicle:row.querySelector(".position-vehicle").checked,
+        active:true
+      })).filter(poste=>keepEmpty||poste.name)
+    }
+
+    function readFleetList(keepEmpty){
       return [...document.querySelectorAll("#fleetList .fleet-row")].map(row=>({
         id:row.dataset.unitId,
         name:row.querySelector(".fleet-name").value.trim(),
         type:row.querySelector(".fleet-type").value,
         plate:row.querySelector(".fleet-plate").value.trim(),
         active:true
-      })).filter(unit=>unit.name)
+      })).filter(unit=>keepEmpty||unit.name)
     }
 
     function readEstablishmentForm(){
@@ -3408,6 +4183,7 @@
 
       return {
         name:document.getElementById("establishmentName").value.trim(),
+        positions:readPositionList(),
         openingDays,
         midday:{
           start:document.getElementById("middayStart").value,
@@ -3437,6 +4213,15 @@
     function prepareEstablishmentSection(){
       clearMessage(document.getElementById("establishmentMessage"));
       renderEstablishmentForm()
+    }
+
+    /* Ouvrir la fiche de quelqu'un depuis n'importe quel écran. La barre
+       de navigation sert ensuite de chemin de retour. */
+    async function ouvrirFicheEmploye(userId){
+      const profil=currentDrivers.concat(currentStaff).find(gens=>gens.id===userId);
+      if(!profil)return;
+      showSection("drivers");
+      await openEditDriverForm(userId,profil)
     }
 
     async function prepareDriversSection(){
@@ -3485,6 +4270,9 @@
 
         await loadEstablishmentConfig();
         renderEstablishmentForm();
+        renderSetupGuide();
+        renderActionPanel();
+        renderSettingsGroup();
         showMessage(messageEl,"La fiche a été enregistrée.","success")
       }catch(error){
         console.error(error);
@@ -3493,6 +4281,29 @@
         button.disabled=false;
         button.textContent="Enregistrer la fiche"
       }
+    }
+
+    /* Création d'un compte employé. Appelée par l'écran « Gérer les
+       employés » et par l'assistant de mise en service : un compte créé
+       par l'assistant est exactement un compte créé à la main. */
+    async function creerCompteEmploye({name,email,password,phone="",vehicle="",active=true,
+      role="driver",position,inPlanning=true}){
+      const credential=await createUserWithEmailAndPassword(driverCreatorAuth,email,password);
+      const userId=credential.user.uid;
+
+      await setDoc(doc(db,"users",userId),{
+        name,email,phone,vehicle,active,
+        role,
+        position:positionOf(position),
+        inPlanning,
+        mustChangePassword:true,
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        updatedAt:serverTimestamp()
+      });
+
+      await signOut(driverCreatorAuth);
+      return userId
     }
 
     function subscribeToDrivers(){
@@ -3516,6 +4327,10 @@
           // Aucune relecture des affectations ici : elle avait lieu a chaque
           // modification d'un livreur et coutait toute la collection.
           renderDrivers();
+          renderSetupGuide();
+          renderActionPanel();
+          renderSettingsGroup();
+          wizardRafraichir();
           repaintNextService()
         },
         error=>{
@@ -3690,6 +4505,7 @@
             date:slot.date,
             time:shifted?arrival:slot.time,
             name:driver.name||"Livreur",
+            position:severalPositions()?positionLabel(positionOf(slot.positionId)):"",
             vehicle:unitName||(chosen?deliveryMethodLabel(chosen):""),
             note:notes.join(" · "),
             status
@@ -3716,7 +4532,7 @@
 
           const cover=coverage.get(`${day}_${time}`);
           const shortage=cover&&cover.from&&cover.onTime<cover.planned
-            ? `<span class="kitchen-short">${cover.onTime} livreur${cover.onTime>1?"s":""} sur ${cover.planned} avant ${escapeHtml(cover.from)}</span>`
+            ? `<span class="kitchen-short">${cover.onTime} sur ${cover.planned} avant ${escapeHtml(cover.from)}</span>`
             : "";
 
           if(drivers.length===0){
@@ -3726,6 +4542,7 @@
           return `<td>${drivers.map(driver=>`
             <span class="kitchen-driver">
               <strong>${escapeHtml(driver.name)}</strong>
+              ${driver.position?`<small>${escapeHtml(driver.position)}</small>`:""}
               ${driver.vehicle?`<small>${escapeHtml(driver.vehicle)}</small>`:""}
               ${driver.note?`<small class="kitchen-note">⚠ ${escapeHtml(driver.note)}</small>`:""}
             </span>
@@ -3841,7 +4658,16 @@
       }
     }
 
+    function fillNeedPositionSelect(){
+      const liste=positions();
+      needPosition.innerHTML=liste
+        .map(poste=>`<option value="${escapeHtml(poste.id)}">${escapeHtml(poste.name)}</option>`)
+        .join("");
+      needPositionField.classList.toggle("hidden",liste.length<2)
+    }
+
     function prepareNeedsSection(){
+      fillNeedPositionSelect();
       clearMessage(needFormMessage);
       subscribeToNeedTemplates();   // charge uniquement a la 1re ouverture de l'ecran
       renderNeedTimeOptions();
@@ -3877,7 +4703,28 @@
       }).format(date)
     }
 
+    /* Création d'un besoin, pour le formulaire comme pour l'assistant. */
+    async function creerBesoin({week,date,time,positionId,quantity,notes=""}){
+      const ref=await addDoc(collection(db,"needs"),{
+        weekId:week.id,
+        weekStartDate:week.startDate,
+        date,time,
+        positionId:positionOf(positionId),
+        quantity:Number(quantity),
+        notes,
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        createdByName:currentProfile.name||""
+      });
+      availabilityCache.delete(week.id);
+      return ref.id
+    }
+
     function renderNeeds(){
+      renderSetupGuide();
+      renderActionPanel();
+      renderSettingsGroup();
+      wizardRafraichir();
       const weekId=needsWeekSelect.value;
 
       if(!weekId){
@@ -3904,7 +4751,7 @@
         card.className="need-card";
         card.innerHTML=`
           <div>
-            <h3>${escapeHtml(formatDay(need.date))} à ${escapeHtml(need.time||"—")}</h3>
+            <h3>${escapeHtml(formatDay(need.date))} à ${escapeHtml(need.time||"—")}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(need.positionId)))}`:""}</h3>
             <p class="need-meta">${need.notes?escapeHtml(need.notes):"Aucune note interne"}</p>
             ${isNeedTimeAllowed(need.time)?"":`
               <p class="need-warning">Heure hors des créneaux déclarables par les livreurs.
@@ -4383,11 +5230,12 @@
         </div>
         <div class="dv-days"></div>
 
+        ${positionRequiresVehicle(positionOf(currentProfile?.position))?`
         <div class="dv-secthead">
           <h3>Mes moyens de livraison</h3>
           <p class="dv-sub">Uniquement ceux que vous pourrez réellement utiliser cette semaine.</p>
         </div>
-        <div class="dv-methods"></div>
+        <div class="dv-methods"></div>`:""}
 
         <div class="dv-savebar">
           <button class="dv-btn dv-btn-primary save-availability" type="button">
@@ -4547,15 +5395,17 @@
       });
 
       const methodsBox=wrapper.querySelector(".dv-methods");
+      const demandeVehicule=!!methodsBox;
       const methodChips=new Map();
 
       function paintMethods(){
+        if(!demandeVehicule)return;
         methodChips.forEach((chip,methodId)=>{
           chip.classList.toggle("is-on",chosenMethods.has(methodId))
         })
       }
 
-      allowedMethods.forEach(methodId=>{
+      if(demandeVehicule)allowedMethods.forEach(methodId=>{
         const chip=document.createElement("button");
         chip.type="button";
         chip.className="dv-chip";
@@ -4588,7 +5438,8 @@
 
         const hasAvailability=daysPayload.some(day=>day.middayAvailable||day.eveningAvailable);
 
-        if(hasAvailability&&deliveryMethods.length===0){
+        // Un caissier n'a aucun moyen de livraison à déclarer.
+        if(demandeVehicule&&hasAvailability&&deliveryMethods.length===0){
           driverToast("Choisissez au moins un moyen de livraison.","bad");
           return
         }
@@ -4897,8 +5748,15 @@
       )
     }
 
+    /* Tant que l'employé n'a pas choisi lui-même une semaine, l'écran suit
+       celle qui attend une réponse. Les semaines arrivent avant les
+       affectations : sans cela, l'alerte annonçait « 1 horaire à
+       confirmer » au-dessus d'une semaine vide. */
+    let driverWeekChosenByUser = false;
+
     function chooseDefaultDriverWeek(weeks){
-      if(currentDriverWeekId&&weeks.some(week=>week.id===currentDriverWeekId))return;
+      if(driverWeekChosenByUser&&currentDriverWeekId
+        &&weeks.some(week=>week.id===currentDriverWeekId))return;
 
       const pendingWeek=currentDriverAssignments.find(
         assignment=>(assignment.status||"pending")==="pending"
@@ -4938,6 +5796,7 @@
 
         button.addEventListener("click",()=>{
           currentDriverWeekId=week.id;
+          driverWeekChosenByUser=true;
           refreshDriverScreen()
         });
 
@@ -5003,9 +5862,60 @@
         </div>
       `;
 
+      // Un horaire à confirmer ne doit pas cacher des disponibilités à
+      // envoyer : ce sont deux gestes, avec deux échéances.
+      const seconde=document.getElementById("driverActionSecond");
+      if(seconde){
+        const aussi=pending.length&&toAnswer.length?toAnswer[0]:null;
+        seconde.classList.toggle("hidden",!aussi);
+        if(aussi){
+          const reste=deadlineRemaining(aussi);
+          seconde.innerHTML=`
+            ${dvSvg("send")}
+            <div class="dv-action-body">
+              <strong>Disponibilités à envoyer</strong>
+              <span>${escapeHtml(reste!==null&&reste>0
+                ? `Semaine du ${driverRangeLabel(aussi.startDate,aussi.endDate)} — il reste ${formatCountdown(reste)}.`
+                : `Semaine du ${driverRangeLabel(aussi.startDate,aussi.endDate)}.`)}</span>
+              <button class="dv-action-link" type="button">Remplir mes disponibilités</button>
+            </div>`;
+          seconde.querySelector(".dv-action-link").addEventListener("click",()=>{
+            currentDriverWeekId=aussi.id;
+            driverWeekChosenByUser=true;
+            setDriverTab("availability");
+            refreshDriverScreen()
+          })
+        }
+      }
+
+      // Le prochain service acquis, avec ce qu'il faut savoir en partant :
+      // l'heure et le véhicule.
+      const prochain=document.getElementById("driverNextShift");
+      if(prochain){
+        const acquis=currentDriverAssignments
+          .filter(item=>item.active!==false&&(item.date||"")>=today
+            &&["confirmed","implied"].includes(driverEffectiveStatus(item)))
+          .sort((a,b)=>`${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))[0];
+        prochain.classList.toggle("hidden",!acquis);
+        if(acquis){
+          const vehicule=acquis.vehicleUnitName
+            ||(acquis.vehicleChoice?deliveryMethodLabel(acquis.vehicleChoice):"");
+          prochain.innerHTML=`
+            <div class="dv-next-when">
+              <small>Prochain service</small>
+              <strong>${escapeHtml(driverRelativeDay(acquis.date))} · ${escapeHtml(acquis.time||"")}</strong>
+              <span>${escapeHtml(driverDayLabel(acquis.date))}</span>
+            </div>
+            <div class="dv-next-what">
+              ${severalPositions()?`<span class="dv-next-chip">${escapeHtml(positionLabel(positionOf(acquis.positionId)))}</span>`:""}
+              ${vehicule?`<span class="dv-next-chip is-vehicle">${escapeHtml(vehicule)}</span>`:""}
+            </div>`
+        }
+      }
+
       if(link){
         driverActionCard.querySelector(".dv-action-link").addEventListener("click",()=>{
-          if(link.weekId)currentDriverWeekId=link.weekId;
+          if(link.weekId){currentDriverWeekId=link.weekId;driverWeekChosenByUser=true}
           setDriverTab(link.tab);
           refreshDriverScreen()
         })
@@ -5083,6 +5993,54 @@
       if(assignment.forced===true&&!isTimeShiftOnly(assignment.forcedCode))return "pending";
 
       return Date.now()>=deadline?"implied":"pending"
+    }
+
+    /* ===================================================================
+       LE NUMÉRO DE TÉLÉPHONE, SAISI PAR L'INTÉRESSÉ
+       Demander dix-huit numéros par messages et les recopier est une perte
+       de temps, et une source de fautes de frappe. Chacun saisit le sien.
+       =================================================================== */
+    function refreshDriverPhone(){
+      const champ=document.getElementById("driverOwnPhone");
+      const invitation=document.getElementById("driverAskPhone");
+      if(!champ)return;
+
+      const numero=(currentProfile?.phone||"").trim();
+      if(document.activeElement!==champ)champ.value=numero;
+      if(invitation)invitation.classList.toggle("hidden",numero.length>0)
+    }
+
+    async function saveDriverPhone(){
+      const champ=document.getElementById("driverOwnPhone");
+      const bouton=document.getElementById("driverSavePhone");
+      const numero=champ.value.trim();
+
+      // Assez souple pour accepter les formats écrits à la main, assez
+      // strict pour refuser une saisie manifestement fautive.
+      if(numero&&!/^[+0-9][0-9\s().\-]{6,}$/.test(numero)){
+        driverToast("Ce numéro ne semble pas valide. Exemple : +41 79 000 00 00","bad");
+        return
+      }
+
+      bouton.disabled=true;
+      const libelle=bouton.textContent;
+      bouton.textContent="Enregistrement…";
+
+      try{
+        await updateDoc(doc(db,"users",auth.currentUser.uid),{
+          phone:numero,
+          updatedAt:serverTimestamp()
+        });
+        currentProfile={...currentProfile,phone:numero};
+        refreshDriverPhone();
+        driverToast(numero?"Votre numéro est enregistré.":"Numéro effacé.","ok")
+      }catch(error){
+        console.error(error);
+        driverToast(`Impossible d’enregistrer : ${error.code||error.message}`,"bad")
+      }finally{
+        bouton.disabled=false;
+        bouton.textContent=libelle
+      }
     }
 
     function renderCurrentDriverAssignments(){
@@ -5275,6 +6233,7 @@
     }
 
     function refreshDriverScreen(){
+      refreshDriverPhone();
       renderDriverWeekTabs();
       renderCurrentDriverAssignments();
       renderSelectedAvailabilityWeek()
@@ -5340,7 +6299,7 @@
       // vehicleChoice appartient au livreur : il n'entre pas dans la comparaison,
       // sinon chaque synchronisation l'effacerait.
       const keys=["weekId","weekStartDate","weekEndDate","date","time","needId",
-                  "userId","driverName","driverEmail","vehicleRequirement",
+                  "userId","positionId","driverName","driverEmail","vehicleRequirement",
                   "vehicleUnitId","vehicleUnitName",
                   "forced","forcedReason","forcedCode","active"];
 
@@ -5376,6 +6335,7 @@
             time:slot.time,
             needId:slot.needId||"",
             userId:driver.userId,
+            positionId:slot.positionId||"",
             driverName:driver.name||"",
             driverEmail:driver.email||"",
             deliveryMethods,
@@ -5666,8 +6626,25 @@
       {
         group:"Les livreurs",
         question:"Comment créer un compte livreur ?",
-        answer:`<p>Écran <strong>Gérer les livreurs</strong>, bouton « Ajouter un livreur ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
+        answer:`<p>Écran <strong>Gérer les employés</strong>, bouton « Ajouter un compte ». Vous saisissez son nom, son adresse e-mail et un mot de passe provisoire que vous lui communiquez.</p>
           <p>À sa première connexion, il est obligé de le changer. Vous ne connaissez donc jamais son mot de passe définitif, et c’est voulu.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Comment mettre toute l’équipe en route sans distribuer dix-huit mots de passe ?",
+        answer:`<p>Deux boutons, sur l’écran <strong>Gérer les employés</strong>.</p>
+          <p><strong>Écrire à toute l’équipe</strong> ouvre votre logiciel de courrier avec tous les comptes actifs en copie cachée — personne ne voit l’adresse des autres — et un message déjà rédigé : l’adresse de l’application, le fait qu’un lien de mot de passe va suivre, et la demande d’ajouter son numéro de téléphone.</p>
+          <p>Puis, sur chaque fiche, <strong>Envoyer un lien de mot de passe</strong>. La personne reçoit un courriel et choisit elle-même son mot de passe : vous n’en connaissez aucun, et vous n’avez rien à transmettre.</p>
+          <p>Ce second message vient de Firebase et atterrit assez souvent dans les indésirables. Prévenez-les, c’est la cause numéro un des appels le premier soir.</p>
+          <p>Vous pouvez toujours créer un compte avec un mot de passe provisoire si vous préférez le donner de vive voix. Les deux méthodes coexistent.</p>`
+      },
+      {
+        group:"Les livreurs",
+        question:"Comment récupérer les numéros de téléphone de mon équipe ?",
+        answer:`<p>Vous n’avez pas à les saisir. Chacun entre le sien depuis son application : onglet <strong>Aide</strong>, section <strong>Mon compte</strong>, champ « Mon numéro de téléphone ».</p>
+          <p>Tant qu’il manque, un encadré orange s’affiche sur son écran d’accueil et l’invite à l’ajouter. Il disparaît dès que c’est fait.</p>
+          <p>Vous pouvez aussi le saisir vous-même depuis sa fiche, mais c’est dix-huit numéros à recopier, avec les fautes de frappe que cela suppose.</p>
+          <p>À quoi ça sert : le bouton <strong>Appeler</strong> sur le service du jour, et les relances individuelles par SMS ou WhatsApp. Sans numéro, il vous reste la relance de groupe, qui fonctionne par copier-coller.</p>`
       },
       {
         group:"Les livreurs",
@@ -5677,8 +6654,17 @@
       },
       {
         group:"Les livreurs",
+        question:"Mon équipe n’est pas faite que de livreurs. Comment faire ?",
+        answer:`<p>Dans la <strong>fiche de l’établissement</strong>, déclarez vos <strong>postes de travail</strong> : livreur, caissier, cuisine, téléphoniste — les métiers de votre maison. Cochez « nécessite un véhicule » pour ceux qui en demandent un.</p>
+          <p>Chaque employé reçoit ensuite un poste sur sa fiche, et chaque besoin en vise un : « 2 livreurs et 1 caissier à 18:00 ». La proposition ne retient que les gens du bon poste, et n’exige un véhicule que là où c’est justifié — un caissier ne sera jamais écarté faute de voiture.</p>
+          <p>Ne confondez pas le poste et le rôle. Le <strong>rôle</strong> dit ce qu’on a le droit de faire dans l’application ; le <strong>poste</strong> dit ce qu’on fait dans la maison. Le patron sera administrateur et propriétaire.</p>
+          <p>Un responsable qui travaille aussi en service coche « apparaît dans les plannings » sur sa fiche. Sans cette case, il reste hors des propositions.</p>
+          <p>Tant que vous ne déclarez aucun poste, tout le monde est considéré comme livreur : rien ne change pour une maison qui n’a que des livreurs.</p>`
+      },
+      {
+        group:"Les livreurs",
         question:"Comment donner un accès responsable à quelqu’un ?",
-        answer:`<p>Écran <strong>Gérer les livreurs</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Livreur, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
+        answer:`<p>Écran <strong>Gérer les employés</strong>. À la création, ou en modifiant une fiche existante, choisissez le <strong>rôle</strong> : Employé, Responsable ou Administrateur. Ce choix n’apparaît que pour un administrateur.</p>
           <p>Un <strong>responsable</strong> prépare et publie les plannings, gère les livreurs et les besoins. Un <strong>administrateur</strong> fait tout cela, et peut en plus modifier la fiche de l’établissement et attribuer les rôles.</p>
           <p>Les responsables sont regroupés dans leur propre liste, en haut de l’écran. Ils n’apparaissent jamais dans les propositions de planning : ce ne sont pas des livreurs.</p>
           <p>Deux sécurités : vous ne pouvez pas modifier votre propre rôle, et le dernier administrateur actif ne peut pas perdre le sien. Sans cela, on peut se verrouiller dehors en un clic.</p>`
@@ -5901,6 +6887,7 @@
     }
 
     function renderNextService(target,rows){
+      setTimeout(renderAlerts,0);
       rows.sort((a,b)=>{
         const heure=(a.time||"").localeCompare(b.time||"");
         return heure!==0?heure:(a.driverName||"").localeCompare(b.driverName||"","fr")
@@ -5908,7 +6895,7 @@
 
       if(rows.length===0){
         nextServiceList.innerHTML=
-          '<div class="next-service-empty">Aucun livreur affecté sur ce service. '
+          '<div class="next-service-empty">Personne n’est affecté sur ce service. '
           +'Ouvrez l’écran Planning pour le préparer.</div>';
         nextServiceCount.innerHTML='<span class="service-chip is-bad">Personne</span>';
         return
@@ -5919,7 +6906,7 @@
       const refus=statuts.filter(st=>st==="refused").length;
       const attente=statuts.filter(st=>st==="pending").length;
 
-      const chips=[`<span class="service-chip">${rows.length} livreur${rows.length>1?"s":""}</span>`];
+      const chips=[`<span class="service-chip">${rows.length} personne${rows.length>1?"s":""}</span>`];
       if(acquis)chips.push(`<span class="service-chip is-ok">${acquis} confirmé${acquis>1?"s":""}</span>`);
       if(attente)chips.push(`<span class="service-chip is-warn">${attente} sans réponse</span>`);
       if(refus)chips.push(`<span class="service-chip is-bad">${refus} refus</span>`);
@@ -5937,7 +6924,11 @@
             <span class="service-time">${escapeHtml(row.time||"")}</span>
             <span class="service-who">
               <strong>${escapeHtml(row.driverName||"Livreur")}</strong>
-              <small>${escapeHtml([vehicule,retard].filter(Boolean).join(" · ")||"Aucun véhicule attribué")}</small>
+              <small>${escapeHtml([
+                severalPositions()?positionLabel(positionOf(row.positionId)):"",
+                vehicule,
+                retard
+              ].filter(Boolean).join(" · ")||"Aucun véhicule attribué")}</small>
             </span>
             <span class="service-right">
               <span class="confirmation-badge confirmation-${statut}">${effectiveStatusLabel(statut)}</span>
@@ -5967,7 +6958,7 @@
         nextServiceWarning.classList.remove("hidden")
       }else if(attente){
         nextServiceWarning.textContent=
-          `${attente} livreur${attente>1?"s n’ont":" n’a"} pas encore répondu. `
+          `${attente} personne${attente>1?"s n’ont":" n’a"} pas encore répondu. `
           +`Vous pouvez relancer le groupe depuis l’écran Planning.`;
         nextServiceWarning.classList.remove("hidden")
       }
@@ -6089,6 +7080,1462 @@
       return touchees
     }
 
+    /* ===================================================================
+       MISE EN SERVICE
+       Un établissement qui découvre l'application voit huit boutons et ne
+       sait pas par lequel commencer. Ce guide donne l'ordre, coche ce qui
+       est fait, et s'efface quand il n'a plus lieu d'être.
+
+       Aucune lecture supplémentaire : tout se déduit de ce qui est déjà
+       chargé — la fiche, l'équipe, les semaines, les besoins.
+       =================================================================== */
+    function setupSteps(){
+      const config=establishmentConfig||{};
+      const semainePubliee=currentWeeks.some(week=>week.status==="closed");
+
+      return [
+        {
+          titre:"La fiche de votre établissement",
+          detail:"Le nom, les jours d’ouverture, les heures d’arrivée possibles et les moyens de livraison acceptés. Tout le reste en découle : ce que vos employés pourront cocher, et ce que vous pourrez demander.",
+          fait:establishmentConfigExists&&!!(config.name||"").trim(),
+          bouton:"Remplir la fiche",
+          vers:"establishment"
+        },
+        {
+          titre:"Vos postes de travail",
+          detail:"Livreur, caissier, cuisine, téléphoniste. À déclarer seulement si votre équipe ne fait pas qu’un seul métier : sans poste déclaré, tout le monde est considéré comme livreur.",
+          facultatif:true,
+          fait:(config.positions||[]).length>0,
+          bouton:"Déclarer les postes",
+          vers:"establishment",
+          ancre:"positionsAnchor"
+        },
+        {
+          titre:"Votre parc de véhicules",
+          detail:"Vos voitures et scooters, nommés comme votre équipe les appelle. Inutile si vos livreurs utilisent tous leur propre véhicule.",
+          facultatif:true,
+          fait:(config.fleet||[]).length>0,
+          bouton:"Ajouter les véhicules",
+          vers:"establishment",
+          ancre:"fleetAnchor"
+        },
+        {
+          titre:"Votre équipe",
+          detail:"Un compte par personne, avec sa propre adresse. Profitez-en pour lire le règlement interne et vérifier qu’il correspond à votre maison : chacun devra l’accepter avant de pouvoir répondre.",
+          fait:currentDrivers.length>0,
+          bouton:"Créer les comptes",
+          vers:"drivers"
+        },
+        {
+          titre:"Votre première semaine",
+          detail:"Créez-la et ouvrez-la : vos employés pourront alors envoyer leurs disponibilités jusqu’à la date limite que vous aurez fixée.",
+          fait:currentWeeks.length>0,
+          bouton:"Créer une semaine",
+          vers:"createWeek"
+        },
+        {
+          titre:"Vos besoins",
+          detail:"Pour chaque service, l’heure d’arrivée et le nombre de personnes. C’est ce que l’application va chercher à pourvoir.",
+          fait:currentNeeds.length>0,
+          bouton:"Définir les besoins",
+          vers:"needs"
+        },
+        {
+          titre:"Votre premier planning",
+          detail:"Générez la proposition, ajustez-la si besoin, validez, puis publiez. La feuille de cuisine sera prête à imprimer.",
+          fait:semainePubliee,
+          bouton:"Ouvrir le planning",
+          vers:"planning"
+        }
+      ]
+    }
+
+    function renderSetupGuide(){
+      const panneau=document.getElementById("setupGuide");
+      if(!panneau)return;
+
+      const etapes=setupSteps();
+      const requises=etapes.filter(etape=>!etape.facultatif);
+      const faites=requises.filter(etape=>etape.fait).length;
+
+      // Le guide s'efface de lui-même : il n'a plus rien à apprendre.
+      if(faites===requises.length){
+        panneau.classList.add("hidden");
+        return
+      }
+      panneau.classList.remove("hidden");
+
+      document.getElementById("setupCount").textContent=`${faites} sur ${requises.length}`;
+      document.getElementById("setupProgressBar").style.width=
+        `${Math.round(faites/requises.length*100)}%`;
+
+      // Un responsable qui a renvoye l'assistant a plus tard doit pouvoir
+      // le rappeler : le guide reste la porte d'entree.
+      const reprendre=document.getElementById("setupResume");
+      if(reprendre)reprendre.classList.toggle("hidden",!establishmentConfigExists);
+
+      // La première étape non faite est mise en avant : c'est la suivante.
+      const prochaine=etapes.findIndex(etape=>!etape.fait&&!etape.facultatif);
+      const liste=document.getElementById("setupSteps");
+      liste.innerHTML="";
+
+      etapes.forEach((etape,index)=>{
+        const ligne=document.createElement("div");
+        ligne.className="setup-step"
+          +(etape.fait?" is-done":"")
+          +(index===prochaine?" is-next":"");
+        ligne.innerHTML=`
+          <span class="setup-mark">${etape.fait?"✓":index+1}</span>
+          <span>
+            <strong>${escapeHtml(etape.titre)}${etape.facultatif?'<span class="setup-optional">facultatif</span>':""}</strong>
+            <small>${escapeHtml(etape.detail)}</small>
+          </span>
+          <button class="button ${index===prochaine?"button-primary":"button-ghost"} setup-go" type="button">${escapeHtml(etape.fait?"Revoir":etape.bouton)}</button>
+        `;
+        ligne.querySelector(".setup-go").addEventListener("click",()=>showSection(etape.vers,etape.ancre));
+        liste.appendChild(ligne)
+      })
+    }
+
+    /* ===================================================================
+       ASSISTANT DE MISE EN SERVICE
+
+       Le premier contact d'un nouveau client avec Journia. Une question à
+       la fois, plein écran, rien d'autre de visible : ni menu, ni autre
+       écran. Les réponses sont proposées quand elles peuvent l'être —
+       personne n'a envie de taper « 11:00 » dans un champ vide.
+
+       L'assistant ne garde aucun état caché : sa position se déduit de ce
+       qui existe déjà — la fiche, l'équipe, les semaines, les besoins. On
+       peut donc le quitter et le reprendre une semaine plus tard, il
+       reprend exactement là où il s'était arrêté.
+       =================================================================== */
+    const WIZARD_PLUS_TARD = "journia.assistant.plusTard";
+
+    let wizardOuvert = false;
+    let wizardEtape = 0;
+    let wizardBrouillon = null;
+    let wizardOccupe = false;
+    let wizardValider = null;   // renvoie un message d'erreur, ou "" si tout va bien
+    let wizardAction = null;    // ce que fait le bouton principal quand il écrit
+
+    function wizardRemis(){
+      try{ return localStorage.getItem(WIZARD_PLUS_TARD)==="1" }catch(error){ return false }
+    }
+    function wizardMarquerRemis(valeur){
+      try{ valeur ? localStorage.setItem(WIZARD_PLUS_TARD,"1") : localStorage.removeItem(WIZARD_PLUS_TARD) }
+      catch(error){ /* navigation privée : l'assistant se reproposera, ce n'est pas grave */ }
+    }
+
+    function wizardMethodesEtablissement(){
+      return (wizardBrouillon?.deliveryMethods||[]).some(id=>id==="company_car"||id==="company_scooter")
+    }
+
+    function wizardNouveauBrouillon(){
+      wizardBrouillon = JSON.parse(JSON.stringify(
+        establishmentConfigExists ? establishmentConfig : DEFAULT_CONFIG
+      ));
+      if(!Array.isArray(wizardBrouillon.positions))wizardBrouillon.positions=[];
+      if(!Array.isArray(wizardBrouillon.fleet))wizardBrouillon.fleet=[];
+      // La fiche part avec les cinq moyens de livraison cochés, ce qui
+      // convient à un repli mais pas à une question : demander « avec quoi
+      // livrez-vous ? » en ayant déjà répondu « avec tout » invite à ne
+      // rien lire. L'assistant part donc d'une page blanche.
+      if(!establishmentConfigExists)wizardBrouillon.deliveryMethods=[];
+      wizardBrouillon.plusieursMetiers=(wizardBrouillon.positions||[]).length>0
+    }
+
+    /* ---------- Les étapes ---------- */
+
+    function wizardEtapes(){
+      const liste=[
+        {id:"intro",kind:"intro",phase:"Bienvenue",
+          question:"Mettons Journia à votre main.",
+          aide:"Une dizaine de questions, et votre premier planning est en route. Tout reste modifiable ensuite : rien de ce que vous répondez ici n'est définitif.",
+          cta:"Commencer"},
+
+        {id:"nom",kind:"texte",phase:"Votre établissement",
+          question:"Comment s’appelle votre établissement ?",
+          aide:"Ce nom apparaîtra sur la feuille de cuisine et dans les messages envoyés à votre équipe.",
+          placeholder:"Nara Pizza",
+          lire:()=>wizardBrouillon.name||"",
+          ecrire:valeur=>{wizardBrouillon.name=valeur.trim()},
+          valide:()=>wizardBrouillon.name?"":"Indiquez le nom de votre établissement."},
+
+        {id:"jours",kind:"jours",phase:"Votre établissement",
+          question:"Quand êtes-vous ouvert ?",
+          aide:"Touchez « Midi » ou « Soir » pour ouvrir ou fermer un service. Un service fermé ne sera jamais proposé, ni à vous, ni à votre équipe.",
+          valide:()=>wizardBrouillon.openingDays.some(jour=>jour.midday||jour.evening)
+            ?"":"Ouvrez au moins un service dans la semaine."},
+
+        {id:"heures",kind:"heures",phase:"Votre établissement",
+          question:"À quelle heure vos livreurs arrivent-ils ?",
+          aide:"La première et la dernière arrivée possible. Entre les deux, chacun choisit son heure — c’est ce qui permet d’échelonner les arrivées plutôt que de faire venir tout le monde en même temps.",
+          valide:()=>{
+            const b=wizardBrouillon;
+            if(minutesOf(b.midday.end)<minutesOf(b.midday.start)
+              ||minutesOf(b.evening.end)<minutesOf(b.evening.start))
+              return "La dernière arrivée doit venir après la première.";
+            if(minutesOf(b.midday.end)>=minutesOf(b.evening.start))
+              return "Le service du soir doit commencer après la fin du service de midi.";
+            return ""
+          }},
+
+        {id:"moyens",kind:"moyens",phase:"Votre établissement",
+          question:"Avec quoi vos livreurs livrent-ils ?",
+          aide:"Cochez tout ce qui existe chez vous. Vous pourrez restreindre semaine par semaine — l’hiver, par exemple, en n’autorisant que les voitures.",
+          valide:()=>(wizardBrouillon.deliveryMethods||[]).length
+            ?"":"Cochez au moins un moyen de livraison."},
+
+        {id:"postes",kind:"postes",phase:"Votre établissement",
+          question:"Votre équipe fait-elle un seul métier ?",
+          aide:"Si tout le monde livre, il n’y a rien à déclarer. Sinon, nommez les métiers de votre maison : chaque employé en occupera un, et chaque besoin en demandera un.",
+          valide:()=>{
+            if(!wizardBrouillon.plusieursMetiers)return "";
+            const liste=wizardBrouillon.positions||[];
+            // Une ligne vide ne disparaît pas en silence : on demande de la
+            // nommer ou de la retirer. Enregistrer sans rien dire laisserait
+            // croire qu'un métier a été créé.
+            if(liste.some(poste=>!(poste.name||"").trim()))
+              return "Nommez ce métier, ou retirez la ligne.";
+            return liste.length>=2
+              ?""
+              :"Nommez au moins deux métiers, ou revenez au choix « tout le monde livre »."
+          }}
+      ];
+
+      if(wizardMethodesEtablissement()){
+        liste.push({id:"vehicules",kind:"vehicules",phase:"Votre établissement",
+          question:"Quels véhicules mettez-vous à disposition ?",
+          aide:"Donnez-leur le nom que votre équipe emploie déjà — souvent les trois derniers chiffres de la plaque : « Voiture 911 ». C’est ce nom, et lui seul, qui s’imprimera sur la feuille de cuisine.",
+          valide:()=>""})
+      }
+
+      liste.push(
+        {id:"recap",kind:"recap",phase:"Votre établissement",
+          question:"Voici votre fiche. Est-ce bien cela ?",
+          aide:"Vous pourrez la reprendre à tout moment depuis le tableau de bord.",
+          cta:"Enregistrer ma fiche"},
+
+        {id:"equipe",kind:"equipe",phase:"Votre équipe",
+          question:"Ajoutons votre équipe.",
+          aide:"Un compte par personne, avec sa propre adresse e-mail. Chacun recevra un mot de passe provisoire et choisira le sien à la première connexion.",
+          cta:"Continuer"},
+
+        {id:"semaine",kind:"semaine",phase:"Votre première semaine",
+          question:"Quelle semaine voulez-vous planifier ?",
+          aide:"Elle s’ouvre aussitôt : votre équipe pourra envoyer ses disponibilités jusqu’à la date limite.",
+          cta:"Ouvrir cette semaine"},
+
+        {id:"besoins",kind:"besoins",phase:"Votre première semaine",
+          question:"Combien de personnes par service ?",
+          aide:"Une estimation suffit pour commencer : vous ajusterez service par service ensuite. L’application cherchera à pourvoir ce nombre.",
+          cta:"Enregistrer mes besoins"},
+
+        {id:"attente",kind:"attente",phase:"Votre premier planning",
+          question:"Votre équipe a la parole.",
+          aide:"Chacun répond depuis son téléphone. Vous n’avez plus rien à faire jusqu’à la date limite — et vous pouvez fermer cette page.",
+          cta:"Ouvrir la proposition de planning"},
+
+        {id:"fin",kind:"fin",phase:"Votre premier planning",
+          question:"C’est en place.",
+          aide:"Votre premier planning est publié, chacun connaît ses horaires et la feuille de cuisine est prête à imprimer. La semaine prochaine, il ne vous restera que trois gestes : ouvrir la semaine, générer, publier.",
+          cta:"Aller au tableau de bord"}
+      );
+
+      return liste
+    }
+
+    /* La position de l'assistant se déduit des données, jamais d'un
+       marqueur : on ne peut donc pas se retrouver renvoyé à une étape
+       déjà faite, ni coincé sur une étape qu'on vient de terminer. */
+    function wizardPositionUtile(){
+      const etapes=wizardEtapes();
+      const vers=id=>Math.max(0,etapes.findIndex(etape=>etape.id===id));
+
+      if(!establishmentConfigExists||!(establishmentConfig.name||"").trim())return 0;
+      if(currentDrivers.length===0)return vers("equipe");
+      if(currentWeeks.length===0)return vers("semaine");
+      if(currentNeeds.length===0)return vers("besoins");
+      if(currentWeeks.some(semaine=>semaine.status==="closed"))return vers("fin");
+      return vers("attente")
+    }
+
+    function wizardTermine(){
+      return currentWeeks.some(semaine=>semaine.status==="closed")
+    }
+
+    /* ---------- L'écran ---------- */
+
+    function wizardOuvrir(depuisLeDebut){
+      wizardNouveauBrouillon();
+      wizardEtape=depuisLeDebut?0:wizardPositionUtile();
+      wizardOuvert=true;
+      wizardMarquerRemis(false);
+      document.getElementById("appView").classList.add("hidden");
+      document.getElementById("wizard").classList.remove("hidden");
+      wizardRendre()
+    }
+
+    function wizardFermer(remisAPlusTard){
+      wizardOuvert=false;
+      document.getElementById("wizard").classList.add("hidden");
+      document.getElementById("appView").classList.remove("hidden");
+      if(remisAPlusTard)wizardMarquerRemis(true);
+      showSection("dashboard")
+    }
+
+    /* Les données arrivent une fraction de seconde après l'écriture : une
+       semaine créée, un compte créé, un besoin enregistré. L'assistant doit
+       alors se redessiner — sinon il affiche encore l'étape d'avant. On
+       s'abstient tant que quelqu'un est en train de taper, et on conserve
+       le message à l'écran : c'est parfois lui qui porte le mot de passe
+       provisoire d'un employé. */
+    function wizardRafraichir(){
+      if(!wizardOuvert)return;
+      const etapes=wizardEtapes();
+      const etape=etapes[Math.min(wizardEtape,etapes.length-1)];
+      if(!etape||!["equipe","semaine","besoins","attente","fin"].includes(etape.kind))return;
+
+      const actif=document.activeElement;
+      const cadre=document.getElementById("wizard");
+      if(actif&&actif.tagName==="INPUT"&&cadre&&cadre.contains(actif))return;
+
+      const zone=document.getElementById("wizardMessage");
+      const texte=zone?zone.textContent:"";
+      const classe=zone?zone.className:"";
+      wizardRendre();
+      const encore=document.getElementById("wizardMessage");
+      if(encore&&texte){encore.textContent=texte;encore.className=classe}
+    }
+
+    function wizardAller(pas){
+      const etapes=wizardEtapes();
+      wizardEtape=Math.min(etapes.length-1,Math.max(0,wizardEtape+pas));
+      wizardRendre()
+    }
+
+    function wizardMessage(texte,type){
+      const zone=document.getElementById("wizardMessage");
+      if(!zone)return;
+      if(!texte){zone.textContent="";zone.className="message";return}
+      zone.textContent=texte;zone.className=`message ${type||"error"}`
+    }
+
+    function wizardCarte({icone,titre,detail,choisi,surClic}){
+      const carte=document.createElement("button");
+      carte.type="button";
+      carte.className=`wizard-card${choisi?" is-chosen":""}`;
+      carte.innerHTML=`
+        ${icone?`<span class="wizard-card-icon">${icone}</span>`:'<span></span>'}
+        <span>
+          <strong>${escapeHtml(titre)}</strong>
+          ${detail?`<small>${escapeHtml(detail)}</small>`:""}
+        </span>
+        <span class="wizard-card-check">${choisi?"✓":""}</span>
+      `;
+      carte.addEventListener("click",surClic);
+      return carte
+    }
+
+    function wizardRendre(){
+      const etapes=wizardEtapes();
+      const etape=etapes[Math.min(wizardEtape,etapes.length-1)];
+      if(!etape)return;
+
+      wizardValider=etape.valide||null;
+      wizardAction=null;
+
+      const points=document.getElementById("wizardDots");
+      points.innerHTML="";
+      etapes.forEach((autre,index)=>{
+        const point=document.createElement("span");
+        point.className="wizard-dot"
+          +(index<wizardEtape?" is-done":"")
+          +(index===wizardEtape?" is-now":"");
+        points.appendChild(point)
+      });
+
+      document.getElementById("wizardPhase").textContent=
+        `${etape.phase} · étape ${wizardEtape+1} sur ${etapes.length}`;
+      document.getElementById("wizardQuestion").textContent=etape.question;
+      document.getElementById("wizardHint").textContent=etape.aide||"";
+      wizardMessage("");
+
+      const zone=document.getElementById("wizardAnswers");
+      zone.innerHTML="";
+      const bouton=document.getElementById("wizardNext");
+      bouton.textContent=etape.cta||"Continuer";
+      bouton.disabled=false;
+      document.getElementById("wizardBack").classList.toggle("hidden",wizardEtape===0);
+
+      const rendus={
+        intro:wizardRendreIntro,texte:wizardRendreTexte,jours:wizardRendreJours,
+        heures:wizardRendreHeures,moyens:wizardRendreMoyens,postes:wizardRendrePostes,
+        vehicules:wizardRendreVehicules,recap:wizardRendreRecap,equipe:wizardRendreEquipe,
+        semaine:wizardRendreSemaine,besoins:wizardRendreBesoins,attente:wizardRendreAttente,
+        fin:wizardRendreFin
+      };
+      (rendus[etape.kind]||(()=>{}))(zone,etape);
+      window.scrollTo({top:0,behavior:"smooth"})
+    }
+
+    function wizardRendreIntro(zone){
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.innerHTML=`
+        Ce que nous allons faire, dans l’ordre : <strong>votre fiche</strong>
+        (jours, horaires, véhicules), puis <strong>votre équipe</strong>,
+        puis <strong>votre première semaine</strong>. Ensuite, ce sont vos
+        employés qui travaillent : ils répondent depuis leur téléphone.
+      `;
+      zone.appendChild(note)
+    }
+
+    function wizardRendreTexte(zone,etape){
+      const champ=document.createElement("div");
+      champ.className="wizard-field";
+      const input=document.createElement("input");
+      input.type="text";
+      input.id="wizardText";
+      input.value=etape.lire();
+      input.placeholder=etape.placeholder||"";
+      input.addEventListener("input",()=>etape.ecrire(input.value));
+      input.addEventListener("keydown",event=>{if(event.key==="Enter")wizardSuivant()});
+      champ.appendChild(input);
+      zone.appendChild(champ);
+      setTimeout(()=>input.focus(),30)
+    }
+
+    function wizardRendreJours(zone){
+      const raccourcis=[
+        {titre:"Ouvert tous les jours",jours:[1,2,3,4,5,6,0],midi:true,soir:true},
+        {titre:"Fermé le lundi",jours:[2,3,4,5,6,0],midi:true,soir:true},
+        {titre:"Le soir seulement",jours:[1,2,3,4,5,6,0],midi:false,soir:true}
+      ];
+      const barre=document.createElement("div");
+      barre.className="wizard-shortcuts";
+      raccourcis.forEach(raccourci=>{
+        const puce=document.createElement("button");
+        puce.type="button";
+        puce.className="wizard-chip";
+        puce.textContent=raccourci.titre;
+        puce.addEventListener("click",()=>{
+          wizardBrouillon.openingDays=[0,1,2,3,4,5,6].map((rien,index)=>({
+            midday:raccourci.jours.includes(index)&&raccourci.midi,
+            evening:raccourci.jours.includes(index)&&raccourci.soir
+          }));
+          wizardRendre()
+        });
+        barre.appendChild(puce)
+      });
+      zone.appendChild(barre);
+
+      [1,2,3,4,5,6,0].forEach(index=>{
+        const jour=wizardBrouillon.openingDays[index]||{midday:false,evening:false};
+        const ligne=document.createElement("div");
+        ligne.className="wizard-day";
+        ligne.innerHTML=`<strong>${WEEKDAY_NAMES[index]}</strong>`;
+        [["midday","Midi"],["evening","Soir"]].forEach(([clef,libelle])=>{
+          const pilule=document.createElement("button");
+          pilule.type="button";
+          pilule.className=`wizard-pill${jour[clef]?" is-on":""}`;
+          pilule.textContent=libelle;
+          pilule.dataset.jour=`${index}-${clef}`;
+          pilule.addEventListener("click",()=>{
+            wizardBrouillon.openingDays[index]={...jour,[clef]:!jour[clef]};
+            wizardRendre()
+          });
+          ligne.appendChild(pilule)
+        });
+        zone.appendChild(ligne)
+      })
+    }
+
+    function wizardRendreHeures(zone){
+      const modeles=[
+        {titre:"Arrivées échelonnées",detail:"Midi de 11:00 à 12:00 · soir de 18:00 à 19:30",
+         midi:{start:"11:00",end:"12:00"},soir:{start:"18:00",end:"19:30"}},
+        {titre:"Tout le monde à la même heure",detail:"Midi à 11:00 · soir à 18:00",
+         midi:{start:"11:00",end:"11:00"},soir:{start:"18:00",end:"18:00"}}
+      ];
+      modeles.forEach(modele=>{
+        const choisi=wizardBrouillon.midday.start===modele.midi.start
+          &&wizardBrouillon.midday.end===modele.midi.end
+          &&wizardBrouillon.evening.start===modele.soir.start
+          &&wizardBrouillon.evening.end===modele.soir.end;
+        zone.appendChild(wizardCarte({icone:"🕒",titre:modele.titre,detail:modele.detail,choisi,
+          surClic:()=>{
+            wizardBrouillon.midday={...wizardBrouillon.midday,...modele.midi};
+            wizardBrouillon.evening={...wizardBrouillon.evening,...modele.soir};
+            wizardRendre()
+          }}))
+      });
+
+      const grille=document.createElement("div");
+      grille.className="wizard-grid";
+      [["Midi — première arrivée","midday","start"],["Midi — dernière arrivée","midday","end"],
+       ["Soir — première arrivée","evening","start"],["Soir — dernière arrivée","evening","end"]]
+        .forEach(([libelle,service,borne])=>{
+          const champ=document.createElement("div");
+          champ.className="wizard-field";
+          const id=`wizard-${service}-${borne}`;
+          champ.innerHTML=`<label for="${id}">${libelle}</label>`;
+          const input=document.createElement("input");
+          input.type="time";input.id=id;input.value=wizardBrouillon[service][borne];
+          input.addEventListener("change",()=>{
+            wizardBrouillon[service]={...wizardBrouillon[service],[borne]:input.value};
+            wizardMessage("")
+          });
+          champ.appendChild(input);
+          grille.appendChild(champ)
+        });
+      zone.appendChild(grille)
+    }
+
+    function wizardRendreMoyens(zone){
+      DELIVERY_METHODS.forEach(methode=>{
+        const choisi=(wizardBrouillon.deliveryMethods||[]).includes(methode.id);
+        zone.appendChild(wizardCarte({icone:methode.icon,titre:methode.label,choisi,
+          surClic:()=>{
+            const liste=new Set(wizardBrouillon.deliveryMethods||[]);
+            liste.has(methode.id)?liste.delete(methode.id):liste.add(methode.id);
+            wizardBrouillon.deliveryMethods=[...liste];
+            wizardRendre()
+          }}))
+      })
+    }
+
+    function wizardRendrePostes(zone){
+      zone.appendChild(wizardCarte({icone:"🛵",titre:"Tout le monde livre",
+        detail:"Un seul métier : inutile de déclarer quoi que ce soit.",
+        choisi:!wizardBrouillon.plusieursMetiers,
+        surClic:()=>{
+          wizardBrouillon.plusieursMetiers=false;
+          wizardBrouillon.positions=[];
+          wizardRendre()
+        }}));
+
+      zone.appendChild(wizardCarte({icone:"👥",titre:"Plusieurs métiers",
+        detail:"Livreur, caissier, cuisine, téléphoniste…",
+        choisi:wizardBrouillon.plusieursMetiers,
+        surClic:()=>{
+          wizardBrouillon.plusieursMetiers=true;
+          if((wizardBrouillon.positions||[]).length===0){
+            wizardBrouillon.positions=[
+              {id:"livreur",name:"Livreur",requiresVehicle:true,active:true},
+              {id:newPositionId(),name:"Cuisine",requiresVehicle:false,active:true}
+            ]
+          }
+          wizardRendre()
+        }}));
+
+      if(!wizardBrouillon.plusieursMetiers)return;
+
+      const liste=document.createElement("div");
+      liste.className="wizard-answers";
+      liste.id="wizardPositions";
+      (wizardBrouillon.positions||[]).forEach((poste,index)=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-row has-pill";
+        const nom=document.createElement("input");
+        nom.type="text";nom.value=poste.name||"";nom.placeholder="Nom du métier";
+        nom.className="wizard-position-name";
+        nom.addEventListener("input",()=>{wizardBrouillon.positions[index].name=nom.value});
+        ligne.appendChild(nom);
+
+        const vehicule=document.createElement("button");
+        vehicule.type="button";
+        vehicule.className=`wizard-pill${poste.requiresVehicle!==false?" is-on":""}`;
+        vehicule.textContent="🚗 véhicule";
+        vehicule.title="Ce métier exige-t-il un véhicule ?";
+        vehicule.addEventListener("click",()=>{
+          wizardBrouillon.positions[index].requiresVehicle=poste.requiresVehicle===false;
+          wizardRendre()
+        });
+        ligne.appendChild(vehicule);
+
+        const retirer=document.createElement("button");
+        retirer.type="button";
+        retirer.className="wizard-remove";
+        retirer.textContent="×";
+        retirer.title="Retirer ce métier";
+        retirer.addEventListener("click",()=>{
+          wizardBrouillon.positions.splice(index,1);
+          wizardRendre()
+        });
+        ligne.appendChild(retirer);
+        liste.appendChild(ligne)
+      });
+
+      const ajouter=document.createElement("button");
+      ajouter.type="button";
+      ajouter.className="wizard-add";
+      ajouter.id="wizardAddPosition";
+      ajouter.textContent="+ Ajouter un métier";
+      ajouter.addEventListener("click",()=>{
+        wizardBrouillon.positions.push({id:newPositionId(),name:"",requiresVehicle:false,active:true});
+        wizardRendre()
+      });
+      liste.appendChild(ajouter);
+      zone.appendChild(liste)
+    }
+
+    function wizardRendreVehicules(zone){
+      const types=DELIVERY_METHODS.filter(methode=>
+        methode.id==="company_car"||methode.id==="company_scooter")
+        .filter(methode=>(wizardBrouillon.deliveryMethods||[]).includes(methode.id));
+
+      (wizardBrouillon.fleet||[]).forEach((unite,index)=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-row";
+        const nom=document.createElement("input");
+        nom.type="text";nom.value=unite.name||"";nom.placeholder="Voiture 911";
+        nom.className="wizard-fleet-name";
+        nom.addEventListener("input",()=>{wizardBrouillon.fleet[index].name=nom.value});
+        ligne.appendChild(nom);
+
+        const retirer=document.createElement("button");
+        retirer.type="button";
+        retirer.className="wizard-remove";
+        retirer.textContent="×";
+        retirer.title="Retirer ce véhicule";
+        retirer.addEventListener("click",()=>{
+          wizardBrouillon.fleet.splice(index,1);
+          wizardRendre()
+        });
+        ligne.appendChild(retirer);
+        zone.appendChild(ligne)
+      });
+
+      types.forEach(methode=>{
+        const ajouter=document.createElement("button");
+        ajouter.type="button";
+        ajouter.className="wizard-add";
+        ajouter.dataset.type=methode.id;
+        ajouter.textContent=`+ Ajouter ${methode.id==="company_car"?"une voiture":"un scooter"}`;
+        ajouter.addEventListener("click",()=>{
+          const meme=(wizardBrouillon.fleet||[]).filter(unite=>unite.type===methode.id).length;
+          wizardBrouillon.fleet.push({
+            id:newFleetId(),type:methode.id,
+            name:`${methode.id==="company_car"?"Voiture":"Scooter"} ${meme+1}`,
+            active:true
+          });
+          wizardRendre()
+        });
+        zone.appendChild(ajouter)
+      })
+    }
+
+    function wizardRendreRecap(zone){
+      const b=wizardBrouillon;
+      const ouverts=[1,2,3,4,5,6,0]
+        .filter(index=>b.openingDays[index]&&(b.openingDays[index].midday||b.openingDays[index].evening))
+        .map(index=>WEEKDAY_NAMES[index].slice(0,3));
+      const lignes=[
+        ["Établissement",b.name||"—"],
+        ["Jours ouverts",ouverts.length?ouverts.join(", "):"aucun"],
+        ["Arrivées midi",`${b.midday.start} → ${b.midday.end}`],
+        ["Arrivées soir",`${b.evening.start} → ${b.evening.end}`],
+        ["Moyens de livraison",(b.deliveryMethods||[]).map(deliveryMethodLabel).join(" · ")||"—"],
+        ["Métiers",b.plusieursMetiers
+          ?(b.positions||[]).map(poste=>poste.name).filter(Boolean).join(", ")
+          :"tout le monde livre"],
+        ["Véhicules",(b.fleet||[]).map(unite=>unite.name).filter(Boolean).join(", ")||"aucun"]
+      ];
+      const tableau=document.createElement("div");
+      tableau.className="wizard-recap";
+      tableau.id="wizardRecap";
+      lignes.forEach(([libelle,valeur])=>{
+        const ligne=document.createElement("div");
+        ligne.innerHTML=`<span>${escapeHtml(libelle)}</span><strong>${escapeHtml(valeur)}</strong>`;
+        tableau.appendChild(ligne)
+      });
+      zone.appendChild(tableau);
+
+      wizardAction=async()=>{
+        const aGarder=(wizardBrouillon.positions||[])
+          .filter(poste=>(poste.name||"").trim())
+          .map(poste=>({...poste,name:poste.name.trim()}));
+        const fiche={...wizardBrouillon,positions:wizardBrouillon.plusieursMetiers?aGarder:[]};
+        delete fiche.plusieursMetiers;
+        fiche.fleet=(fiche.fleet||[]).filter(unite=>(unite.name||"").trim());
+
+        // On passe par la fiche et par sa fonction d'enregistrement : un
+        // établissement configuré par l'assistant est exactement un
+        // établissement configuré à la main.
+        establishmentConfig=fiche;
+        renderEstablishmentForm();
+        await saveEstablishmentConfig();
+
+        const retour=document.getElementById("establishmentMessage");
+        if(retour.className.includes("error")){
+          await loadEstablishmentConfig();
+          renderEstablishmentForm();
+          throw new Error(retour.textContent)
+        }
+        wizardAller(1)
+      }
+    }
+
+    function wizardRendreEquipe(zone){
+      if(currentDrivers.length||currentStaff.length>1){
+        const gens=document.createElement("div");
+        gens.className="wizard-people";
+        gens.id="wizardPeople";
+        currentDrivers.forEach(employe=>{
+          const ligne=document.createElement("div");
+          ligne.className="wizard-person";
+          ligne.innerHTML=`
+            <span class="wizard-card-icon">✓</span>
+            <span><strong>${escapeHtml(employe.name||"—")}</strong>
+              <small>${escapeHtml(employe.email||"")}${severalPositions()?" · "+escapeHtml(positionLabel(positionOf(employe.position))):""}</small></span>
+            <span></span>`;
+          gens.appendChild(ligne)
+        });
+        zone.appendChild(gens)
+      }
+
+      const grille=document.createElement("div");
+      grille.className="wizard-grid";
+      grille.innerHTML=`
+        <div class="wizard-field"><label for="wizardPersonName">Prénom et nom</label>
+          <input type="text" id="wizardPersonName" placeholder="Antonio Rossi"></div>
+        <div class="wizard-field"><label for="wizardPersonEmail">Adresse e-mail</label>
+          <input type="email" id="wizardPersonEmail" placeholder="antonio@exemple.ch"></div>`;
+      zone.appendChild(grille);
+
+      if(severalPositions()){
+        const champ=document.createElement("div");
+        champ.className="wizard-field";
+        champ.innerHTML=`<label for="wizardPersonPosition">Son métier</label>`;
+        const select=document.createElement("select");
+        select.id="wizardPersonPosition";
+        positions().forEach(poste=>{
+          const option=document.createElement("option");
+          option.value=poste.id;option.textContent=poste.name;
+          select.appendChild(option)
+        });
+        champ.appendChild(select);
+        zone.appendChild(champ)
+      }
+
+      const ajouter=document.createElement("button");
+      ajouter.type="button";
+      ajouter.className="wizard-add";
+      ajouter.id="wizardAddPerson";
+      ajouter.textContent="+ Créer ce compte";
+      ajouter.addEventListener("click",()=>wizardCreerPersonne(ajouter));
+      zone.appendChild(ajouter);
+
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.style.marginTop="18px";
+      note.textContent="Chaque compte reçoit un mot de passe provisoire, affiché ici après la création. Vous pourrez aussi envoyer à chacun un lien pour choisir son mot de passe lui-même.";
+      zone.appendChild(note);
+
+      document.getElementById("wizardNext").disabled=currentDrivers.length===0
+    }
+
+    async function wizardCreerPersonne(bouton){
+      const nom=document.getElementById("wizardPersonName").value.trim();
+      const courriel=document.getElementById("wizardPersonEmail").value.trim().toLowerCase();
+      const poste=document.getElementById("wizardPersonPosition")?.value;
+
+      if(!nom){wizardMessage("Indiquez le prénom et le nom.");return}
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(courriel)){wizardMessage("Cette adresse e-mail ne semble pas valide.");return}
+      if(currentDrivers.concat(currentStaff).some(gens=>(gens.email||"").toLowerCase()===courriel)){
+        wizardMessage("Un compte existe déjà avec cette adresse.");return
+      }
+
+      wizardMessage("");
+      bouton.disabled=true;
+      bouton.textContent="Création…";
+      const motDePasse=motDePasseProvisoire();
+
+      try{
+        await creerCompteEmploye({
+          name:nom,email:courriel,password:motDePasse,
+          position:positionOf(poste)
+        });
+        wizardMessage(`Compte créé pour ${nom}. Mot de passe provisoire : ${motDePasse}`,"success");
+        document.getElementById("wizardPersonName").value="";
+        document.getElementById("wizardPersonEmail").value="";
+        document.getElementById("wizardNext").disabled=false
+      }catch(error){
+        console.error(error);
+        wizardMessage(`Impossible de créer ce compte : ${error.code||error.message}`)
+      }finally{
+        bouton.disabled=false;
+        bouton.textContent="+ Créer ce compte"
+      }
+    }
+
+    function motDePasseProvisoire(){
+      const lettres="abcdefghijkmnpqrstuvwxyz";
+      const chiffres="23456789";
+      let sortie="";
+      for(let index=0;index<4;index+=1)sortie+=lettres[Math.floor(Math.random()*lettres.length)];
+      for(let index=0;index<4;index+=1)sortie+=chiffres[Math.floor(Math.random()*chiffres.length)];
+      return sortie
+    }
+
+    function wizardLundiProchain(decalage){
+      const aujourdhui=new Date();
+      const jour=aujourdhui.getDay();
+      const versLundi=(8-jour)%7||7;
+      const lundi=new Date(aujourdhui);
+      lundi.setDate(aujourdhui.getDate()+versLundi+7*(decalage||0));
+      return lundi
+    }
+
+    function wizardIso(date){
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`
+    }
+
+    function wizardRendreSemaine(zone){
+      const choix=[0,1].map(decalage=>{
+        const lundi=wizardLundiProchain(decalage);
+        const dimanche=new Date(lundi);
+        dimanche.setDate(lundi.getDate()+6);
+        return {
+          debut:wizardIso(lundi),
+          fin:wizardIso(dimanche),
+          titre:decalage===0?"La semaine prochaine":"Dans deux semaines",
+          detail:`Du ${formatDate(wizardIso(lundi))} au ${formatDate(wizardIso(dimanche))}`
+        }
+      });
+
+      if(!wizardBrouillon.semaineChoisie)wizardBrouillon.semaineChoisie=choix[0];
+
+      choix.forEach(option=>{
+        zone.appendChild(wizardCarte({icone:"📅",titre:option.titre,detail:option.detail,
+          choisi:wizardBrouillon.semaineChoisie.debut===option.debut,
+          surClic:()=>{wizardBrouillon.semaineChoisie=option;wizardRendre()}}))
+      });
+
+      const limite=document.createElement("div");
+      limite.className="wizard-field";
+      limite.innerHTML=`<label for="wizardDeadline">Jusqu’à quand votre équipe peut-elle répondre ?</label>`;
+      const input=document.createElement("input");
+      input.type="date";input.id="wizardDeadline";
+      const parDefaut=new Date(`${wizardBrouillon.semaineChoisie.debut}T12:00:00`);
+      parDefaut.setDate(parDefaut.getDate()-3);
+      input.value=wizardBrouillon.limiteChoisie||wizardIso(parDefaut);
+      input.addEventListener("change",()=>{wizardBrouillon.limiteChoisie=input.value});
+      limite.appendChild(input);
+      zone.appendChild(limite);
+
+      wizardAction=async()=>{
+        const semaine=wizardBrouillon.semaineChoisie;
+        const deja=currentWeeks.find(autre=>autre.startDate===semaine.debut);
+        if(deja){wizardAller(1);return}
+
+        await creerSemaine({
+          startDate:semaine.debut,
+          endDate:semaine.fin,
+          deadlineDate:document.getElementById("wizardDeadline").value,
+          deadlineTime:establishmentConfig.defaultDeadlineTime||"18:00",
+          message:"",
+          deliveryMethods:(establishmentConfig.deliveryMethods||[]).slice(),
+          open:true
+        });
+        wizardAller(1)
+      }
+    }
+
+    function wizardRendreBesoins(zone){
+      const semaine=currentWeeks
+        .slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)))
+        .find(autre=>autre.status!=="closed")||currentWeeks[0];
+
+      if(!semaine){
+        zone.innerHTML='<div class="wizard-note">La semaine vient d\u2019\u00eatre ouverte, elle arrive\u2026</div>';
+        document.getElementById("wizardNext").disabled=true;
+        return
+      }
+
+      // Un seul chiffre pour toute la semaine ne correspond a aucune
+      // realite : le samedi soir ne ressemble pas au mardi midi, et un
+      // caissier ne se compte pas comme un livreur. On demande donc
+      // quatre nombres par metier, et tout reste ajustable service par
+      // service ensuite.
+      const services=wizardServicesDeLaSemaine(semaine);
+      const groupes=wizardGroupesDeBesoin(services);
+      const metiers=positions();
+
+      if(!wizardBrouillon.parPoste)wizardBrouillon.parPoste={};
+      metiers.forEach((poste,rang)=>{
+        if(wizardBrouillon.parPoste[poste.id])return;
+        // Seul le premier metier part avec des nombres : demander deux
+        // caissiers par service parce qu'on demande deux livreurs serait
+        // une invention. Les autres partent a zero, a lui de choisir.
+        wizardBrouillon.parPoste[poste.id]=rang===0
+          ? {...BESOINS_PAR_DEFAUT}
+          : {semaineMidi:0,semaineSoir:0,finMidi:0,finSoir:0}
+      });
+
+      if(!wizardBrouillon.posteChoisi
+        ||!metiers.some(poste=>poste.id===wizardBrouillon.posteChoisi)){
+        wizardBrouillon.posteChoisi=metiers[0].id
+      }
+
+      if(metiers.length>1){
+        const barre=document.createElement("div");
+        barre.className="wizard-shortcuts";
+        barre.id="wizardPostePills";
+        metiers.forEach(poste=>{
+          const total=groupes.reduce((somme,groupe)=>
+            somme+groupe.services.length*(wizardBrouillon.parPoste[poste.id][groupe.clef]||0),0);
+          const pilule=document.createElement("button");
+          pilule.type="button";
+          pilule.dataset.poste=poste.id;
+          pilule.className=`wizard-pill${poste.id===wizardBrouillon.posteChoisi?" is-on":""}`;
+          pilule.textContent=total?`${poste.name} · ${total}`:poste.name;
+          pilule.addEventListener("click",()=>{
+            wizardBrouillon.posteChoisi=poste.id;
+            wizardRendre()
+          });
+          barre.appendChild(pilule)
+        });
+        zone.appendChild(barre)
+      }
+
+      const quantites=wizardBrouillon.parPoste[wizardBrouillon.posteChoisi];
+      const metier=metiers.find(poste=>poste.id===wizardBrouillon.posteChoisi);
+
+      if(metiers.length>1){
+        const quelMetier=document.createElement("p");
+        quelMetier.className="wizard-hint";
+        quelMetier.id="wizardPosteHint";
+        quelMetier.style.margin="0 0 4px";
+        quelMetier.innerHTML=`Ces nombres concernent le poste
+          <strong>${escapeHtml(metier.name)}</strong>. Touchez un autre m\u00e9tier ci-dessus pour le r\u00e9gler \u00e0 son tour.`;
+        zone.appendChild(quelMetier)
+      }
+
+      groupes.filter(groupe=>groupe.services.length).forEach(groupe=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-need";
+        ligne.dataset.groupe=groupe.clef;
+
+        const texte=document.createElement("span");
+        texte.innerHTML=`<strong>${escapeHtml(groupe.titre)}</strong>
+          <small>${escapeHtml(groupe.jours)} \u00b7 ${groupe.services.length} service${groupe.services.length>1?"s":""}</small>`;
+        ligne.appendChild(texte);
+
+        const reglage=document.createElement("span");
+        reglage.className="wizard-stepper";
+
+        const moins=document.createElement("button");
+        moins.type="button";moins.className="wizard-step";moins.textContent="\u2212";
+        moins.setAttribute("aria-label",`Moins de personnes \u2014 ${groupe.titre}`);
+        moins.addEventListener("click",()=>{
+          quantites[groupe.clef]=Math.max(0,(quantites[groupe.clef]||0)-1);
+          wizardRendre()
+        });
+
+        const valeur=document.createElement("b");
+        valeur.textContent=String(quantites[groupe.clef]||0);
+
+        const plus=document.createElement("button");
+        plus.type="button";plus.className="wizard-step";plus.textContent="+";
+        plus.setAttribute("aria-label",`Plus de personnes \u2014 ${groupe.titre}`);
+        plus.addEventListener("click",()=>{
+          quantites[groupe.clef]=Math.min(20,(quantites[groupe.clef]||0)+1);
+          wizardRendre()
+        });
+
+        reglage.appendChild(moins);reglage.appendChild(valeur);reglage.appendChild(plus);
+        ligne.appendChild(reglage);
+        zone.appendChild(ligne)
+      });
+
+      const aPourvoir=metiers.reduce((total,poste)=>
+        total+groupes.reduce((somme,groupe)=>
+          somme+groupe.services.length*(wizardBrouillon.parPoste[poste.id][groupe.clef]||0),0),0);
+
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.id="wizardNeedsNote";
+      note.innerHTML=`Cette semaine compte <strong>${services.length} service${services.length>1?"s":""}</strong>
+        ouvert${services.length>1?"s":""}. Nous allons donc demander
+        <strong>${aPourvoir} pr\u00e9sence${aPourvoir>1?"s":""}</strong> au total${metiers.length>1?", tous m\u00e9tiers confondus":""}.
+        Un service laiss\u00e9 \u00e0 z\u00e9ro ne sera pas demand\u00e9 du tout.`;
+      zone.appendChild(note);
+
+      document.getElementById("wizardNext").disabled=aPourvoir===0;
+
+      wizardAction=async()=>{
+        for(const poste of metiers){
+          const parGroupe=wizardBrouillon.parPoste[poste.id];
+          for(const groupe of groupes){
+            const quantite=parGroupe[groupe.clef]||0;
+            if(quantite===0)continue;
+            for(const service of groupe.services){
+              const deja=currentNeeds.find(besoin=>
+                besoin.weekId===semaine.id
+                && besoin.date===service.date
+                && besoin.time===service.time
+                && positionOf(besoin.positionId)===poste.id);
+              if(deja)continue;
+              await creerBesoin({week:semaine,date:service.date,time:service.time,
+                positionId:poste.id,quantity:quantite,notes:""})
+            }
+          }
+        }
+        wizardAller(1)
+      }
+    }
+
+    /* Vendredi, samedi et dimanche d'un cote ; le reste de l'autre. C'est
+       la coupure que tout le monde emploie en restauration, et elle
+       recouvre l'essentiel de l'ecart d'affluence. */
+    const JOURS_DE_FIN_DE_SEMAINE=[5,6,0];
+
+    const BESOINS_PAR_DEFAUT={
+      semaineMidi:1, semaineSoir:2, finMidi:2, finSoir:3
+    };
+
+    function wizardGroupesDeBesoin(services){
+      const bascule=minutesOf(establishmentConfig.evening?.start||"18:00");
+      const modele=[
+        {clef:"semaineMidi",titre:"Midi, en semaine",jours:"Lundi à jeudi",fin:false,soir:false},
+        {clef:"semaineSoir",titre:"Soir, en semaine",jours:"Lundi à jeudi",fin:false,soir:true},
+        {clef:"finMidi",titre:"Midi, en fin de semaine",jours:"Vendredi, samedi, dimanche",fin:true,soir:false},
+        {clef:"finSoir",titre:"Soir, en fin de semaine",jours:"Vendredi, samedi, dimanche",fin:true,soir:true}
+      ];
+
+      return modele.map(groupe=>({
+        ...groupe,
+        services:services.filter(service=>{
+          const jour=new Date(`${service.date}T12:00:00`).getDay();
+          const finDeSemaine=JOURS_DE_FIN_DE_SEMAINE.includes(jour);
+          const leSoir=minutesOf(service.time)>=bascule;
+          return finDeSemaine===groupe.fin&&leSoir===groupe.soir
+        })
+      }))
+    }
+
+    function wizardServicesDeLaSemaine(semaine){
+      const services=[];
+      const debut=new Date(`${semaine.startDate}T12:00:00`);
+      for(let pas=0;pas<7;pas+=1){
+        const jour=new Date(debut);
+        jour.setDate(debut.getDate()+pas);
+        const iso=wizardIso(jour);
+        if(iso>semaine.endDate)break;
+        const ouverture=establishmentConfig.openingDays[jour.getDay()]||{};
+        if(ouverture.midday)services.push({date:iso,time:establishmentConfig.midday.start});
+        if(ouverture.evening)services.push({date:iso,time:establishmentConfig.evening.start})
+      }
+      return services
+    }
+
+    async function wizardRendreAttente(zone,etape){
+      const semaine=currentWeeks
+        .slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)))
+        .find(autre=>autre.status==="open")||currentWeeks[0];
+
+      const compteur=document.createElement("div");
+      compteur.className="wizard-count";
+      compteur.id="wizardWaitCount";
+      compteur.innerHTML=`<b>…</b><span>réponses sur ${currentDrivers.length}</span>`;
+      zone.appendChild(compteur);
+
+      if(semaine){
+        const rappel=document.createElement("div");
+        rappel.className="wizard-note";
+        rappel.innerHTML=`Date limite : <strong>${escapeHtml(formatDate(semaine.deadlineDate))}
+          à ${escapeHtml(semaine.deadlineTime||"18:00")}</strong>.
+          Passé ce délai, vous générez la proposition et vous publiez.`;
+        zone.appendChild(rappel)
+      }
+
+      const relancer=document.createElement("button");
+      relancer.type="button";
+      relancer.className="wizard-add";
+      relancer.id="wizardRelance";
+      relancer.textContent="✉️ Écrire à toute mon équipe";
+      relancer.addEventListener("click",()=>writeToTeam());
+      zone.appendChild(relancer);
+
+      wizardAction=async()=>{
+        wizardFermer(false);
+        showSection("planning")
+      };
+
+      if(semaine){
+        try{
+          const reponses=await loadAvailabilitiesForWeek(semaine.id);
+          const bloc=document.getElementById("wizardWaitCount");
+          if(bloc)bloc.innerHTML=`<b>${reponses.length}</b><span>réponse${reponses.length>1?"s":""} sur ${currentDrivers.length}</span>`
+        }catch(error){
+          console.error(error)
+        }
+      }
+    }
+
+    function wizardRendreFin(zone){
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.id="wizardEndNote";
+      note.innerHTML=`Votre tableau de bord vous dira désormais, à chaque
+        ouverture, ce qu’il y a à faire : les réponses qui manquent, la
+        proposition à générer, le planning à publier. L’assistant, lui,
+        a fini son travail.`;
+      zone.appendChild(note);
+      wizardAction=async()=>{
+        wizardMarquerRemis(true);
+        wizardFermer(false)
+      }
+    }
+
+    async function wizardSuivant(){
+      if(wizardOccupe)return;
+      const message=wizardValider?wizardValider():"";
+      if(message){wizardMessage(message);return}
+
+      if(!wizardAction){wizardAller(1);return}
+
+      const bouton=document.getElementById("wizardNext");
+      const libelle=bouton.textContent;
+      wizardOccupe=true;
+      bouton.disabled=true;
+      bouton.textContent="Un instant…";
+      try{
+        await wizardAction()
+      }catch(error){
+        console.error(error);
+        wizardMessage(error.message||"Quelque chose n’a pas fonctionné.")
+      }finally{
+        wizardOccupe=false;
+        // Si l'action a fait avancer l'assistant, l'étape suivante a déjà
+        // repris la main sur le bouton — y compris pour le désactiver, ce
+        // que fait l'étape de l'équipe tant que personne n'existe. On ne
+        // restaure donc que si l'on est resté sur place.
+        const encore=document.getElementById("wizardNext");
+        if(encore&&encore.textContent==="Un instant…"){
+          encore.disabled=false;
+          encore.textContent=libelle
+        }
+      }
+    }
+
+    /* Appelé à la connexion d'un responsable : l'assistant ne s'impose que
+       si la mise en service n'est pas terminée et qu'on ne l'a pas remis à
+       plus tard. */
+    function wizardPeutEtreOuvrir(){
+      if(wizardTermine())return false;
+      if(wizardRemis())return false;
+      if(!establishmentConfigExists||!(establishmentConfig.name||"").trim()){
+        wizardOuvrir(true);
+        return true
+      }
+      return false
+    }
+
+    /* ===================================================================
+       CE QU'IL Y A A FAIRE MAINTENANT
+
+       Le tableau de bord ne se contente pas d'offrir neuf portes : il dit
+       laquelle pousser. L'etat se deduit des semaines, des besoins et de
+       l'equipe deja charges ; seul le compte des reponses demande une
+       lecture, mise en cache et partagee avec l'ecran de planning.
+       =================================================================== */
+    function semaineEnCours(){
+      const triees=currentWeeks.slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)));
+      return triees.find(semaine=>semaine.status==="open")
+        ||triees.filter(semaine=>semaine.status==="draft")[0]
+        ||null
+    }
+
+    function etatDuTableauDeBord(){
+      if(!etapesDeMiseEnServiceFaites())return {id:"miseEnService"};
+
+      const semaine=semaineEnCours();
+
+      if(!semaine){
+        return {
+          id:"ouvrirSemaine",
+          eyebrow:"La suite",
+          titre:"Ouvrez votre prochaine semaine",
+          detail:"Aucune semaine n’attend de réponses. Créez-la et ouvrez-la : votre équipe recevra la demande et répondra depuis son téléphone.",
+          boutons:[{texte:"Créer une semaine",vers:"createWeek",primaire:true}]
+        }
+      }
+
+      const besoins=currentNeeds.filter(besoin=>besoin.weekId===semaine.id);
+      if(besoins.length===0){
+        return {
+          id:"besoins",
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"Il manque vos besoins",
+          detail:"Tant qu’aucun besoin n’est défini, l’application ne sait pas combien de personnes il faut, ni à quelle heure. Rien ne peut être proposé.",
+          boutons:[{texte:"Définir les besoins",vers:"needs",primaire:true}]
+        }
+      }
+
+      if(semaine.status==="draft"){
+        return {
+          id:"ouvrir",
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"Cette semaine est encore en brouillon",
+          detail:"Votre équipe ne la voit pas et ne peut pas répondre. Ouvrez-la pour lancer la collecte des disponibilités.",
+          boutons:[{texte:"Ouvrir la semaine",vers:"createWeek",primaire:true}]
+        }
+      }
+
+      if(isDeadlinePassed(semaine)){
+        return {
+          id:"generer",
+          semaine,
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"La date limite est passée",
+          detail:"Vous pouvez générer la proposition, l’ajuster, puis la publier. S’il manque encore des réponses, l’écran de planning vous propose de prolonger le délai.",
+          boutons:[{texte:"Ouvrir le planning",vers:"planning",primaire:true}]
+        }
+      }
+
+      return {
+        id:"attente",
+        semaine,
+        eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+        titre:"Votre équipe répond",
+        detail:`Réponses attendues jusqu’au ${formatDate(semaine.deadlineDate)} à ${semaine.deadlineTime||"18:00"}. Vous n’avez rien à faire d’ici là.`,
+        boutons:[
+          {texte:"Voir les réponses",vers:"planning",primaire:true},
+          {texte:"Écrire à mon équipe",action:writeToTeam}
+        ]
+      }
+    }
+
+    /* Les réglages restent ouverts tant que la mise en service n'est pas
+       finie — c'est là qu'on travaille. Ensuite ils se replient, et le
+       responsable retrouve devant lui la semaine et son équipe, ce qu'il
+       ouvre réellement chaque lundi. Son choix, s'il en fait un, prime. */
+    const REGLAGES_OUVERTS="journia.reglages.ouverts";
+
+    function reglagesChoixManuel(){
+      try{ return localStorage.getItem(REGLAGES_OUVERTS) }catch(error){ return null }
+    }
+
+    function renderSettingsGroup(){
+      const groupe=document.getElementById("settingsGroup");
+      if(!groupe)return;
+
+      const choix=reglagesChoixManuel();
+      const miseEnServiceFinie=etapesDeMiseEnServiceFaites();
+      const ouvert=choix===null?!miseEnServiceFinie:choix==="1";
+
+      groupe.classList.toggle("is-closed",!ouvert);
+      document.getElementById("toggleSettings").setAttribute("aria-expanded",String(ouvert))
+    }
+
+    function etapesDeMiseEnServiceFaites(){
+      return setupSteps().filter(etape=>!etape.facultatif).every(etape=>etape.fait)
+    }
+
+    /* ===================================================================
+       LES ALERTES ESSENTIELLES
+
+       Ce qui demande un geste aujourd'hui, en tête du tableau de bord et
+       en pastille dans la barre de navigation. Trois couleurs, toujours
+       les mêmes : rouge pour un trou à boucher, ambre pour ce qui attend,
+       bleu pour ce qui gênera plus tard. Tout se déduit de données déjà
+       chargées — aucune lecture n'est faite pour une alerte.
+       =================================================================== */
+    let reponsesConnues = {weekId:"",recues:-1};
+
+    function alertesDuJour(){
+      const alertes=[];
+      if(!etapesDeMiseEnServiceFaites())return alertes;
+
+      const quand=(document.getElementById("nextServiceTitle")?.textContent||"Prochain service").trim();
+      const service=nextServiceTarget?nextServiceRows:[];
+      const statuts=service.map(driverEffectiveStatus);
+
+      const refus=service.filter((ligne,index)=>statuts[index]==="refused");
+      if(refus.length){
+        alertes.push({
+          ton:"bad",icone:"\u2715",vers:"planning",bouton:"Remplacer",
+          titre:`${refus.length} refus à remplacer — ${quand.toLowerCase()}`,
+          detail:[...new Set(refus.map(ligne=>`${ligne.driverName||"Quelqu’un"} à ${ligne.time||""}`))].join(" · ")
+        })
+      }
+
+      const semaine=semaineEnCours();
+      if(semaine&&semaine.status==="open"&&isDeadlinePassed(semaine)
+        &&reponsesConnues.weekId===semaine.id&&reponsesConnues.recues>=0){
+        const manquantes=Math.max(0,currentDrivers.filter(gens=>gens.active===true).length-reponsesConnues.recues);
+        if(manquantes>0){
+          alertes.push({
+            ton:"warn",icone:"\u23f3",vers:"planning",bouton:"Décider",
+            titre:`Délai passé : ${manquantes} réponse${manquantes>1?"s manquent":" manque"}`,
+            detail:`Semaine du ${formatDate(semaine.startDate)}. Prolongez le délai, ou générez le planning avec les réponses reçues.`
+          })
+        }
+      }
+
+      const attente=service.filter((ligne,index)=>statuts[index]==="pending");
+      if(attente.length){
+        alertes.push({
+          ton:"warn",icone:"?",vers:"planning",bouton:"Relancer",
+          titre:`${attente.length} horaire${attente.length>1?"s":""} sans réponse — ${quand.toLowerCase()}`,
+          detail:[...new Set(attente.map(ligne=>ligne.driverName||"Quelqu’un"))].join(" · ")
+        })
+      }
+
+      const sansNumero=currentDrivers.filter(gens=>gens.active===true&&!normalizePhone(gens.phone));
+      if(sansNumero.length){
+        alertes.push({
+          ton:"info",icone:"\u260e",vers:"drivers",bouton:"Voir",
+          titre:`${sansNumero.length} employé${sansNumero.length>1?"s":""} sans numéro de téléphone`,
+          detail:"Impossible de les appeler ou de leur écrire par WhatsApp le jour où il le faudra."
+        })
+      }
+
+      return alertes
+    }
+
+    function renderAlerts(){
+      const panneau=document.getElementById("alertsPanel");
+      if(!panneau)return;
+
+      const alertes=alertesDuJour();
+      const miseEnService=!etapesDeMiseEnServiceFaites();
+      panneau.classList.toggle("hidden",miseEnService);
+      panneau.innerHTML="";
+
+      const urgentes=alertes.filter(alerte=>alerte.ton!=="info");
+      if(!miseEnService&&urgentes.length===0){
+        const calme=document.createElement("div");
+        calme.className="alert is-ok";
+        calme.innerHTML=`<span class="alert-ico">\u2713</span>
+          <span><strong>Rien d’urgent</strong><small>Aucun refus à remplacer, aucun délai dépassé.</small></span>`;
+        panneau.appendChild(calme)
+      }
+
+      alertes.forEach(alerte=>{
+        const ligne=document.createElement("div");
+        ligne.className=`alert is-${alerte.ton}`;
+        ligne.innerHTML=`<span class="alert-ico">${alerte.icone}</span>
+          <span><strong>${escapeHtml(alerte.titre)}</strong><small>${escapeHtml(alerte.detail)}</small></span>`;
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className=`button ${alerte.ton==="info"?"button-ghost":"button-primary"}`;
+        bouton.textContent=alerte.bouton;
+        bouton.addEventListener("click",()=>showSection(alerte.vers));
+        ligne.appendChild(bouton);
+        panneau.appendChild(ligne)
+      });
+
+      // Les pastilles suivent les mêmes alertes, sur tous les écrans.
+      const compte={planning:0,drivers:0};
+      alertes.forEach(alerte=>{
+        if(alerte.ton==="info")compte.drivers+=1;
+        else compte.planning+=1
+      });
+      document.querySelectorAll(".mainnav-badge").forEach(pastille=>{
+        const combien=compte[pastille.dataset.badge]||0;
+        pastille.textContent=pastille.dataset.badge==="drivers"
+          ? String(currentDrivers.filter(gens=>gens.active===true&&!normalizePhone(gens.phone)).length||"")
+          : String(combien||"");
+        pastille.classList.toggle("hidden",combien===0)
+      })
+    }
+
+    /* Le fil de la semaine : où l'on en est, d'un coup d'œil. */
+    function etapesDeLaSemaine(semaine){
+      if(!semaine)return [];
+      const besoins=currentNeeds.filter(besoin=>besoin.weekId===semaine.id).length>0;
+      const ouverte=semaine.status!=="draft";
+      const publiee=semaine.status==="closed";
+      const reponses=publiee||(ouverte&&isDeadlinePassed(semaine))
+        ||(reponsesConnues.weekId===semaine.id&&reponsesConnues.recues>=0
+          &&reponsesConnues.recues>=currentDrivers.filter(gens=>gens.active===true).length
+          &&currentDrivers.length>0);
+      return [
+        {titre:"Besoins",fait:besoins},
+        {titre:"Semaine ouverte",fait:ouverte},
+        {titre:"Réponses",fait:reponses},
+        {titre:"Planning",fait:publiee},
+        {titre:"Publié",fait:publiee}
+      ]
+    }
+
+    function peindreEtapes(liste,etapes){
+      if(!liste)return;
+      liste.classList.toggle("hidden",etapes.length===0);
+      liste.innerHTML="";
+      const courante=etapes.findIndex(etape=>!etape.fait);
+      etapes.forEach((etape,index)=>{
+        const item=document.createElement("li");
+        item.className="week-step"+(etape.fait?" is-done":index===courante?" is-now":"");
+        item.innerHTML=`<b>${etape.fait?"\u2713":index+1}</b>${escapeHtml(etape.titre)}`;
+        liste.appendChild(item)
+      })
+    }
+
+    function renderActionPanel(){
+      const panneau=document.getElementById("actionPanel");
+      if(!panneau)return;
+
+      const etat=etatDuTableauDeBord();
+      renderAlerts();
+      if(etat.id==="miseEnService"){
+        panneau.classList.add("hidden");
+        return
+      }
+      panneau.classList.remove("hidden");
+      peindreEtapes(document.getElementById("weekSteps"),
+        etat.id==="ouvrirSemaine"?[]:etapesDeLaSemaine(semaineEnCours()));
+
+      document.getElementById("actionEyebrow").textContent=etat.eyebrow||"";
+      document.getElementById("actionTitle").textContent=etat.titre;
+      document.getElementById("actionDetail").textContent=etat.detail||"";
+
+      const zone=document.getElementById("actionButtons");
+      zone.innerHTML="";
+      (etat.boutons||[]).forEach(descriptif=>{
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className=`button ${descriptif.primaire?"button-primary":"button-ghost"}`;
+        bouton.textContent=descriptif.texte;
+        bouton.addEventListener("click",()=>{
+          if(descriptif.action)descriptif.action();
+          else showSection(descriptif.vers)
+        });
+        zone.appendChild(bouton)
+      });
+
+      // Le compte des reponses vaut mieux qu'une promesse : il arrive un
+      // instant plus tard, sans retarder l'affichage.
+      if(etat.id==="generer"&&etat.semaine&&currentDrivers.length){
+        loadAvailabilitiesForWeek(etat.semaine.id).then(reponses=>{
+          reponsesConnues={weekId:etat.semaine.id,recues:reponses.length};
+          renderAlerts()
+        }).catch(error=>console.error(error))
+      }
+
+      if(etat.id==="attente"&&etat.semaine&&currentDrivers.length){
+        loadAvailabilitiesForWeek(etat.semaine.id).then(reponses=>{
+          reponsesConnues={weekId:etat.semaine.id,recues:reponses.length};
+          renderAlerts();
+          peindreEtapes(document.getElementById("weekSteps"),etapesDeLaSemaine(semaineEnCours()));
+          const detail=document.getElementById("actionDetail");
+          if(!detail||etatDuTableauDeBord().id!=="attente")return;
+          const manquants=Math.max(0,currentDrivers.length-reponses.length);
+          detail.textContent=manquants===0
+            ? `Tout le monde a répondu. Vous pouvez générer la proposition sans attendre la date limite.`
+            : `${reponses.length} réponse${reponses.length>1?"s":""} sur ${currentDrivers.length} · ${manquants} manquante${manquants>1?"s":""} · limite le ${formatDate(etat.semaine.deadlineDate)} à ${etat.semaine.deadlineTime||"18:00"}.`
+        }).catch(error=>console.error(error))
+      }
+    }
+
     function renderPlanningRuleNote(){
       const note=document.getElementById("planningRuleNote");
       if(!note)return;
@@ -6160,6 +8607,7 @@
     }
 
     function updateDeadlineDisplay(week,responseUserIds){
+      renderPlanSteps();
       if(planningDeadlineTimer){
         clearInterval(planningDeadlineTimer);
         planningDeadlineTimer=null
@@ -6194,10 +8642,10 @@
 
         missingDriversList.appendChild(groupMessageBar(
           missingDrivers.length>1
-            ? `Un seul message pour les ${missingDrivers.length} livreurs`
+            ? `Un seul message pour les ${missingDrivers.length} personnes`
             : "Message prêt à envoyer",
           groupMessage,
-          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe d’équipe."
         ));
 
         missingDriversList.appendChild(individualLabel("Ou un message à la fois"))
@@ -6211,6 +8659,18 @@
 
       missingDriversContainer.classList.toggle("hidden",missingDrivers.length===0);
 
+      // On ne propose de prolonger que si cela sert à quelque chose : le
+      // délai est passé, et quelqu'un n'a pas encore répondu.
+      const prolongation=document.getElementById("deadlineExtend");
+      const aProlonger=isDeadlinePassed(week)&&missingDrivers.length>0&&week.status==="open";
+      prolongation.classList.toggle("hidden",!aProlonger);
+      if(aProlonger){
+        const demain=new Date();
+        demain.setDate(demain.getDate()+1);
+        document.getElementById("extendDate").value=wizardIso(demain);
+        clearMessage(document.getElementById("extendMessage"))
+      }
+
       function tick(){
         const deadline=new Date(`${week.deadlineDate}T${week.deadlineTime||"23:59"}:00`);
         const remaining=deadline.getTime()-Date.now();
@@ -6222,6 +8682,51 @@
 
       tick();
       planningDeadlineTimer=setInterval(tick,60000)
+    }
+
+    /* Prolonger le délai d'une semaine ouverte. Rien d'autre ne change :
+       ni le statut, ni les besoins, ni les réponses déjà reçues. */
+    async function prolongerDelai(nouvelleDate){
+      const zone=document.getElementById("extendMessage");
+      const week=currentWeeks.find(autre=>autre.id===planningWeekSelect.value);
+
+      if(!week){
+        showMessage(zone,"Choisissez d’abord une semaine.","error");
+        return
+      }
+      if(!nouvelleDate){
+        showMessage(zone,"Indiquez la nouvelle date limite.","error");
+        return
+      }
+      if(nouvelleDate>week.endDate){
+        showMessage(zone,"La date limite ne peut pas dépasser la fin de la semaine concernée.","error");
+        return
+      }
+
+      const bouton=document.getElementById("extendButton");
+      bouton.disabled=true;
+
+      try{
+        await updateDoc(doc(db,"weeks",week.id),{
+          deadlineDate:nouvelleDate,
+          updatedAt:serverTimestamp(),
+          updatedBy:auth.currentUser.uid
+        });
+        showMessage(zone,
+          `Les disponibilités sont rouvertes jusqu’au ${formatDate(nouvelleDate)} à ${week.deadlineTime||"23:59"}. Prévenez votre équipe : elle ne sera pas avertie toute seule.`,
+          "success")
+      }catch(error){
+        console.error(error);
+        showMessage(zone,`Impossible de prolonger : ${error.code||error.message}`,"error")
+      }finally{
+        bouton.disabled=false
+      }
+    }
+
+    function dansNJours(jours){
+      const date=new Date();
+      date.setDate(date.getDate()+Number(jours||1));
+      return wizardIso(date)
     }
 
     /* ===================================================================
@@ -6241,8 +8746,12 @@
       return digits
     }
 
+    /* L'adresse donnée à l'équipe est toujours celle de la vraie
+       application. Un message préparé depuis la page d'essai envoyait
+       tout le monde sur la version d'essai. */
     function appAddress(){
-      return `${window.location.origin}${window.location.pathname}`
+      const chemin=window.location.pathname.replace(/essai\.html$/,"");
+      return `${window.location.origin}${chemin}`
     }
 
     /* ===================================================================
@@ -6347,9 +8856,14 @@
       const row=document.createElement("div");
       row.className="relance-row";
 
-      const name=document.createElement("span");
-      name.className="relance-name";
+      // Le nom mène à la fiche : c'est là qu'on va chercher un numéro
+      // manquant, ou qu'on comprend pourquoi quelqu'un ne répond jamais.
+      const name=document.createElement("button");
+      name.type="button";
+      name.className="relance-name relance-open";
       name.textContent=driver.name||"Livreur";
+      name.title="Ouvrir la fiche de cette personne";
+      name.addEventListener("click",()=>ouvrirFicheEmploye(driver.id));
       row.appendChild(name);
 
       const actions=document.createElement("div");
@@ -6481,7 +8995,7 @@
         updateDeadlineDisplay(week,responseUserIds);
 
         if(responses.length===0){
-          planningAvailabilityContainer.innerHTML='<div class="empty-state">Aucun livreur n’a encore envoyé ses disponibilités pour cette semaine.</div>';
+          planningAvailabilityContainer.innerHTML='<div class="empty-state">Personne n’a encore envoyé ses disponibilités pour cette semaine.</div>';
           refreshToggleAllLabel();
           return
         }
@@ -6568,13 +9082,21 @@
       // toute la collection users puis un document par livreur.
       await loadDriverPrivateData();
 
-      const drivers=currentDrivers
+      // Les livreurs sont planifiés d'office ; un responsable seulement
+      // s'il a coché « apparaît dans les plannings » sur sa fiche.
+      const planifiables=[
+        ...currentDrivers,
+        ...currentStaff.filter(profile=>profile.inPlanning===true)
+      ];
+
+      const drivers=planifiables
         .filter(profile=>profile.active===true)
         .map(profile=>{
           const privateData=currentDriverPrivateData.get(profile.id)||{priority:3,reliability:3,experience:3};
 
           return {
             userId:profile.id,
+            position:positionOf(profile.position),
             name:profile.name||"Livreur",
             email:profile.email||"",
             phone:profile.phone||"",
@@ -6620,7 +9142,8 @@
       const latest=service==="midi"?normalized.middayLatest:normalized.eveningLatest;
       if(latest&&need.time>latest)return {code:"earlier",text:`n’est plus disponible après ${latest}`};
 
-      if(!weeklyDeliveryMethods.length){
+      // Un caissier n'a pas à justifier d'un véhicule.
+      if(ctx.posteExigeVehicule!==false&&!weeklyDeliveryMethods.length){
         // Nuance importante : le livreur a bien répondu et il a un véhicule.
         // C'est le responsable qui a fermé ce moyen pour la semaine — en
         // hiver, par exemple, quand les scooters restent au garage.
@@ -6656,7 +9179,13 @@
         const serviceKey=`${need.date}_${service}`;
         const usedForService=assignedByDateAndService.get(serviceKey)||new Set();
 
+        // Un besoin vise un poste : les autres n'ont rien à faire dans la
+        // liste, ni comme candidats ni comme écartés.
+        const besoinPoste=positionOf(need.positionId);
+        const posteExigeVehicule=positionRequiresVehicle(besoinPoste);
+
         const evaluated=data.drivers
+          .filter(driver=>positionOf(driver.position)===besoinPoste)
           .map(driver=>{
             const availability=data.availabilities.find(item=>item.userId===driver.userId);
             const day=availability?.days?.find(item=>item.date===need.date);
@@ -6692,6 +9221,7 @@
                 availability,day,need,service,
                 declaredMethods,
                 weeklyDeliveryMethods,
+                posteExigeVehicule,
                 respectsSixDayLimit,
                 workedCount:workedDates.size,
                 alreadyUsed:usedForService.has(driver.userId)
@@ -6702,7 +9232,7 @@
         const candidates=evaluated
           .filter(candidate=>
             candidate.fits
-            && candidate.hasDeliveryMethod
+            && (!posteExigeVehicule||candidate.hasDeliveryMethod)
             && candidate.respectsSixDayLimit
             && !usedForService.has(candidate.userId)
           )
@@ -6729,10 +9259,17 @@
         // véhicule à deux livreurs sur le même jour et le même service.
         const takenUnits=takenUnitsByService.get(serviceKey)||new Set();
         selected.forEach(driver=>{
-          const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
-          if(!companyType)return;
+          // Quelqu'un qui accepte le scooter ET la voiture doit se voir
+          // proposer les deux : ne regarder que le premier moyen coché le
+          // laissait sans véhicule alors qu'une voiture attendait au garage.
+          const companyTypes=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+          if(!companyTypes.length)return;
 
-          const free=availableUnitsOfType(companyType,need.date).find(unit=>!takenUnits.has(unit.id));
+          let free=null;
+          for(const type of companyTypes){
+            free=availableUnitsOfType(type,need.date).find(unit=>!takenUnits.has(unit.id));
+            if(free)break
+          }
           if(!free)return;
 
           takenUnits.add(free.id);
@@ -6770,6 +9307,7 @@
           excluded,
           missingVehicles,
           needId:need.id,
+          positionId:besoinPoste,
           date:need.date,
           time:need.time,
           service,
@@ -6849,6 +9387,106 @@
       if(status==="refused")return "Refusé";
       if(status==="implied")return "Réputé confirmé";
       return "En attente"
+    }
+
+    /* Les refus encore ouverts : celui qui a ete remplace ne compte plus,
+       son affectation est devenue inactive. */
+    function refusEnAttente(plan){
+      const liste=[];
+      if(!plan)return liste;
+
+      plan.assignments.forEach((slot,slotIndex)=>{
+        slot.selected.forEach(driver=>{
+          const assignment=currentAssignmentStatuses.get(
+            assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId));
+          if(!assignment||assignment.active===false)return;
+          if(assignment.status!=="refused")return;
+          liste.push({
+            slotIndex,date:slot.date,time:slot.time,
+            positionId:slot.positionId,
+            name:driver.name||"Livreur",
+            userId:driver.userId,
+            candidats:slot.waitlist.length
+          })
+        })
+      });
+
+      return liste
+    }
+
+    /* Combien de places sont reellement tenues sur ce creneau : un refus
+       n'en tient aucune, et afficher 1/1 sur un creneau refuse revient a
+       cacher le trou. */
+    function placesTenues(plan,slot){
+      return slot.selected.filter(driver=>{
+        const assignment=currentAssignmentStatuses.get(
+          assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId));
+        if(!assignment)return true;
+        if(assignment.active===false)return false;
+        return assignment.status!=="refused"
+      }).length
+    }
+
+    function renderPlanSteps(){
+      const liste=document.getElementById("planSteps");
+      if(!liste)return;
+      const semaine=currentWeeks.find(autre=>autre.id===planningWeekSelect.value);
+      const plan=currentPlan&&semaine&&currentPlan.weekId===semaine.id?currentPlan:null;
+
+      document.getElementById("planningSection").classList.toggle("is-published",
+        !!semaine&&semaine.status==="closed");
+
+      if(!semaine){peindreEtapes(liste,[]);return}
+      const publie=semaine.status==="closed"||plan?.status==="closed";
+      const valide=publie||plan?.status==="validated";
+      peindreEtapes(liste,[
+        {titre:"Réponses",fait:!!plan||isDeadlinePassed(semaine)||publie},
+        {titre:"Proposition",fait:!!plan},
+        {titre:"Validation",fait:valide},
+        {titre:"Publication",fait:publie}
+      ])
+    }
+
+    function renderRefusals(){
+      const panneau=document.getElementById("refusalsPanel");
+      if(!panneau)return;
+
+      const refus=refusEnAttente(currentPlan);
+      panneau.classList.toggle("hidden",refus.length===0);
+      if(!refus.length)return;
+
+      document.getElementById("refusalsTitle").textContent=
+        refus.length>1
+          ? `${refus.length} refus à traiter`
+          : "1 refus à traiter";
+
+      const liste=document.getElementById("refusalsList");
+      liste.innerHTML="";
+
+      refus.forEach(refusal=>{
+        const ligne=document.createElement("div");
+        ligne.className="refusal-row";
+        ligne.dataset.slot=String(refusal.slotIndex);
+        ligne.innerHTML=`<span>
+            <strong>${escapeHtml(refusal.name)} a refusé</strong>
+            <small>${escapeHtml(formatDay(refusal.date))} à ${escapeHtml(refusal.time)}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(refusal.positionId)))}`:""}
+              · ${refusal.candidats?`${refusal.candidats} candidat${refusal.candidats>1?"s":""} en attente`:"aucun autre candidat"}</small>
+          </span>`;
+
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className="button button-primary refusal-go";
+        bouton.textContent="Voir ce créneau";
+        bouton.addEventListener("click",()=>{
+          const cible=planContainer.querySelectorAll(".plan-slot")[refusal.slotIndex];
+          if(!cible)return;
+          cible.scrollIntoView({behavior:"smooth",block:"center"});
+          cible.classList.add("is-flagged");
+          setTimeout(()=>cible.classList.remove("is-flagged"),2500)
+        });
+        ligne.appendChild(bouton);
+        liste.appendChild(ligne)
+      })
     }
 
     function confirmationTotals(plan){
@@ -6951,10 +9589,10 @@
 
         pendingConfirmList.appendChild(groupMessageBar(
           waiting.size>1
-            ? `Un seul message pour les ${waiting.size} livreurs`
+            ? `Un seul message pour les ${waiting.size} personnes`
             : "Message prêt à envoyer",
           groupMessage,
-          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe de livreurs."
+          "Ouvrir WhatsApp vous laisse choisir la conversation : visez votre groupe d’équipe."
         ));
 
         pendingConfirmList.appendChild(individualLabel("Ou un message à la fois"))
@@ -6984,10 +9622,14 @@
         validatePlanButton.classList.add("hidden");
         if(reopenPlanButton)reopenPlanButton.classList.add("hidden");
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
+        const panneauRefus=document.getElementById("refusalsPanel");
+        if(panneauRefus)panneauRefus.classList.add("hidden");
         return
       }
 
       renderPendingConfirmations();
+      renderRefusals();
+      renderPlanSteps();
 
       const totals=planTotals(currentPlan);
       planContainer.innerHTML="";
@@ -7063,7 +9705,7 @@
 
       currentPlan.assignments.forEach((slot,slotIndex)=>{
         const section=document.createElement("article");
-        section.className="plan-slot";
+        section.className="plan-slot"+(placesTenues(currentPlan,slot)<slot.quantity?" is-short":"");
 
         const selectedHtml=slot.selected.length
           ? slot.selected.map((driver,index)=>`
@@ -7079,11 +9721,16 @@
                 </div>
                 <div>
                   ${(()=>{
-                    const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
-                    if(!companyType||!fleetUnitsOfType(companyType).length)return "";
+                    // Tous les moyens acceptés, et non le premier : la
+                    // liste doit contenir ce que cette personne peut
+                    // réellement conduire.
+                    const companyTypes=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+                    if(!companyTypes.length)return "";
                     const taken=usedUnitsForService(currentPlan,slot.date,servicePeriod(slot.time),driver.userId);
-                    const options=availableUnitsOfType(companyType,slot.date)
+                    const options=companyTypes
+                      .flatMap(type=>availableUnitsOfType(type,slot.date))
                       .filter(unit=>!taken.has(unit.id)||unit.id===driver.vehicleUnitId);
+                    if(!options.length&&!driver.vehicleUnitId)return "";
                     return `<select class="vehicle-unit" data-slot="${slotIndex}" data-driver="${index}"
                               ${currentPlan.status==="closed"?"disabled":""}>
                         <option value="">Aucun véhicule</option>
@@ -7106,7 +9753,7 @@
                 </div>
               </div>
             `).join("")
-          : '<div class="empty-state">Aucun livreur disponible pour ce besoin.</div>';
+          : '<div class="empty-state">Personne n’est disponible pour ce besoin.</div>';
 
         const waitlistHtml=slot.waitlist.length
           ? slot.waitlist.map((driver,index)=>`
@@ -7128,17 +9775,20 @@
         section.innerHTML=`
           <div class="plan-slot-header">
             <div>
-              <h3>${formatDay(slot.date)} à ${escapeHtml(slot.time)}</h3>
-              <p class="muted">${slot.quantity} livreur${slot.quantity>1?"s":""} nécessaire${slot.quantity>1?"s":""}${slot.notes?` · ${escapeHtml(slot.notes)}`:""}</p>
+              <h3>${formatDay(slot.date)} à ${escapeHtml(slot.time)}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(slot.positionId)))}`:""}</h3>
+              <p class="muted">${slot.quantity} personne${slot.quantity>1?"s":""} nécessaire${slot.quantity>1?"s":""}${slot.notes?` · ${escapeHtml(slot.notes)}`:""}</p>
             </div>
-            <span class="status-badge ${slot.selected.length>=slot.quantity?"status-active":"status-inactive"}">
-              ${slot.selected.length}/${slot.quantity}
-            </span>
+            ${(()=>{
+              const tenues=placesTenues(currentPlan,slot);
+              return `<span class="status-badge ${tenues>=slot.quantity?"status-active":"status-inactive"}">
+                ${tenues}/${slot.quantity}
+              </span>`
+            })()}
           </div>
 
           <div class="plan-columns">
             <div>
-              <h3>Livreurs proposés</h3>
+              <h3>Équipe proposée</h3>
               <div class="assigned-list">${selectedHtml}</div>
             </div>
             <div>
@@ -7151,10 +9801,29 @@
                 (driver.weeklyDeliveryMethods||[]).some(isCompanyMethod)&&!driver.vehicleUnitId
               );
               if(!waiting.length)return "";
+
+              // « Votre parc ne suffit pas » ne dit pas quoi faire. Un parc
+              // où aucun scooter n'a été déclaré et un parc dont tous les
+              // scooters roulent déjà demandent deux gestes différents.
+              const detail=driver=>{
+                const types=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+                const declares=types.filter(type=>fleetUnitsOfType(type).length);
+                if(!declares.length){
+                  return `aucun ${types.map(type=>typeDeVehicule(type)).join(" ni ")} n’est déclaré dans votre parc`
+                }
+                const libres=declares.filter(type=>availableUnitsOfType(type,slot.date).length);
+                if(!libres.length){
+                  return `tous vos ${declares.map(type=>typeDeVehicule(type,true)).join(" et ")} sont indisponibles ce jour-là`
+                }
+                return `tous vos ${libres.map(type=>typeDeVehicule(type,true)).join(" et ")} sont déjà pris sur ce service`
+              };
+
               return `<div class="vehicle-shortage">
-                ${waiting.length} livreur${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service :
-                ${waiting.map(driver=>escapeHtml(driver.name)).join(", ")}.
-                Votre parc ne suffit pas, ou ils utiliseront un véhicule personnel.
+                ${waiting.length} personne${waiting.length>1?"s":""} sans véhicule de l’établissement sur ce service.
+                ${waiting.map(driver=>
+                  `<span class="shortage-line"><strong>${escapeHtml(driver.name)}</strong> : ${escapeHtml(detail(driver))}.</span>`
+                ).join("")}
+                <span class="shortage-line">À défaut, ${waiting.length>1?"ils utiliseront":"il utilisera"} un véhicule personnel.</span>
               </div>`
             })()}
 
@@ -7727,7 +10396,53 @@
     document.getElementById("openKitchen").addEventListener("click",()=>showSection("kitchen"));
     document.getElementById("openRegulationAdmin").addEventListener("click",()=>showSection("regulationAdmin"));
     document.getElementById("openEstablishment").addEventListener("click",()=>showSection("establishment"));
+    sendPasswordLinkButton.addEventListener("click",sendPasswordLink);
+    document.getElementById("emailTeam").addEventListener("click",writeToTeam);
+    document.getElementById("driverSavePhone").addEventListener("click",saveDriverPhone);
+    document.getElementById("driverOwnPhone").addEventListener("keydown",event=>{
+      if(event.key==="Enter"){event.preventDefault();saveDriverPhone()}
+    });
+    document.getElementById("driverAskPhoneButton").addEventListener("click",()=>{
+      document.getElementById("dvNavHelp").click();
+      const champ=document.getElementById("driverOwnPhone");
+      champ.scrollIntoView?.({behavior:"smooth",block:"center"});
+      champ.focus()
+    });
+
     document.getElementById("openGarage").addEventListener("click",()=>showSection("garage"));
+
+    document.getElementById("wizardNext").addEventListener("click",()=>wizardSuivant());
+    document.getElementById("wizardBack").addEventListener("click",()=>wizardAller(-1));
+    document.getElementById("wizardQuit").addEventListener("click",()=>wizardFermer(true));
+    // Depuis le guide, on reprend là où l'on en était ; depuis les réglages,
+    // c'est un geste délibéré : on repasse toute la configuration.
+    document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
+    document.getElementById("openWizard").addEventListener("click",()=>wizardOuvrir(true));
+
+    document.getElementById("driverSearch").addEventListener("input",event=>{
+      driverFilter.texte=event.target.value;
+      renderDrivers()
+    });
+    document.getElementById("driverFilterActive").addEventListener("click",()=>{
+      driverFilter.actifs=!driverFilter.actifs;
+      renderDrivers()
+    });
+
+    document.querySelectorAll(".mainnav-link").forEach(lien=>{
+      lien.addEventListener("click",()=>showSection(lien.dataset.vers))
+    });
+
+    document.querySelectorAll(".extend-quick").forEach(bouton=>{
+      bouton.addEventListener("click",()=>prolongerDelai(dansNJours(bouton.dataset.jours)))
+    });
+    document.getElementById("extendButton").addEventListener("click",()=>
+      prolongerDelai(document.getElementById("extendDate").value));
+
+    document.getElementById("toggleSettings").addEventListener("click",()=>{
+      const ouvert=!document.getElementById("settingsGroup").classList.contains("is-closed");
+      try{ localStorage.setItem(REGLAGES_OUVERTS,ouvert?"0":"1") }catch(error){ /* sans mémoire, tant pis */ }
+      renderSettingsGroup()
+    });
 
     garageForm.addEventListener("submit",async event=>{
       event.preventDefault();
@@ -7826,8 +10541,13 @@
       renderHelp(event.target.value)
     });
     document.getElementById("saveEstablishmentButton").addEventListener("click",saveEstablishmentConfig);
+    document.getElementById("addPosition").addEventListener("click",()=>{
+      renderPositionList([...readPositionList(true),
+        {id:newPositionId(),name:"",requiresVehicle:true,active:true}])
+    });
+
     document.getElementById("addFleetUnit").addEventListener("click",()=>{
-      renderFleetList([...readFleetList(),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
+      renderFleetList([...readFleetList(true),{id:newFleetId(),name:"",type:"company_car",plate:"",active:true}])
     });
     ["middayStart","middayEnd","middayStep","eveningStart","eveningEnd","eveningStep"].forEach(id=>{
       document.getElementById(id).addEventListener("change",updateSlotsPreview)
@@ -7938,7 +10658,7 @@
         }
 
         if(data.availabilities.length===0){
-          throw new Error("Aucun livreur n’a encore envoyé ses disponibilités.")
+          throw new Error("Personne n’a encore envoyé ses disponibilités.")
         }
 
         currentPlan=createProposal(data);
@@ -8245,10 +10965,11 @@
           throw new Error("Sélectionnez au moins un moyen de livraison autorisé pour cette semaine.")
         }
 
-        await addDoc(collection(db,"weeks"),{
-          startDate:weekStart.value,endDate:weekEnd.value,deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
-          message:weekMessage.value.trim(),deliveryMethods,status:openImmediately.checked?"open":"draft",
-          createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,createdByName:currentProfile.name||""
+        await creerSemaine({
+          startDate:weekStart.value,endDate:weekEnd.value,
+          deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
+          message:weekMessage.value.trim(),deliveryMethods,
+          open:openImmediately.checked
         });
         showMessage(weekFormMessage,"La semaine a été enregistrée avec succès.","success");
         weekForm.reset();
@@ -8306,26 +11027,24 @@
       saveNeedButton.textContent="Enregistrement…";
 
       try{
+        const positionId=positionOf(needPosition.value);
+
         const duplicateNeed=currentNeeds.find(need=>
           need.weekId===week.id
           && need.date===needDate.value
           && need.time===needTime.value
+          && positionOf(need.positionId)===positionId
         );
 
         if(duplicateNeed){
-          throw new Error("Un besoin existe déjà pour ce jour et cette heure.")
+          throw new Error(severalPositions()
+            ? `Un besoin existe déjà pour ce jour, cette heure et le poste « ${positionLabel(positionId)} ».`
+            : "Un besoin existe déjà pour ce jour et cette heure.")
         }
 
-        await addDoc(collection(db,"needs"),{
-          weekId:week.id,
-          weekStartDate:week.startDate,
-          date:needDate.value,
-          time:needTime.value,
-          quantity:Number(needQuantity.value),
-          notes:needNotes.value.trim(),
-          createdAt:serverTimestamp(),
-          createdBy:auth.currentUser.uid,
-          createdByName:currentProfile.name||""
+        await creerBesoin({
+          week,date:needDate.value,time:needTime.value,positionId,
+          quantity:Number(needQuantity.value),notes:needNotes.value.trim()
         });
 
         showMessage(needFormMessage,"Le besoin a été ajouté.","success");
@@ -8362,6 +11081,9 @@
       const experience=Number(document.getElementById("driverExperience").value);
       const notes=document.getElementById("driverNotes").value.trim();
       const role=isAdminProfile()?driverRoleSelect.value:"driver";
+      const position=positionOf(driverPositionSelect.value);
+      // Un livreur est toujours planifié ; un responsable seulement s'il le demande.
+      const inPlanning=role==="driver"?true:driverInPlanning.checked;
 
       saveDriverButton.disabled=true;
       saveDriverButton.textContent=existingId?"Enregistrement…":"Création…";
@@ -8370,23 +11092,13 @@
         let userId=existingId;
 
         if(!existingId){
-          const password=document.getElementById("driverPassword").value;
-          const credential=await createUserWithEmailAndPassword(driverCreatorAuth,email,password);
-          userId=credential.user.uid;
-
-          await setDoc(doc(db,"users",userId),{
-            name,email,phone,vehicle,active,
-            role,
-            mustChangePassword:true,
-            createdAt:serverTimestamp(),
-            createdBy:auth.currentUser.uid,
-            updatedAt:serverTimestamp()
-          });
-
-          await signOut(driverCreatorAuth)
+          userId=await creerCompteEmploye({
+            name,email,phone,vehicle,active,role,position,inPlanning,
+            password:document.getElementById("driverPassword").value
+          })
         }else{
           const champs={
-            name,phone,vehicle,active,
+            name,phone,vehicle,active,position,inPlanning,
             updatedAt:serverTimestamp(),
             updatedBy:auth.currentUser.uid
           };
@@ -8439,7 +11151,7 @@
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-12-c";
+    const APP_VERSION = "2026-11-14-n";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
@@ -8478,6 +11190,7 @@
         currentDriverOpenWeeks=[];
         currentDriverOpenWeeksCount=0;
         currentDriverWeekId="";
+        driverWeekChosenByUser=false;
         driverPasswordGate.classList.add("hidden");
         driverRegulationGate.classList.add("hidden");
         driverMainContent.classList.add("hidden");

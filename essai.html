@@ -1634,8 +1634,9 @@
                 </div>
 
                 <div class="field">
-                  <label for="driverVehicle">Véhicule</label>
-                  <input id="driverVehicle" type="text" placeholder="Voiture, scooter, vélo…">
+                  <label for="driverVehicle">Véhicule habituel (note)</label>
+                  <input id="driverVehicle" type="text" placeholder="Voiture et scooter, vélo…">
+                  <small class="muted">Une note pour vous, sans effet sur le planning : ce sont les moyens que l’employé coche chaque semaine avec ses disponibilités qui comptent.</small>
                 </div>
 
                 <div id="driverPositionField" class="field">
@@ -3966,6 +3967,8 @@ Adresse de l'application : ${adresse}
 Votre identifiant est cette adresse e-mail.
 
 Vous allez recevoir un second message pour choisir votre mot de passe. S'il n'arrive pas, regardez dans vos indésirables.
+
+À votre première connexion, l'application vous présente le règlement interne. Lisez-le jusqu'au bout et acceptez-le : tant que ce n'est pas fait, vous ne pouvez ni envoyer vos disponibilités ni voir vos horaires. Votre acceptation est enregistrée avec sa date.
 
 Une fois connecté, prenez une minute pour ajouter votre numéro de téléphone : onglet Aide, section Mon compte. C'est ce qui permet de vous joindre un soir de service.
 
@@ -8751,8 +8754,12 @@ ${currentProfile?.name||""}`;
       return digits
     }
 
+    /* L'adresse donnée à l'équipe est toujours celle de la vraie
+       application. Un message préparé depuis la page d'essai envoyait
+       tout le monde sur la version d'essai. */
     function appAddress(){
-      return `${window.location.origin}${window.location.pathname}`
+      const chemin=window.location.pathname.replace(/essai\.html$/,"");
+      return `${window.location.origin}${chemin}`
     }
 
     /* ===================================================================
@@ -11152,7 +11159,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-m · ESSAI";
+    const APP_VERSION = "2026-11-14-n · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -11255,6 +11262,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-m. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-n. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
