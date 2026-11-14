@@ -379,6 +379,15 @@
     .wizard-cta:disabled{background:#e6d5c4;cursor:default}
     .wizard-back{border:0;background:none;color:var(--muted);font:inherit;font-size:15px;cursor:pointer;
       text-decoration:underline;padding:8px}
+    .wizard-need{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;
+      padding:15px 18px;border:2px solid #efe1d2;border-radius:16px;background:#fff}
+    .wizard-need strong{display:block;font-size:17px}
+    .wizard-need small{display:block;margin-top:3px;color:var(--muted)}
+    .wizard-stepper{display:flex;align-items:center;gap:12px}
+    .wizard-stepper b{min-width:28px;text-align:center;font-size:21px}
+    .wizard-step{width:40px;height:40px;border-radius:50%;border:2px solid #efe1d2;background:#fff;
+      font:inherit;font-size:22px;line-height:1;color:var(--orange-dark);cursor:pointer}
+    .wizard-step:hover{border-color:var(--orange)}
     .wizard-recap{display:grid;gap:9px;padding:20px;border:2px solid #efe1d2;border-radius:16px;background:#fff}
     .wizard-recap div{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:12px;
       padding-bottom:9px;border-bottom:1px solid #f3eae1}
@@ -1343,6 +1352,7 @@
             <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
             <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
             <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
+            <button id="openWizard" class="dashboard-button" type="button"><span class="dashboard-icon">🧭</span><span><strong>Me guider pas à pas</strong><small>Revoir la configuration question par question</small></span></button>
           </div>
         </div>
 
@@ -7606,40 +7616,111 @@ ${currentProfile?.name||""}`;
         return
       }
 
-      if(!wizardBrouillon.parService)wizardBrouillon.parService=2;
+      // Un seul chiffre pour toute la semaine ne correspond a aucune
+      // realite : le samedi soir ne ressemble pas au mardi midi. On
+      // demande donc quatre nombres, qui couvrent l'essentiel de l'ecart,
+      // et tout reste ajustable service par service ensuite.
+      const services=wizardServicesDeLaSemaine(semaine);
+      const groupes=wizardGroupesDeBesoin(services);
 
-      [1,2,3,4].forEach(nombre=>{
-        zone.appendChild(wizardCarte({
-          icone:"👤",
-          titre:`${nombre} personne${nombre>1?"s":""} par service`,
-          detail:nombre===1?"Un seul renfort à la fois.":"",
-          choisi:wizardBrouillon.parService===nombre,
-          surClic:()=>{wizardBrouillon.parService=nombre;wizardRendre()}
-        }))
+      if(!wizardBrouillon.parGroupe)wizardBrouillon.parGroupe={...BESOINS_PAR_DEFAUT};
+      const quantites=wizardBrouillon.parGroupe;
+
+      groupes.filter(groupe=>groupe.services.length).forEach(groupe=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-need";
+        ligne.dataset.groupe=groupe.clef;
+
+        const texte=document.createElement("span");
+        texte.innerHTML=`<strong>${escapeHtml(groupe.titre)}</strong>
+          <small>${escapeHtml(groupe.jours)} · ${groupe.services.length} service${groupe.services.length>1?"s":""}</small>`;
+        ligne.appendChild(texte);
+
+        const reglage=document.createElement("span");
+        reglage.className="wizard-stepper";
+
+        const moins=document.createElement("button");
+        moins.type="button";moins.className="wizard-step";moins.textContent="−";
+        moins.setAttribute("aria-label",`Moins de personnes — ${groupe.titre}`);
+        moins.addEventListener("click",()=>{
+          quantites[groupe.clef]=Math.max(0,(quantites[groupe.clef]||0)-1);
+          wizardRendre()
+        });
+
+        const valeur=document.createElement("b");
+        valeur.textContent=String(quantites[groupe.clef]||0);
+
+        const plus=document.createElement("button");
+        plus.type="button";plus.className="wizard-step";plus.textContent="+";
+        plus.setAttribute("aria-label",`Plus de personnes — ${groupe.titre}`);
+        plus.addEventListener("click",()=>{
+          quantites[groupe.clef]=Math.min(20,(quantites[groupe.clef]||0)+1);
+          wizardRendre()
+        });
+
+        reglage.appendChild(moins);reglage.appendChild(valeur);reglage.appendChild(plus);
+        ligne.appendChild(reglage);
+        zone.appendChild(ligne)
       });
 
-      const services=wizardServicesDeLaSemaine(semaine);
+      const aPourvoir=groupes.reduce(
+        (total,groupe)=>total+groupe.services.length*(quantites[groupe.clef]||0),0);
+
       const note=document.createElement("div");
       note.className="wizard-note";
       note.id="wizardNeedsNote";
       note.innerHTML=`Cette semaine compte <strong>${services.length} service${services.length>1?"s":""}</strong>
-        ouverts. Nous allons donc demander
-        <strong>${services.length*wizardBrouillon.parService} présence${services.length*wizardBrouillon.parService>1?"s":""}</strong>
-        au total, que vous pourrez ajuster service par service.`;
+        ouvert${services.length>1?"s":""}. Nous allons donc demander
+        <strong>${aPourvoir} présence${aPourvoir>1?"s":""}</strong> au total.
+        Un service laissé à zéro ne sera pas demandé du tout.`;
       zone.appendChild(note);
 
+      document.getElementById("wizardNext").disabled=aPourvoir===0;
+
       wizardAction=async()=>{
-        const quantite=wizardBrouillon.parService;
         const poste=defaultPositionId();
-        for(const service of services){
-          const deja=currentNeeds.find(besoin=>
-            besoin.weekId===semaine.id&&besoin.date===service.date&&besoin.time===service.time);
-          if(deja)continue;
-          await creerBesoin({week:semaine,date:service.date,time:service.time,
-            positionId:poste,quantity:quantite,notes:""})
+        for(const groupe of groupes){
+          const quantite=quantites[groupe.clef]||0;
+          if(quantite===0)continue;
+          for(const service of groupe.services){
+            const deja=currentNeeds.find(besoin=>
+              besoin.weekId===semaine.id&&besoin.date===service.date&&besoin.time===service.time);
+            if(deja)continue;
+            await creerBesoin({week:semaine,date:service.date,time:service.time,
+              positionId:poste,quantity:quantite,notes:""})
+          }
         }
         wizardAller(1)
       }
+    }
+
+    /* Vendredi, samedi et dimanche d'un cote ; le reste de l'autre. C'est
+       la coupure que tout le monde emploie en restauration, et elle
+       recouvre l'essentiel de l'ecart d'affluence. */
+    const JOURS_DE_FIN_DE_SEMAINE=[5,6,0];
+
+    const BESOINS_PAR_DEFAUT={
+      semaineMidi:1, semaineSoir:2, finMidi:2, finSoir:3
+    };
+
+    function wizardGroupesDeBesoin(services){
+      const bascule=minutesOf(establishmentConfig.evening?.start||"18:00");
+      const modele=[
+        {clef:"semaineMidi",titre:"Midi, en semaine",jours:"Lundi à jeudi",fin:false,soir:false},
+        {clef:"semaineSoir",titre:"Soir, en semaine",jours:"Lundi à jeudi",fin:false,soir:true},
+        {clef:"finMidi",titre:"Midi, en fin de semaine",jours:"Vendredi, samedi, dimanche",fin:true,soir:false},
+        {clef:"finSoir",titre:"Soir, en fin de semaine",jours:"Vendredi, samedi, dimanche",fin:true,soir:true}
+      ];
+
+      return modele.map(groupe=>({
+        ...groupe,
+        services:services.filter(service=>{
+          const jour=new Date(`${service.date}T12:00:00`).getDay();
+          const finDeSemaine=JOURS_DE_FIN_DE_SEMAINE.includes(jour);
+          const leSoir=minutesOf(service.time)>=bascule;
+          return finDeSemaine===groupe.fin&&leSoir===groupe.soir
+        })
+      }))
     }
 
     function wizardServicesDeLaSemaine(semaine){
@@ -9555,7 +9636,10 @@ ${currentProfile?.name||""}`;
     document.getElementById("wizardNext").addEventListener("click",()=>wizardSuivant());
     document.getElementById("wizardBack").addEventListener("click",()=>wizardAller(-1));
     document.getElementById("wizardQuit").addEventListener("click",()=>wizardFermer(true));
+    // Depuis le guide, on reprend là où l'on en était ; depuis les réglages,
+    // c'est un geste délibéré : on repasse toute la configuration.
     document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
+    document.getElementById("openWizard").addEventListener("click",()=>wizardOuvrir(true));
 
     garageForm.addEventListener("submit",async event=>{
       event.preventDefault();
@@ -10264,7 +10348,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-c · ESSAI";
+    const APP_VERSION = "2026-11-14-e · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10366,6 +10450,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-c. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-e. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
