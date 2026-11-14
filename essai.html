@@ -649,6 +649,17 @@
     .relance-list{display:grid;gap:8px;margin-top:12px}
     .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
       border:1px solid var(--border);border-radius:12px;background:#fff}
+    .plan-slot.is-flagged{box-shadow:0 0 0 3px rgba(180,35,24,.25)}
+    .refusals{margin:18px 0;padding:18px 20px;border:1px solid #f3c4c4;border-radius:14px;
+      background:#fdf2f2}
+    .refusals>strong{display:block;font-size:17px;color:var(--error)}
+    .refusals>p{margin:6px 0 0;line-height:1.5}
+    .refusals-list{display:grid;gap:9px;margin-top:14px}
+    .refusal-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 14px;
+      border:1px solid #f3c4c4;border-radius:12px;background:#fff}
+    .refusal-row>span{flex:1;min-width:200px}
+    .refusal-row strong{display:block}
+    .refusal-row small{display:block;color:var(--muted);margin-top:2px}
     .shortage-line{display:block;margin-top:5px;font-weight:600}
     .relance-name{font-weight:700;flex:1;min-width:120px}
     .relance-open{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--text);
@@ -2027,6 +2038,15 @@
               <div class="empty-state">Choisissez une semaine.</div>
             </div>
           </section>
+
+          <!-- Un refus laisse un creneau decouvert sans que rien ne le
+               signale en haut de l'ecran. Il faut le dire avant la liste,
+               et mener directement au creneau concerne. -->
+          <div id="refusalsPanel" class="refusals hidden">
+            <strong id="refusalsTitle">—</strong>
+            <p class="muted">Un refus laisse le créneau découvert. Remplacez la personne, ou prenez quelqu’un dans la liste d’attente.</p>
+            <div id="refusalsList" class="refusals-list"></div>
+          </div>
 
           <div id="planContainer" class="plan-list">
             <div class="empty-state">Choisissez une semaine, puis générez une proposition.</div>
@@ -8978,6 +8998,86 @@ ${currentProfile?.name||""}`;
       return "En attente"
     }
 
+    /* Les refus encore ouverts : celui qui a ete remplace ne compte plus,
+       son affectation est devenue inactive. */
+    function refusEnAttente(plan){
+      const liste=[];
+      if(!plan)return liste;
+
+      plan.assignments.forEach((slot,slotIndex)=>{
+        slot.selected.forEach(driver=>{
+          const assignment=currentAssignmentStatuses.get(
+            assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId));
+          if(!assignment||assignment.active===false)return;
+          if(assignment.status!=="refused")return;
+          liste.push({
+            slotIndex,date:slot.date,time:slot.time,
+            positionId:slot.positionId,
+            name:driver.name||"Livreur",
+            userId:driver.userId,
+            candidats:slot.waitlist.length
+          })
+        })
+      });
+
+      return liste
+    }
+
+    /* Combien de places sont reellement tenues sur ce creneau : un refus
+       n'en tient aucune, et afficher 1/1 sur un creneau refuse revient a
+       cacher le trou. */
+    function placesTenues(plan,slot){
+      return slot.selected.filter(driver=>{
+        const assignment=currentAssignmentStatuses.get(
+          assignmentDocId(plan.weekId,slot.date,slot.time,driver.userId));
+        if(!assignment)return true;
+        if(assignment.active===false)return false;
+        return assignment.status!=="refused"
+      }).length
+    }
+
+    function renderRefusals(){
+      const panneau=document.getElementById("refusalsPanel");
+      if(!panneau)return;
+
+      const refus=refusEnAttente(currentPlan);
+      panneau.classList.toggle("hidden",refus.length===0);
+      if(!refus.length)return;
+
+      document.getElementById("refusalsTitle").textContent=
+        refus.length>1
+          ? `${refus.length} refus à traiter`
+          : "1 refus à traiter";
+
+      const liste=document.getElementById("refusalsList");
+      liste.innerHTML="";
+
+      refus.forEach(refusal=>{
+        const ligne=document.createElement("div");
+        ligne.className="refusal-row";
+        ligne.dataset.slot=String(refusal.slotIndex);
+        ligne.innerHTML=`<span>
+            <strong>${escapeHtml(refusal.name)} a refusé</strong>
+            <small>${escapeHtml(formatDay(refusal.date))} à ${escapeHtml(refusal.time)}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(refusal.positionId)))}`:""}
+              · ${refusal.candidats?`${refusal.candidats} candidat${refusal.candidats>1?"s":""} en attente`:"aucun autre candidat"}</small>
+          </span>`;
+
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className="button button-primary refusal-go";
+        bouton.textContent="Voir ce créneau";
+        bouton.addEventListener("click",()=>{
+          const cible=planContainer.querySelectorAll(".plan-slot")[refusal.slotIndex];
+          if(!cible)return;
+          cible.scrollIntoView({behavior:"smooth",block:"center"});
+          cible.classList.add("is-flagged");
+          setTimeout(()=>cible.classList.remove("is-flagged"),2500)
+        });
+        ligne.appendChild(bouton);
+        liste.appendChild(ligne)
+      })
+    }
+
     function confirmationTotals(plan){
       let total=0;
       let confirmed=0;
@@ -9111,10 +9211,13 @@ ${currentProfile?.name||""}`;
         validatePlanButton.classList.add("hidden");
         if(reopenPlanButton)reopenPlanButton.classList.add("hidden");
         if(pendingConfirmContainer)pendingConfirmContainer.classList.add("hidden");
+        const panneauRefus=document.getElementById("refusalsPanel");
+        if(panneauRefus)panneauRefus.classList.add("hidden");
         return
       }
 
       renderPendingConfirmations();
+      renderRefusals();
 
       const totals=planTotals(currentPlan);
       planContainer.innerHTML="";
@@ -9263,9 +9366,12 @@ ${currentProfile?.name||""}`;
               <h3>${formatDay(slot.date)} à ${escapeHtml(slot.time)}${severalPositions()?` · ${escapeHtml(positionLabel(positionOf(slot.positionId)))}`:""}</h3>
               <p class="muted">${slot.quantity} personne${slot.quantity>1?"s":""} nécessaire${slot.quantity>1?"s":""}${slot.notes?` · ${escapeHtml(slot.notes)}`:""}</p>
             </div>
-            <span class="status-badge ${slot.selected.length>=slot.quantity?"status-active":"status-inactive"}">
-              ${slot.selected.length}/${slot.quantity}
-            </span>
+            ${(()=>{
+              const tenues=placesTenues(currentPlan,slot);
+              return `<span class="status-badge ${tenues>=slot.quantity?"status-active":"status-inactive"}">
+                ${tenues}/${slot.quantity}
+              </span>`
+            })()}
           </div>
 
           <div class="plan-columns">
@@ -10624,7 +10730,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-k · ESSAI";
+    const APP_VERSION = "2026-11-14-l · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10726,6 +10832,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-k. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-l. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
