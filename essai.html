@@ -8839,10 +8839,17 @@ ${currentProfile?.name||""}`;
         // véhicule à deux livreurs sur le même jour et le même service.
         const takenUnits=takenUnitsByService.get(serviceKey)||new Set();
         selected.forEach(driver=>{
-          const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
-          if(!companyType)return;
+          // Quelqu'un qui accepte le scooter ET la voiture doit se voir
+          // proposer les deux : ne regarder que le premier moyen coché le
+          // laissait sans véhicule alors qu'une voiture attendait au garage.
+          const companyTypes=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+          if(!companyTypes.length)return;
 
-          const free=availableUnitsOfType(companyType,need.date).find(unit=>!takenUnits.has(unit.id));
+          let free=null;
+          for(const type of companyTypes){
+            free=availableUnitsOfType(type,need.date).find(unit=>!takenUnits.has(unit.id));
+            if(free)break
+          }
           if(!free)return;
 
           takenUnits.add(free.id);
@@ -9190,11 +9197,16 @@ ${currentProfile?.name||""}`;
                 </div>
                 <div>
                   ${(()=>{
-                    const companyType=(driver.weeklyDeliveryMethods||[]).find(isCompanyMethod);
-                    if(!companyType||!fleetUnitsOfType(companyType).length)return "";
+                    // Tous les moyens acceptés, et non le premier : la
+                    // liste doit contenir ce que cette personne peut
+                    // réellement conduire.
+                    const companyTypes=(driver.weeklyDeliveryMethods||[]).filter(isCompanyMethod);
+                    if(!companyTypes.length)return "";
                     const taken=usedUnitsForService(currentPlan,slot.date,servicePeriod(slot.time),driver.userId);
-                    const options=availableUnitsOfType(companyType,slot.date)
+                    const options=companyTypes
+                      .flatMap(type=>availableUnitsOfType(type,slot.date))
                       .filter(unit=>!taken.has(unit.id)||unit.id===driver.vehicleUnitId);
+                    if(!options.length&&!driver.vehicleUnitId)return "";
                     return `<select class="vehicle-unit" data-slot="${slotIndex}" data-driver="${index}"
                               ${currentPlan.status==="closed"?"disabled":""}>
                         <option value="">Aucun véhicule</option>
@@ -10584,7 +10596,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-i · ESSAI";
+    const APP_VERSION = "2026-11-14-j · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10686,6 +10698,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-i. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-j. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
