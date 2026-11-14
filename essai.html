@@ -421,6 +421,103 @@
     .deadline-extend-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
     .deadline-extend-actions input[type="date"]{padding:11px 13px;border:1px solid var(--border);
       border-radius:10px;font:inherit;background:var(--white)}
+
+    /* =================================================================
+       RELECTURE D'ENSEMBLE — espace responsable
+       Trois couleurs d'état, toujours les mêmes : rouge = un trou à
+       boucher, ambre = quelque chose attend, vert = c'est tenu.
+       ================================================================= */
+    :root{--bad:#b42318;--bad-soft:#fdecec;--bad-line:#f3c4c4;
+      --warn:#8a5600;--warn-soft:#fff6e6;--warn-line:#f0d7a8;
+      --ok:#0f6b4a;--ok-soft:#e8f8ee;--ok-line:#bfe8cf;
+      --info:#1a4f8a;--info-soft:#eef4fc;--info-line:#c6dcf7}
+    .back-row{display:none}
+    #appView .topbar{position:static;display:flex;grid-template-columns:none;align-items:center;
+      justify-content:space-between;gap:12px;padding:8px 16px}
+    #appView .topbar-brand{width:auto}
+    #appView .topbar-brand img{width:46px}
+    #appView .topbar-title strong{font-size:16px}
+    /* L'en-tête du responsable a ses propres classes : les règles
+       historiques de .topbar-actions empilaient les boutons sur mobile et
+       mangeaient un quart de l'écran. */
+    #appView .topbar{flex-wrap:nowrap;flex-direction:row}
+    #appView .topbar-brand{flex:1 1 auto;min-width:0}
+    .mgr-actions{display:flex;gap:8px;flex:0 0 auto}
+    .mgr-actions .button{padding:8px 13px;font-size:13px;min-height:0;width:auto;white-space:nowrap}
+    @media(max-width:430px){.mgr-actions .button{padding:7px 10px;font-size:12px}}
+    .mainnav{box-shadow:0 1px 0 rgba(0,0,0,.03)}
+    .mainnav-link{display:inline-flex;align-items:center;gap:7px;position:relative}
+    .mainnav-ico{font-size:15px;line-height:1}
+    .mainnav-badge{min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:var(--bad);color:#fff;
+      font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+    .mainnav-badge.is-soft{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+    .mainnav-badge.hidden{display:none}
+    .hello{margin-bottom:18px}
+    .hello h2{margin:0 0 4px;font-size:26px;letter-spacing:-.4px}
+    .hello p{margin:0}
+    .hello #helloDate::first-letter{text-transform:uppercase}
+    @media(max-width:620px){.hello-account{display:none}.hello h2{font-size:22px}}
+
+    .alerts{display:grid;gap:10px;margin-bottom:20px}
+    .alerts.hidden{display:none}
+    .alert{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:13px;align-items:center;
+      padding:13px 16px;border-radius:14px;border:1px solid var(--line,var(--border));background:#fff}
+    .alert-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px}
+    .alert strong{display:block}
+    .alert small{display:block;margin-top:2px;line-height:1.4;color:var(--muted)}
+    .alert .button{padding:9px 14px;font-size:14px;white-space:nowrap}
+    .alert.is-bad{background:var(--bad-soft);border-color:var(--bad-line)}
+    .alert.is-bad strong{color:var(--bad)}.alert.is-bad .alert-ico{background:#fff;color:var(--bad)}
+    .alert.is-warn{background:var(--warn-soft);border-color:var(--warn-line)}
+    .alert.is-warn strong{color:var(--warn)}.alert.is-warn .alert-ico{background:#fff}
+    .alert.is-info{background:var(--info-soft);border-color:var(--info-line)}
+    .alert.is-info strong{color:var(--info)}.alert.is-info .alert-ico{background:#fff}
+    .alert.is-ok{background:var(--ok-soft);border-color:var(--ok-line);grid-template-columns:auto minmax(0,1fr)}
+    .alert.is-ok strong{color:var(--ok)}.alert.is-ok .alert-ico{background:#fff}
+    @media(max-width:620px){.alert{grid-template-columns:auto minmax(0,1fr)}.alert .button{grid-column:2;justify-self:start}}
+
+    .week-steps{list-style:none;display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0;padding:0}
+    .week-steps.hidden{display:none}
+    .week-step{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;font-size:13px;
+      font-weight:700;border:1px solid var(--border);background:#fff;color:var(--muted)}
+    .week-step b{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;
+      font-size:11px;background:#eee;color:var(--muted)}
+    .week-step.is-done{background:var(--ok-soft);border-color:var(--ok-line);color:var(--ok)}
+    .week-step.is-done b{background:var(--ok);color:#fff}
+    .week-step.is-now{background:var(--soft);border-color:var(--orange);color:var(--orange-dark)}
+    .week-step.is-now b{background:var(--orange-dark);color:#fff}
+    .plan-steps{margin:0 0 16px}
+    .rule-details{margin-bottom:14px}
+    .rule-details summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600}
+    .rule-details .form-note{margin-top:8px}
+    /* Une semaine publiée ne collecte plus rien : relancer huit personnes
+       pour des disponibilités qui ne serviront pas est du bruit. */
+    #planningSection.is-published #planningDeadlineDashboard,
+    #planningSection.is-published #missingDriversContainer,
+    #planningSection.is-published #deadlineExtend,
+    #planningSection.is-published #availabilityHeader,
+    #planningSection.is-published #planningAvailabilityContainer{display:none}
+    .plan-slot.is-short{border-color:var(--bad-line)}
+
+    .driver-filters{display:grid;gap:10px;margin-bottom:14px}
+    .driver-filters input[type="search"]{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:12px;
+      font:inherit;background:#fff}
+    .driver-filter-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .driver-filter-positions{display:contents}
+    .filter-chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 13px;font:inherit;
+      font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+    .filter-chip.is-on{background:var(--soft);border-color:var(--orange);color:var(--orange-dark)}
+    .driver-filter-count{margin:0;font-size:13px}
+    .driver-card{grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px 16px;padding:14px 16px}
+    .driver-card .driver-score-panel{grid-column:1 / -1}
+    .driver-card h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+    .driver-post{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--info-soft);color:var(--info)}
+    .driver-flag{padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--warn-soft);
+      color:var(--warn);border:1px solid var(--warn-line)}
+    .driver-card.is-inactive{opacity:.62}
+    .driver-more summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;margin-top:4px}
+    .driver-more .driver-stat-grid{margin-top:10px}
+    .service-row{grid-template-columns:62px minmax(0,1fr) auto}
     .next-service{margin-bottom:22px;border-color:#f0cdaa;background:linear-gradient(180deg,#fffaf5,#fff)}
     .next-service .panel-header{margin-bottom:12px;align-items:flex-start}
     .next-service h3{font-size:21px}
@@ -959,8 +1056,7 @@
   
     /* Correctif final de l’en-tête mobile */
     @media (max-width: 768px){
-      #driverView .topbar,
-      #appView .topbar{
+      #driverView .topbar{
         display:flex!important;
         flex-direction:column!important;
         align-items:stretch!important;
@@ -973,8 +1069,7 @@
         overflow:hidden!important;
       }
 
-      #driverView .topbar-brand,
-      #appView .topbar-brand{
+      #driverView .topbar-brand{
         width:100%!important;
         max-width:100%!important;
         display:flex!important;
@@ -983,8 +1078,7 @@
         min-width:0!important;
       }
 
-      #driverView .topbar-actions,
-      #appView .topbar-actions{
+      #driverView .topbar-actions{
         width:100%!important;
         max-width:100%!important;
         display:grid!important;
@@ -997,8 +1091,7 @@
         box-sizing:border-box!important;
       }
 
-      #driverView .topbar-actions .button,
-      #appView .topbar-actions .button{
+      #driverView .topbar-actions .button{
         position:static!important;
         inset:auto!important;
         float:none!important;
@@ -1021,33 +1114,28 @@
         text-align:center!important;
       }
 
-      #driverView .topbar-title strong,
-      #appView .topbar-title strong{
+      #driverView .topbar-title strong{
         font-size:18px!important;
         line-height:1.15!important;
       }
 
-      #driverView .topbar-title small,
-      #appView .topbar-title small{
+      #driverView .topbar-title small{
         max-width:100%!important;
         font-size:13px!important;
       }
 
-      #driverView .topbar-brand img,
-      #appView .topbar-brand img{
+      #driverView .topbar-brand img{
         width:58px!important;
         flex:0 0 auto!important;
       }
     }
 
     @media (max-width: 380px){
-      #driverView .topbar-actions,
-      #appView .topbar-actions{
+      #driverView .topbar-actions{
         grid-template-columns:1fr!important;
       }
 
-      #driverView .topbar-actions .button,
-      #appView .topbar-actions .button{
+      #driverView .topbar-actions .button{
         font-size:14px!important;
       }
     }
@@ -1119,6 +1207,19 @@
     .dv-action.is-send{background:var(--dv-brand-soft);border-color:var(--dv-brand-line);color:var(--dv-brand-ink)}
     .dv-action.is-ok{background:var(--dv-ok-soft);border-color:var(--dv-ok-line);color:var(--dv-ok-ink)}
     .dv-action.is-idle{color:var(--dv-muted)}
+    .dv-next{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      padding:15px 16px;border-radius:16px;border:1px solid var(--dv-ok-line);background:var(--dv-ok-soft);
+      color:var(--dv-ok-ink)}
+    .dv-next.hidden{display:none}
+    .dv-next small{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;opacity:.8}
+    .dv-next strong{display:block;font-size:20px;font-weight:700;margin-top:2px}
+    .dv-next strong::first-letter{text-transform:uppercase}
+    .dv-next-when span{display:block;font-size:13px;opacity:.85;margin-top:1px}
+    .dv-next-what{display:flex;gap:7px;flex-wrap:wrap}
+    .dv-next-chip{padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;
+      background:var(--dv-card);border:1px solid var(--dv-ok-line);color:var(--dv-text)}
+    .dv-action.hidden{display:none}
+    .dv-action+.dv-action,.dv-action+.dv-next,.dv-next+.dv-secthead{margin-top:10px}
     .dv-action-link{margin-top:10px;font-size:13px;font-weight:600;text-decoration:underline;
       background:none;border:none;padding:0;color:inherit;display:block}
 
@@ -1317,9 +1418,9 @@
         <img src="nara-pizza-logo-transparent.png" alt="Nara Pizza">
         <div class="topbar-title"><strong>Journia</strong><small id="topbarUser">—</small></div>
       </div>
-      <div class="topbar-actions">
+      <div class="mgr-actions">
         <button class="button button-ghost install-help-button" type="button">Installer</button>
-        <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
+        <button id="logoutButton" class="button button-ghost" type="button">Sortir</button>
       </div>
     </header>
 
@@ -1327,21 +1428,24 @@
          pas coûter un aller-retour par le tableau de bord. La barre reste
          sous l'en-tête sur tous les écrans. -->
     <nav id="mainNav" class="mainnav" aria-label="Navigation principale">
-      <button class="mainnav-link" data-vers="dashboard" type="button">Tableau de bord</button>
-      <button class="mainnav-link" data-vers="createWeek" type="button">Semaines</button>
-      <button class="mainnav-link" data-vers="needs" type="button">Besoins</button>
-      <button class="mainnav-link" data-vers="planning" type="button">Planning</button>
-      <button class="mainnav-link" data-vers="kitchen" type="button">Cuisine</button>
-      <button class="mainnav-link" data-vers="drivers" type="button">Employés</button>
-      <button class="mainnav-link" data-vers="establishment" type="button">Fiche</button>
+      <button class="mainnav-link" data-vers="dashboard" type="button"><span class="mainnav-ico">🏠</span>Accueil<span class="mainnav-badge hidden" data-badge="dashboard"></span></button>
+      <button class="mainnav-link" data-vers="createWeek" type="button"><span class="mainnav-ico">📅</span>Semaines</button>
+      <button class="mainnav-link" data-vers="needs" type="button"><span class="mainnav-ico">🕒</span>Besoins</button>
+      <button class="mainnav-link" data-vers="planning" type="button"><span class="mainnav-ico">🧩</span>Planning<span class="mainnav-badge hidden" data-badge="planning"></span></button>
+      <button class="mainnav-link" data-vers="kitchen" type="button"><span class="mainnav-ico">🖨️</span>Cuisine</button>
+      <button class="mainnav-link" data-vers="drivers" type="button"><span class="mainnav-ico">👥</span>Employés<span class="mainnav-badge is-soft hidden" data-badge="drivers"></span></button>
+      <button class="mainnav-link" data-vers="establishment" type="button"><span class="mainnav-ico">🏪</span>Fiche</button>
     </nav>
 
     <main class="layout">
       <section id="dashboardSection" class="section-view active">
-        <div class="page-header">
-          <div><h2>Tableau de bord manager</h2><p class="muted">Préparez les semaines, les livreurs et les besoins opérationnels.</p></div>
-          <div class="profile-card"><p>Bonjour <strong id="profileName">—</strong></p><small><span id="profileEmail">—</span> · <span id="profileRole">—</span></small></div>
+        <div class="hello">
+          <h2>Bonjour <span id="profileName">—</span></h2>
+          <p class="muted"><span id="helloDate"></span><span class="hello-account"> · <span id="profileEmail">—</span> · <span id="profileRole">—</span></span></p>
         </div>
+
+        <!-- Ce qui demande un geste aujourd'hui, avant tout le reste. -->
+        <section id="alertsPanel" class="alerts hidden" aria-live="polite"></section>
 
         <section id="setupGuide" class="panel setup-guide hidden">
           <div class="panel-header">
@@ -1362,6 +1466,7 @@
           <p id="actionEyebrow" class="action-eyebrow"></p>
           <h3 id="actionTitle">—</h3>
           <p id="actionDetail" class="muted"></p>
+          <ol id="weekSteps" class="week-steps hidden"></ol>
           <div id="actionButtons" class="action-buttons"></div>
         </section>
 
@@ -1485,6 +1590,14 @@
             <div><h3>Équipe</h3></div>
           </div>
 
+          <div class="driver-filters">
+            <input id="driverSearch" type="search" placeholder="Chercher un nom, un numéro, une adresse…" aria-label="Chercher un employé">
+            <div class="driver-filter-chips">
+              <button id="driverFilterActive" class="filter-chip is-on" type="button" aria-pressed="true">Actifs seulement</button>
+              <span id="driverFilterPositions" class="driver-filter-positions"></span>
+            </div>
+            <p id="driverFilterCount" class="muted driver-filter-count"></p>
+          </div>
           <div id="driverList" class="driver-list">
             <div class="empty-state">Chargement des livreurs…</div>
           </div>
@@ -1925,13 +2038,6 @@
         </section>
       </section>
 
-      <div id="appMessage" class="message"></div>
-      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
-    </main>
-  </section>
-
-
-
       <section id="planningSection" class="section-view">
         <div class="back-row">
           <button class="button button-ghost backToDashboard" type="button">← Retour au tableau de bord</button>
@@ -1947,7 +2053,11 @@
             </div>
           </div>
 
-          <div id="planningRuleNote" class="form-note"></div>
+          <ol id="planSteps" class="week-steps plan-steps hidden"></ol>
+          <details class="rule-details">
+            <summary>Comment l’application choisit</summary>
+            <div id="planningRuleNote" class="form-note"></div>
+          </details>
 
           <div class="planning-controls">
             <div class="field">
@@ -2027,7 +2137,7 @@
               <div id="pendingConfirmList" class="relance-list"></div>
             </div>
 
-            <div class="panel-header">
+            <div class="panel-header" id="availabilityHeader">
               <div>
                 <h3>Disponibilités reçues</h3>
                 <p class="muted">Les réponses de la semaine sélectionnée apparaissent ici avant de générer le planning. Cliquez sur un nom pour voir le détail de sa semaine.</p>
@@ -2053,6 +2163,14 @@
           </div>
         </section>
       </section>
+
+      <div id="appMessage" class="message"></div>
+      <div class="footer">Journia — version pilote · <span class="app-version">—</span></div>
+    </main>
+  </section>
+
+
+
 
 
   <!-- =================================================================
@@ -2250,6 +2368,10 @@
             <span>Un instant, nous récupérons votre semaine.</span>
           </div>
         </div>
+
+        <div id="driverActionSecond" class="dv-action is-send hidden"></div>
+
+        <div id="driverNextShift" class="dv-next hidden"></div>
 
         <div class="dv-secthead">
           <h2 id="driverPageTitle">Mon planning</h2>
@@ -3146,7 +3268,9 @@
       driverView.classList.add("hidden");
       document.getElementById("profileName").textContent=profile.name||"Utilisateur";
       document.getElementById("profileEmail").textContent=profile.email||"";
-      document.getElementById("profileRole").textContent=profile.role||"";
+      document.getElementById("profileRole").textContent=ROLE_LABELS[profile.role]||profile.role||"";
+      document.getElementById("helloDate").textContent=
+        new Intl.DateTimeFormat("fr-CH",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
       document.getElementById("topbarUser").textContent=`${profile.name||"Utilisateur"} · ${profile.role||""}`;
       loginView.classList.add("hidden");appView.classList.remove("hidden");
       // Seules les donnees indispensables au tableau de bord sont abonnees ici.
@@ -3574,10 +3698,51 @@
       }
     }
 
+    /* La liste des employés : avec vingt comptes dont plusieurs anciens,
+       on ne lit plus rien. Par défaut on ne montre que ceux qui
+       travaillent, et une recherche trouve le reste. */
+    const driverFilter={texte:"",actifs:true,poste:""};
+
+    function employeCorrespond(driver){
+      if(driverFilter.actifs&&driver.active!==true)return false;
+      if(driverFilter.poste&&positionOf(driver.position)!==driverFilter.poste)return false;
+      const cherche=driverFilter.texte.trim().toLowerCase();
+      if(!cherche)return true;
+      return [driver.name,driver.email,driver.phone,driver.vehicle]
+        .some(champ=>String(champ||"").toLowerCase().includes(cherche))
+    }
+
+    function renderDriverFilters(affiches,total){
+      const bouton=document.getElementById("driverFilterActive");
+      if(!bouton)return;
+      bouton.classList.toggle("is-on",driverFilter.actifs);
+      bouton.setAttribute("aria-pressed",String(driverFilter.actifs));
+
+      const zone=document.getElementById("driverFilterPositions");
+      zone.innerHTML="";
+      if(severalPositions()){
+        [{id:"",name:"Tous les postes"},...positions()].forEach(poste=>{
+          const puce=document.createElement("button");
+          puce.type="button";
+          puce.className="filter-chip"+(driverFilter.poste===poste.id?" is-on":"");
+          puce.dataset.poste=poste.id;
+          puce.textContent=poste.name;
+          puce.addEventListener("click",()=>{driverFilter.poste=poste.id;renderDrivers()});
+          zone.appendChild(puce)
+        })
+      }
+
+      const masques=currentDrivers.filter(gens=>gens.active!==true).length;
+      document.getElementById("driverFilterCount").textContent=
+        `${affiches} sur ${total} affiché${affiches>1?"s":""}`
+        +(driverFilter.actifs&&masques?` · ${masques} compte${masques>1?"s":""} désactivé${masques>1?"s":""} masqué${masques>1?"s":""}`:"")
+    }
+
     function renderDrivers(){
-      const drivers=currentDrivers
+      const tous=currentDrivers
         .slice()
         .sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+      const drivers=tous.filter(employeCorrespond);
 
       // Les disponibilites ne sont rechargees que si l'ecran planning est ouvert.
       if(currentSectionName==="planning"&&planningWeekSelect?.value){
@@ -3585,9 +3750,14 @@
       }
 
       renderStaff();
+      renderDriverFilters(drivers.length,tous.length);
 
-      if(drivers.length===0){
+      if(tous.length===0){
         driverList.innerHTML='<div class="empty-state">Aucun employé n’a encore été ajouté.</div>';
+        return
+      }
+      if(drivers.length===0){
+        driverList.innerHTML='<div class="empty-state">Personne ne correspond à cette recherche.</div>';
         return
       }
 
@@ -3597,14 +3767,22 @@
         const score=driverScoreData(driver.id);
         const stats=assignmentStatsForDriver(driver.id);
         const card=document.createElement("article");
-        card.className="driver-card";
+        card.className="driver-card"+(driver.active===true?"":" is-inactive");
+        const telephone=normalizePhone(driver.phone);
 
         card.innerHTML=`
           <div class="driver-overview">
-            <h3>${escapeHtml(driver.name||"Livreur")}</h3>
-            <p class="driver-meta">${escapeHtml(driver.email||"")}</p>
-            <p class="driver-meta">${escapeHtml(driver.phone||"Téléphone non renseigné")} · ${escapeHtml(driver.vehicle||"Véhicule non renseigné")}</p>
-            <p class="driver-data-note">Les données ci-dessous concernent les affectations et confirmations, pas une présence physique pointée.</p>
+            <h3>${escapeHtml(driver.name||"Employé")}
+              ${severalPositions()?`<span class="driver-post">${escapeHtml(positionLabel(positionOf(driver.position)))}</span>`:""}
+              ${telephone?"":'<span class="driver-flag">Sans téléphone</span>'}
+            </h3>
+            <p class="driver-meta">${escapeHtml([driver.phone,driver.email].filter(Boolean).join(" · "))}</p>
+            ${driver.vehicle?`<p class="driver-meta">${escapeHtml(driver.vehicle)}</p>`:""}
+          </div>
+
+          <div class="driver-actions">
+            <span class="status-badge ${driver.active===true?"status-active":"status-inactive"}">${driver.active===true?"Actif":"Désactivé"}</span>
+            <button class="button button-ghost edit-driver" type="button">Modifier</button>
           </div>
 
           <div class="driver-score-panel">
@@ -3615,32 +3793,31 @@
               <span class="score-chip">Score ${score.total}</span>
             </div>
 
-            <div class="driver-stat-grid">
-              <div class="driver-stat-card">
-                <strong>${stats.past.total}</strong>
-                <small>30 derniers jours</small>
-                <div class="driver-stat-detail">
-                  ${stats.past.confirmed} confirmée${stats.past.confirmed>1?"s":""} ·
-                  ${stats.past.refused} refusée${stats.past.refused>1?"s":""} ·
-                  ${stats.past.pending} en attente
+            <details class="driver-more">
+              <summary>Affectations et confirmations</summary>
+              <p class="driver-data-note">Ces chiffres concernent les affectations et confirmations, pas une présence physique pointée.</p>
+              <div class="driver-stat-grid">
+                <div class="driver-stat-card">
+                  <strong>${stats.past.total}</strong>
+                  <small>30 derniers jours</small>
+                  <div class="driver-stat-detail">
+                    ${stats.past.confirmed} confirmée${stats.past.confirmed>1?"s":""} ·
+                    ${stats.past.refused} refusée${stats.past.refused>1?"s":""} ·
+                    ${stats.past.pending} en attente
+                  </div>
+                </div>
+
+                <div class="driver-stat-card">
+                  <strong>${stats.future.total}</strong>
+                  <small>30 prochains jours</small>
+                  <div class="driver-stat-detail">
+                    ${stats.future.confirmed} confirmée${stats.future.confirmed>1?"s":""} ·
+                    ${stats.future.refused} refusée${stats.future.refused>1?"s":""} ·
+                    ${stats.future.pending} en attente
+                  </div>
                 </div>
               </div>
-
-              <div class="driver-stat-card">
-                <strong>${stats.future.total}</strong>
-                <small>30 prochains jours</small>
-                <div class="driver-stat-detail">
-                  ${stats.future.confirmed} confirmée${stats.future.confirmed>1?"s":""} ·
-                  ${stats.future.refused} refusée${stats.future.refused>1?"s":""} ·
-                  ${stats.future.pending} en attente
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="driver-actions">
-            <span class="status-badge ${driver.active===true?"status-active":"status-inactive"}">${driver.active===true?"Actif":"Désactivé"}</span>
-            <button class="button button-ghost edit-driver" type="button">Modifier</button>
+            </details>
           </div>
         `;
 
@@ -5576,8 +5753,15 @@ ${currentProfile?.name||""}`;
       )
     }
 
+    /* Tant que l'employé n'a pas choisi lui-même une semaine, l'écran suit
+       celle qui attend une réponse. Les semaines arrivent avant les
+       affectations : sans cela, l'alerte annonçait « 1 horaire à
+       confirmer » au-dessus d'une semaine vide. */
+    let driverWeekChosenByUser = false;
+
     function chooseDefaultDriverWeek(weeks){
-      if(currentDriverWeekId&&weeks.some(week=>week.id===currentDriverWeekId))return;
+      if(driverWeekChosenByUser&&currentDriverWeekId
+        &&weeks.some(week=>week.id===currentDriverWeekId))return;
 
       const pendingWeek=currentDriverAssignments.find(
         assignment=>(assignment.status||"pending")==="pending"
@@ -5617,6 +5801,7 @@ ${currentProfile?.name||""}`;
 
         button.addEventListener("click",()=>{
           currentDriverWeekId=week.id;
+          driverWeekChosenByUser=true;
           refreshDriverScreen()
         });
 
@@ -5682,9 +5867,60 @@ ${currentProfile?.name||""}`;
         </div>
       `;
 
+      // Un horaire à confirmer ne doit pas cacher des disponibilités à
+      // envoyer : ce sont deux gestes, avec deux échéances.
+      const seconde=document.getElementById("driverActionSecond");
+      if(seconde){
+        const aussi=pending.length&&toAnswer.length?toAnswer[0]:null;
+        seconde.classList.toggle("hidden",!aussi);
+        if(aussi){
+          const reste=deadlineRemaining(aussi);
+          seconde.innerHTML=`
+            ${dvSvg("send")}
+            <div class="dv-action-body">
+              <strong>Disponibilités à envoyer</strong>
+              <span>${escapeHtml(reste!==null&&reste>0
+                ? `Semaine du ${driverRangeLabel(aussi.startDate,aussi.endDate)} — il reste ${formatCountdown(reste)}.`
+                : `Semaine du ${driverRangeLabel(aussi.startDate,aussi.endDate)}.`)}</span>
+              <button class="dv-action-link" type="button">Remplir mes disponibilités</button>
+            </div>`;
+          seconde.querySelector(".dv-action-link").addEventListener("click",()=>{
+            currentDriverWeekId=aussi.id;
+            driverWeekChosenByUser=true;
+            setDriverTab("availability");
+            refreshDriverScreen()
+          })
+        }
+      }
+
+      // Le prochain service acquis, avec ce qu'il faut savoir en partant :
+      // l'heure et le véhicule.
+      const prochain=document.getElementById("driverNextShift");
+      if(prochain){
+        const acquis=currentDriverAssignments
+          .filter(item=>item.active!==false&&(item.date||"")>=today
+            &&["confirmed","implied"].includes(driverEffectiveStatus(item)))
+          .sort((a,b)=>`${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))[0];
+        prochain.classList.toggle("hidden",!acquis);
+        if(acquis){
+          const vehicule=acquis.vehicleUnitName
+            ||(acquis.vehicleChoice?deliveryMethodLabel(acquis.vehicleChoice):"");
+          prochain.innerHTML=`
+            <div class="dv-next-when">
+              <small>Prochain service</small>
+              <strong>${escapeHtml(driverRelativeDay(acquis.date))} · ${escapeHtml(acquis.time||"")}</strong>
+              <span>${escapeHtml(driverDayLabel(acquis.date))}</span>
+            </div>
+            <div class="dv-next-what">
+              ${severalPositions()?`<span class="dv-next-chip">${escapeHtml(positionLabel(positionOf(acquis.positionId)))}</span>`:""}
+              ${vehicule?`<span class="dv-next-chip is-vehicle">${escapeHtml(vehicule)}</span>`:""}
+            </div>`
+        }
+      }
+
       if(link){
         driverActionCard.querySelector(".dv-action-link").addEventListener("click",()=>{
-          if(link.weekId)currentDriverWeekId=link.weekId;
+          if(link.weekId){currentDriverWeekId=link.weekId;driverWeekChosenByUser=true}
           setDriverTab(link.tab);
           refreshDriverScreen()
         })
@@ -6656,6 +6892,7 @@ ${currentProfile?.name||""}`;
     }
 
     function renderNextService(target,rows){
+      setTimeout(renderAlerts,0);
       rows.sort((a,b)=>{
         const heure=(a.time||"").localeCompare(b.time||"");
         return heure!==0?heure:(a.driverName||"").localeCompare(b.driverName||"","fr")
@@ -8107,16 +8344,160 @@ ${currentProfile?.name||""}`;
       return setupSteps().filter(etape=>!etape.facultatif).every(etape=>etape.fait)
     }
 
+    /* ===================================================================
+       LES ALERTES ESSENTIELLES
+
+       Ce qui demande un geste aujourd'hui, en tête du tableau de bord et
+       en pastille dans la barre de navigation. Trois couleurs, toujours
+       les mêmes : rouge pour un trou à boucher, ambre pour ce qui attend,
+       bleu pour ce qui gênera plus tard. Tout se déduit de données déjà
+       chargées — aucune lecture n'est faite pour une alerte.
+       =================================================================== */
+    let reponsesConnues = {weekId:"",recues:-1};
+
+    function alertesDuJour(){
+      const alertes=[];
+      if(!etapesDeMiseEnServiceFaites())return alertes;
+
+      const quand=(document.getElementById("nextServiceTitle")?.textContent||"Prochain service").trim();
+      const service=nextServiceTarget?nextServiceRows:[];
+      const statuts=service.map(driverEffectiveStatus);
+
+      const refus=service.filter((ligne,index)=>statuts[index]==="refused");
+      if(refus.length){
+        alertes.push({
+          ton:"bad",icone:"\u2715",vers:"planning",bouton:"Remplacer",
+          titre:`${refus.length} refus à remplacer — ${quand.toLowerCase()}`,
+          detail:[...new Set(refus.map(ligne=>`${ligne.driverName||"Quelqu’un"} à ${ligne.time||""}`))].join(" · ")
+        })
+      }
+
+      const semaine=semaineEnCours();
+      if(semaine&&semaine.status==="open"&&isDeadlinePassed(semaine)
+        &&reponsesConnues.weekId===semaine.id&&reponsesConnues.recues>=0){
+        const manquantes=Math.max(0,currentDrivers.filter(gens=>gens.active===true).length-reponsesConnues.recues);
+        if(manquantes>0){
+          alertes.push({
+            ton:"warn",icone:"\u23f3",vers:"planning",bouton:"Décider",
+            titre:`Délai passé : ${manquantes} réponse${manquantes>1?"s manquent":" manque"}`,
+            detail:`Semaine du ${formatDate(semaine.startDate)}. Prolongez le délai, ou générez le planning avec les réponses reçues.`
+          })
+        }
+      }
+
+      const attente=service.filter((ligne,index)=>statuts[index]==="pending");
+      if(attente.length){
+        alertes.push({
+          ton:"warn",icone:"?",vers:"planning",bouton:"Relancer",
+          titre:`${attente.length} horaire${attente.length>1?"s":""} sans réponse — ${quand.toLowerCase()}`,
+          detail:[...new Set(attente.map(ligne=>ligne.driverName||"Quelqu’un"))].join(" · ")
+        })
+      }
+
+      const sansNumero=currentDrivers.filter(gens=>gens.active===true&&!normalizePhone(gens.phone));
+      if(sansNumero.length){
+        alertes.push({
+          ton:"info",icone:"\u260e",vers:"drivers",bouton:"Voir",
+          titre:`${sansNumero.length} employé${sansNumero.length>1?"s":""} sans numéro de téléphone`,
+          detail:"Impossible de les appeler ou de leur écrire par WhatsApp le jour où il le faudra."
+        })
+      }
+
+      return alertes
+    }
+
+    function renderAlerts(){
+      const panneau=document.getElementById("alertsPanel");
+      if(!panneau)return;
+
+      const alertes=alertesDuJour();
+      const miseEnService=!etapesDeMiseEnServiceFaites();
+      panneau.classList.toggle("hidden",miseEnService);
+      panneau.innerHTML="";
+
+      const urgentes=alertes.filter(alerte=>alerte.ton!=="info");
+      if(!miseEnService&&urgentes.length===0){
+        const calme=document.createElement("div");
+        calme.className="alert is-ok";
+        calme.innerHTML=`<span class="alert-ico">\u2713</span>
+          <span><strong>Rien d’urgent</strong><small>Aucun refus à remplacer, aucun délai dépassé.</small></span>`;
+        panneau.appendChild(calme)
+      }
+
+      alertes.forEach(alerte=>{
+        const ligne=document.createElement("div");
+        ligne.className=`alert is-${alerte.ton}`;
+        ligne.innerHTML=`<span class="alert-ico">${alerte.icone}</span>
+          <span><strong>${escapeHtml(alerte.titre)}</strong><small>${escapeHtml(alerte.detail)}</small></span>`;
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className=`button ${alerte.ton==="info"?"button-ghost":"button-primary"}`;
+        bouton.textContent=alerte.bouton;
+        bouton.addEventListener("click",()=>showSection(alerte.vers));
+        ligne.appendChild(bouton);
+        panneau.appendChild(ligne)
+      });
+
+      // Les pastilles suivent les mêmes alertes, sur tous les écrans.
+      const compte={planning:0,drivers:0};
+      alertes.forEach(alerte=>{
+        if(alerte.ton==="info")compte.drivers+=1;
+        else compte.planning+=1
+      });
+      document.querySelectorAll(".mainnav-badge").forEach(pastille=>{
+        const combien=compte[pastille.dataset.badge]||0;
+        pastille.textContent=pastille.dataset.badge==="drivers"
+          ? String(currentDrivers.filter(gens=>gens.active===true&&!normalizePhone(gens.phone)).length||"")
+          : String(combien||"");
+        pastille.classList.toggle("hidden",combien===0)
+      })
+    }
+
+    /* Le fil de la semaine : où l'on en est, d'un coup d'œil. */
+    function etapesDeLaSemaine(semaine){
+      if(!semaine)return [];
+      const besoins=currentNeeds.filter(besoin=>besoin.weekId===semaine.id).length>0;
+      const ouverte=semaine.status!=="draft";
+      const publiee=semaine.status==="closed";
+      const reponses=publiee||(ouverte&&isDeadlinePassed(semaine))
+        ||(reponsesConnues.weekId===semaine.id&&reponsesConnues.recues>=0
+          &&reponsesConnues.recues>=currentDrivers.filter(gens=>gens.active===true).length
+          &&currentDrivers.length>0);
+      return [
+        {titre:"Besoins",fait:besoins},
+        {titre:"Semaine ouverte",fait:ouverte},
+        {titre:"Réponses",fait:reponses},
+        {titre:"Planning",fait:publiee},
+        {titre:"Publié",fait:publiee}
+      ]
+    }
+
+    function peindreEtapes(liste,etapes){
+      if(!liste)return;
+      liste.classList.toggle("hidden",etapes.length===0);
+      liste.innerHTML="";
+      const courante=etapes.findIndex(etape=>!etape.fait);
+      etapes.forEach((etape,index)=>{
+        const item=document.createElement("li");
+        item.className="week-step"+(etape.fait?" is-done":index===courante?" is-now":"");
+        item.innerHTML=`<b>${etape.fait?"\u2713":index+1}</b>${escapeHtml(etape.titre)}`;
+        liste.appendChild(item)
+      })
+    }
+
     function renderActionPanel(){
       const panneau=document.getElementById("actionPanel");
       if(!panneau)return;
 
       const etat=etatDuTableauDeBord();
+      renderAlerts();
       if(etat.id==="miseEnService"){
         panneau.classList.add("hidden");
         return
       }
       panneau.classList.remove("hidden");
+      peindreEtapes(document.getElementById("weekSteps"),
+        etat.id==="ouvrirSemaine"?[]:etapesDeLaSemaine(semaineEnCours()));
 
       document.getElementById("actionEyebrow").textContent=etat.eyebrow||"";
       document.getElementById("actionTitle").textContent=etat.titre;
@@ -8138,8 +8519,18 @@ ${currentProfile?.name||""}`;
 
       // Le compte des reponses vaut mieux qu'une promesse : il arrive un
       // instant plus tard, sans retarder l'affichage.
+      if(etat.id==="generer"&&etat.semaine&&currentDrivers.length){
+        loadAvailabilitiesForWeek(etat.semaine.id).then(reponses=>{
+          reponsesConnues={weekId:etat.semaine.id,recues:reponses.length};
+          renderAlerts()
+        }).catch(error=>console.error(error))
+      }
+
       if(etat.id==="attente"&&etat.semaine&&currentDrivers.length){
         loadAvailabilitiesForWeek(etat.semaine.id).then(reponses=>{
+          reponsesConnues={weekId:etat.semaine.id,recues:reponses.length};
+          renderAlerts();
+          peindreEtapes(document.getElementById("weekSteps"),etapesDeLaSemaine(semaineEnCours()));
           const detail=document.getElementById("actionDetail");
           if(!detail||etatDuTableauDeBord().id!=="attente")return;
           const manquants=Math.max(0,currentDrivers.length-reponses.length);
@@ -8221,6 +8612,7 @@ ${currentProfile?.name||""}`;
     }
 
     function updateDeadlineDisplay(week,responseUserIds){
+      renderPlanSteps();
       if(planningDeadlineTimer){
         clearInterval(planningDeadlineTimer);
         planningDeadlineTimer=null
@@ -9036,6 +9428,26 @@ ${currentProfile?.name||""}`;
       }).length
     }
 
+    function renderPlanSteps(){
+      const liste=document.getElementById("planSteps");
+      if(!liste)return;
+      const semaine=currentWeeks.find(autre=>autre.id===planningWeekSelect.value);
+      const plan=currentPlan&&semaine&&currentPlan.weekId===semaine.id?currentPlan:null;
+
+      document.getElementById("planningSection").classList.toggle("is-published",
+        !!semaine&&semaine.status==="closed");
+
+      if(!semaine){peindreEtapes(liste,[]);return}
+      const publie=semaine.status==="closed"||plan?.status==="closed";
+      const valide=publie||plan?.status==="validated";
+      peindreEtapes(liste,[
+        {titre:"Réponses",fait:!!plan||isDeadlinePassed(semaine)||publie},
+        {titre:"Proposition",fait:!!plan},
+        {titre:"Validation",fait:valide},
+        {titre:"Publication",fait:publie}
+      ])
+    }
+
     function renderRefusals(){
       const panneau=document.getElementById("refusalsPanel");
       if(!panneau)return;
@@ -9218,6 +9630,7 @@ ${currentProfile?.name||""}`;
 
       renderPendingConfirmations();
       renderRefusals();
+      renderPlanSteps();
 
       const totals=planTotals(currentPlan);
       planContainer.innerHTML="";
@@ -9293,7 +9706,7 @@ ${currentProfile?.name||""}`;
 
       currentPlan.assignments.forEach((slot,slotIndex)=>{
         const section=document.createElement("article");
-        section.className="plan-slot";
+        section.className="plan-slot"+(placesTenues(currentPlan,slot)<slot.quantity?" is-short":"");
 
         const selectedHtml=slot.selected.length
           ? slot.selected.map((driver,index)=>`
@@ -9341,7 +9754,7 @@ ${currentProfile?.name||""}`;
                 </div>
               </div>
             `).join("")
-          : '<div class="empty-state">Aucun livreur disponible pour ce besoin.</div>';
+          : '<div class="empty-state">Personne n’est disponible pour ce besoin.</div>';
 
         const waitlistHtml=slot.waitlist.length
           ? slot.waitlist.map((driver,index)=>`
@@ -9376,7 +9789,7 @@ ${currentProfile?.name||""}`;
 
           <div class="plan-columns">
             <div>
-              <h3>Livreurs proposés</h3>
+              <h3>Équipe proposée</h3>
               <div class="assigned-list">${selectedHtml}</div>
             </div>
             <div>
@@ -10006,6 +10419,15 @@ ${currentProfile?.name||""}`;
     // c'est un geste délibéré : on repasse toute la configuration.
     document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
     document.getElementById("openWizard").addEventListener("click",()=>wizardOuvrir(true));
+
+    document.getElementById("driverSearch").addEventListener("input",event=>{
+      driverFilter.texte=event.target.value;
+      renderDrivers()
+    });
+    document.getElementById("driverFilterActive").addEventListener("click",()=>{
+      driverFilter.actifs=!driverFilter.actifs;
+      renderDrivers()
+    });
 
     document.querySelectorAll(".mainnav-link").forEach(lien=>{
       lien.addEventListener("click",()=>showSection(lien.dataset.vers))
@@ -10730,7 +11152,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-l · ESSAI";
+    const APP_VERSION = "2026-11-14-m · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10777,6 +11199,7 @@ ${currentProfile?.name||""}`;
         currentDriverOpenWeeks=[];
         currentDriverOpenWeeksCount=0;
         currentDriverWeekId="";
+        driverWeekChosenByUser=false;
         driverPasswordGate.classList.add("hidden");
         driverRegulationGate.classList.add("hidden");
         driverMainContent.classList.add("hidden");
@@ -10832,6 +11255,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-l. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-m. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
