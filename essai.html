@@ -449,6 +449,15 @@
     .dash-group{margin-bottom:8px}
     .dash-group>h4{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.09em;
       text-transform:uppercase;color:var(--muted)}
+    /* Les réglages se font une fois et ne se refont plus. Les laisser
+       ouverts en permanence donne le même poids à ce qu'on touche chaque
+       lundi et à ce qu'on ne touchera plus. */
+    .dash-toggle{border:0;background:none;padding:0;font:inherit;letter-spacing:inherit;
+      text-transform:inherit;color:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+    .dash-toggle:hover{color:var(--orange-dark)}
+    .dash-caret{display:inline-block;font-size:13px;transition:transform .18s}
+    .dash-group.is-closed .dash-caret{transform:rotate(-90deg)}
+    .dash-group.is-closed .dashboard-grid{display:none}
     .dash-group .dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:22px}
     .dashboard-button{width:100%;display:flex;align-items:flex-start;gap:14px;text-align:left;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:14px;padding:18px}
     .dashboard-button:hover{border-color:var(--orange);background:#fff8f2}.dashboard-icon{font-size:26px;line-height:1;flex:0 0 auto}
@@ -1346,9 +1355,13 @@
           </div>
         </div>
 
-        <div class="dash-group">
-          <h4>Réglages</h4>
-          <div class="dashboard-grid">
+        <div class="dash-group" id="settingsGroup">
+          <h4>
+            <button id="toggleSettings" class="dash-toggle" type="button" aria-expanded="true">
+              <span class="dash-caret">▾</span> Réglages
+            </button>
+          </h4>
+          <div class="dashboard-grid" id="settingsGrid">
             <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
             <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
             <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
@@ -3033,7 +3046,7 @@
       if(name==="establishment")prepareEstablishmentSection();
       if(name==="help")prepareHelpSection();
       if(name==="garage")prepareGarageSection();
-      if(name==="dashboard"){renderSetupGuide();renderActionPanel();refreshNextService()}
+      if(name==="dashboard"){renderSetupGuide();renderActionPanel();renderSettingsGroup();refreshNextService()}
 
       // Une ancre : la fiche de l'établissement est longue, et arriver tout
       // en haut quand on venait chercher les postes de travail oblige à
@@ -3254,6 +3267,7 @@
       populateNeedsWeekSelect();
       renderSetupGuide();
       renderActionPanel();
+      renderSettingsGroup();
       wizardRafraichir();
 
       if(currentWeeks.length===0){
@@ -3995,6 +4009,7 @@ ${currentProfile?.name||""}`;
         renderEstablishmentForm();
         renderSetupGuide();
         renderActionPanel();
+        renderSettingsGroup();
         showMessage(messageEl,"La fiche a été enregistrée.","success")
       }catch(error){
         console.error(error);
@@ -4051,6 +4066,7 @@ ${currentProfile?.name||""}`;
           renderDrivers();
           renderSetupGuide();
           renderActionPanel();
+          renderSettingsGroup();
           wizardRafraichir();
           repaintNextService()
         },
@@ -4444,6 +4460,7 @@ ${currentProfile?.name||""}`;
     function renderNeeds(){
       renderSetupGuide();
       renderActionPanel();
+      renderSettingsGroup();
       wizardRafraichir();
       const weekId=needsWeekSelect.value;
 
@@ -7859,9 +7876,7 @@ ${currentProfile?.name||""}`;
     }
 
     function etatDuTableauDeBord(){
-      const etapes=setupSteps();
-      const requises=etapes.filter(etape=>!etape.facultatif);
-      if(requises.some(etape=>!etape.fait))return {id:"miseEnService"};
+      if(!etapesDeMiseEnServiceFaites())return {id:"miseEnService"};
 
       const semaine=semaineEnCours();
 
@@ -7918,6 +7933,32 @@ ${currentProfile?.name||""}`;
           {texte:"Écrire à mon équipe",action:writeToTeam}
         ]
       }
+    }
+
+    /* Les réglages restent ouverts tant que la mise en service n'est pas
+       finie — c'est là qu'on travaille. Ensuite ils se replient, et le
+       responsable retrouve devant lui la semaine et son équipe, ce qu'il
+       ouvre réellement chaque lundi. Son choix, s'il en fait un, prime. */
+    const REGLAGES_OUVERTS="journia.reglages.ouverts";
+
+    function reglagesChoixManuel(){
+      try{ return localStorage.getItem(REGLAGES_OUVERTS) }catch(error){ return null }
+    }
+
+    function renderSettingsGroup(){
+      const groupe=document.getElementById("settingsGroup");
+      if(!groupe)return;
+
+      const choix=reglagesChoixManuel();
+      const miseEnServiceFinie=etapesDeMiseEnServiceFaites();
+      const ouvert=choix===null?!miseEnServiceFinie:choix==="1";
+
+      groupe.classList.toggle("is-closed",!ouvert);
+      document.getElementById("toggleSettings").setAttribute("aria-expanded",String(ouvert))
+    }
+
+    function etapesDeMiseEnServiceFaites(){
+      return setupSteps().filter(etape=>!etape.facultatif).every(etape=>etape.fait)
     }
 
     function renderActionPanel(){
@@ -9641,6 +9682,12 @@ ${currentProfile?.name||""}`;
     document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
     document.getElementById("openWizard").addEventListener("click",()=>wizardOuvrir(true));
 
+    document.getElementById("toggleSettings").addEventListener("click",()=>{
+      const ouvert=!document.getElementById("settingsGroup").classList.contains("is-closed");
+      try{ localStorage.setItem(REGLAGES_OUVERTS,ouvert?"0":"1") }catch(error){ /* sans mémoire, tant pis */ }
+      renderSettingsGroup()
+    });
+
     garageForm.addEventListener("submit",async event=>{
       event.preventDefault();
       clearMessage(garageMessage);
@@ -10348,7 +10395,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-e · ESSAI";
+    const APP_VERSION = "2026-11-14-f · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10450,6 +10497,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-e. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-f. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
