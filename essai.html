@@ -52,6 +52,13 @@
     .topbar-title small{margin-top:2px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45vw}
     .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .install-help-button{white-space:nowrap}
+    .mainnav{position:sticky;top:0;z-index:19;display:flex;gap:4px;overflow-x:auto;
+      padding:7px 14px;background:#fff;border-bottom:1px solid var(--border)}
+    .mainnav-link{flex:0 0 auto;border:0;background:none;padding:9px 14px;border-radius:999px;
+      font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+    .mainnav-link:hover{background:#f6f3f0;color:var(--text)}
+    .mainnav-link.is-current{background:var(--soft);color:var(--orange-dark)}
+    @media(max-width:620px){.mainnav{padding:6px 10px}.mainnav-link{padding:9px 11px;font-size:13px}}
     .install-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.48)}
     .install-modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
     .install-modal-header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
@@ -407,6 +414,13 @@
       .wizard-recap div{grid-template-columns:minmax(0,1fr)}
       .wizard-cta{width:100%;text-align:center}
     }
+    .deadline-extend{margin-top:16px;padding:18px 20px;border:1px solid #f0d7a8;border-radius:14px;
+      background:#fff8ec}
+    .deadline-extend strong{display:block;margin-bottom:5px}
+    .deadline-extend small{display:block;color:var(--muted);line-height:1.5}
+    .deadline-extend-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .deadline-extend-actions input[type="date"]{padding:11px 13px;border:1px solid var(--border);
+      border-radius:10px;font:inherit;background:var(--white)}
     .next-service{margin-bottom:22px;border-color:#f0cdaa;background:linear-gradient(180deg,#fffaf5,#fff)}
     .next-service .panel-header{margin-bottom:12px;align-items:flex-start}
     .next-service h3{font-size:21px}
@@ -636,6 +650,10 @@
     .relance-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;
       border:1px solid var(--border);border-radius:12px;background:#fff}
     .relance-name{font-weight:700;flex:1;min-width:120px}
+    .relance-open{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--text);
+      cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:#e0d6cc;
+      text-underline-offset:3px}
+    .relance-open:hover{color:var(--orange-dark);text-decoration-color:var(--orange)}
     .relance-actions{display:flex;gap:7px;flex-wrap:wrap}
     .relance-link{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
       text-decoration:none;font-weight:700;font-size:13px;border:1px solid var(--border);background:#fafafa;color:var(--text)}
@@ -1292,6 +1310,19 @@
         <button id="logoutButton" class="button button-secondary" type="button">Sortir</button>
       </div>
     </header>
+
+    <!-- Aller voir la fiche d'un employé depuis l'écran de planning ne doit
+         pas coûter un aller-retour par le tableau de bord. La barre reste
+         sous l'en-tête sur tous les écrans. -->
+    <nav id="mainNav" class="mainnav" aria-label="Navigation principale">
+      <button class="mainnav-link" data-vers="dashboard" type="button">Tableau de bord</button>
+      <button class="mainnav-link" data-vers="createWeek" type="button">Semaines</button>
+      <button class="mainnav-link" data-vers="needs" type="button">Besoins</button>
+      <button class="mainnav-link" data-vers="planning" type="button">Planning</button>
+      <button class="mainnav-link" data-vers="kitchen" type="button">Cuisine</button>
+      <button class="mainnav-link" data-vers="drivers" type="button">Employés</button>
+      <button class="mainnav-link" data-vers="establishment" type="button">Fiche</button>
+    </nav>
 
     <main class="layout">
       <section id="dashboardSection" class="section-view active">
@@ -1951,6 +1982,25 @@
                 <strong id="deadlineDateLabel">—</strong>
                 <small>Date limite</small>
               </div>
+            </div>
+
+            <!-- Passé le délai, l'employé voit « Délai dépassé » et ne peut
+                 plus rien envoyer. Si le responsable attend encore des
+                 réponses, il lui faut un moyen de rouvrir la saisie sans
+                 aller fouiller dans la fiche de la semaine. -->
+            <div id="deadlineExtend" class="deadline-extend hidden">
+              <div>
+                <strong>Le délai est passé, et il manque des réponses.</strong>
+                <small>Vos employés voient « Délai dépassé » et ne peuvent plus rien envoyer.
+                  Prolongez le délai pour rouvrir la saisie : ils n’ont rien d’autre à faire que répondre.</small>
+              </div>
+              <div class="deadline-extend-actions">
+                <button class="button button-ghost extend-quick" data-jours="1" type="button">Jusqu’à demain</button>
+                <button class="button button-ghost extend-quick" data-jours="2" type="button">Jusqu’à après-demain</button>
+                <input type="date" id="extendDate" aria-label="Nouvelle date limite">
+                <button id="extendButton" class="button button-primary" type="button">Prolonger</button>
+              </div>
+              <div id="extendMessage" class="message"></div>
             </div>
 
             <div id="missingDriversContainer" class="missing-drivers hidden">
@@ -3048,6 +3098,9 @@
       if(name==="garage")prepareGarageSection();
       if(name==="dashboard"){renderSetupGuide();renderActionPanel();renderSettingsGroup();refreshNextService()}
 
+      document.querySelectorAll(".mainnav-link").forEach(lien=>
+        lien.classList.toggle("is-current",lien.dataset.vers===name));
+
       // Une ancre : la fiche de l'établissement est longue, et arriver tout
       // en haut quand on venait chercher les postes de travail oblige à
       // deviner où ils se trouvent.
@@ -3959,6 +4012,15 @@ ${currentProfile?.name||""}`;
     function prepareEstablishmentSection(){
       clearMessage(document.getElementById("establishmentMessage"));
       renderEstablishmentForm()
+    }
+
+    /* Ouvrir la fiche de quelqu'un depuis n'importe quel écran. La barre
+       de navigation sert ensuite de chemin de retour. */
+    async function ouvrirFicheEmploye(userId){
+      const profil=currentDrivers.concat(currentStaff).find(gens=>gens.id===userId);
+      if(!profil)return;
+      showSection("drivers");
+      await openEditDriverForm(userId,profil)
     }
 
     async function prepareDriversSection(){
@@ -7917,7 +7979,7 @@ ${currentProfile?.name||""}`;
           semaine,
           eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
           titre:"La date limite est passée",
-          detail:"Vous pouvez générer la proposition, l’ajuster, puis la publier.",
+          detail:"Vous pouvez générer la proposition, l’ajuster, puis la publier. S’il manque encore des réponses, l’écran de planning vous propose de prolonger le délai.",
           boutons:[{texte:"Ouvrir le planning",vers:"planning",primaire:true}]
         }
       }
@@ -8126,6 +8188,18 @@ ${currentProfile?.name||""}`;
 
       missingDriversContainer.classList.toggle("hidden",missingDrivers.length===0);
 
+      // On ne propose de prolonger que si cela sert à quelque chose : le
+      // délai est passé, et quelqu'un n'a pas encore répondu.
+      const prolongation=document.getElementById("deadlineExtend");
+      const aProlonger=isDeadlinePassed(week)&&missingDrivers.length>0&&week.status==="open";
+      prolongation.classList.toggle("hidden",!aProlonger);
+      if(aProlonger){
+        const demain=new Date();
+        demain.setDate(demain.getDate()+1);
+        document.getElementById("extendDate").value=wizardIso(demain);
+        clearMessage(document.getElementById("extendMessage"))
+      }
+
       function tick(){
         const deadline=new Date(`${week.deadlineDate}T${week.deadlineTime||"23:59"}:00`);
         const remaining=deadline.getTime()-Date.now();
@@ -8137,6 +8211,51 @@ ${currentProfile?.name||""}`;
 
       tick();
       planningDeadlineTimer=setInterval(tick,60000)
+    }
+
+    /* Prolonger le délai d'une semaine ouverte. Rien d'autre ne change :
+       ni le statut, ni les besoins, ni les réponses déjà reçues. */
+    async function prolongerDelai(nouvelleDate){
+      const zone=document.getElementById("extendMessage");
+      const week=currentWeeks.find(autre=>autre.id===planningWeekSelect.value);
+
+      if(!week){
+        showMessage(zone,"Choisissez d’abord une semaine.","error");
+        return
+      }
+      if(!nouvelleDate){
+        showMessage(zone,"Indiquez la nouvelle date limite.","error");
+        return
+      }
+      if(nouvelleDate>week.endDate){
+        showMessage(zone,"La date limite ne peut pas dépasser la fin de la semaine concernée.","error");
+        return
+      }
+
+      const bouton=document.getElementById("extendButton");
+      bouton.disabled=true;
+
+      try{
+        await updateDoc(doc(db,"weeks",week.id),{
+          deadlineDate:nouvelleDate,
+          updatedAt:serverTimestamp(),
+          updatedBy:auth.currentUser.uid
+        });
+        showMessage(zone,
+          `Les disponibilités sont rouvertes jusqu’au ${formatDate(nouvelleDate)} à ${week.deadlineTime||"23:59"}. Prévenez votre équipe : elle ne sera pas avertie toute seule.`,
+          "success")
+      }catch(error){
+        console.error(error);
+        showMessage(zone,`Impossible de prolonger : ${error.code||error.message}`,"error")
+      }finally{
+        bouton.disabled=false
+      }
+    }
+
+    function dansNJours(jours){
+      const date=new Date();
+      date.setDate(date.getDate()+Number(jours||1));
+      return wizardIso(date)
     }
 
     /* ===================================================================
@@ -8262,9 +8381,14 @@ ${currentProfile?.name||""}`;
       const row=document.createElement("div");
       row.className="relance-row";
 
-      const name=document.createElement("span");
-      name.className="relance-name";
+      // Le nom mène à la fiche : c'est là qu'on va chercher un numéro
+      // manquant, ou qu'on comprend pourquoi quelqu'un ne répond jamais.
+      const name=document.createElement("button");
+      name.type="button";
+      name.className="relance-name relance-open";
       name.textContent=driver.name||"Livreur";
+      name.title="Ouvrir la fiche de cette personne";
+      name.addEventListener("click",()=>ouvrirFicheEmploye(driver.id));
       row.appendChild(name);
 
       const actions=document.createElement("div");
@@ -9682,6 +9806,16 @@ ${currentProfile?.name||""}`;
     document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
     document.getElementById("openWizard").addEventListener("click",()=>wizardOuvrir(true));
 
+    document.querySelectorAll(".mainnav-link").forEach(lien=>{
+      lien.addEventListener("click",()=>showSection(lien.dataset.vers))
+    });
+
+    document.querySelectorAll(".extend-quick").forEach(bouton=>{
+      bouton.addEventListener("click",()=>prolongerDelai(dansNJours(bouton.dataset.jours)))
+    });
+    document.getElementById("extendButton").addEventListener("click",()=>
+      prolongerDelai(document.getElementById("extendDate").value));
+
     document.getElementById("toggleSettings").addEventListener("click",()=>{
       const ouvert=!document.getElementById("settingsGroup").classList.contains("is-closed");
       try{ localStorage.setItem(REGLAGES_OUVERTS,ouvert?"0":"1") }catch(error){ /* sans mémoire, tant pis */ }
@@ -10395,7 +10529,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-f · ESSAI";
+    const APP_VERSION = "2026-11-14-h · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -10497,6 +10631,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-f. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-h. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
