@@ -57,6 +57,11 @@
     .mainnav-link{flex:0 0 auto;border:0;background:none;padding:9px 14px;border-radius:999px;
       font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
     .mainnav-link:hover{background:#f6f3f0;color:var(--text)}
+    .mainnav-out{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;
+      font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;white-space:nowrap;
+      border-left:1px solid var(--border);margin-left:6px;border-radius:0 999px 999px 0}
+    .mainnav-out:hover{background:#f6f3f0;color:var(--text)}
+    .mainnav-out.hidden{display:none}
     .mainnav-link.is-current{background:var(--soft);color:var(--orange-dark)}
     @media(max-width:620px){.mainnav{padding:6px 10px}.mainnav-link{padding:9px 11px;font-size:13px}}
     .install-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.48)}
@@ -1427,6 +1432,10 @@
       <button class="mainnav-link" data-vers="kitchen" type="button"><span class="mainnav-ico">🖨️</span>Cuisine</button>
       <button class="mainnav-link" data-vers="drivers" type="button"><span class="mainnav-ico">👥</span>Employés<span class="mainnav-badge is-soft hidden" data-badge="drivers"></span></button>
       <button class="mainnav-link" data-vers="establishment" type="button"><span class="mainnav-ico">🏪</span>Fiche</button>
+      <!-- Les autres outils Journia installés à côté du Planning. Le lien
+           n'apparaît que si la page existe : tous les établissements n'ont
+           pas tous les outils. -->
+      <a id="navStock" class="mainnav-out hidden" href="stock.html"><span class="mainnav-ico">📦</span>Stock</a>
     </nav>
 
     <main class="layout">
@@ -10428,6 +10437,16 @@ ${currentProfile?.name||""}`;
       renderDrivers()
     });
 
+    /* Journia Stock est une page à part, déposée à côté de celle-ci. On
+       ne montre son entrée que si elle répond. */
+    (async()=>{
+      try{
+        if(typeof fetch!=="function")return;
+        const reponse=await fetch("stock.html",{method:"HEAD",cache:"no-store"});
+        if(reponse.ok)document.getElementById("navStock").classList.remove("hidden")
+      }catch(error){ /* hors ligne, ou module non installé : pas d'entrée */ }
+    })();
+
     document.querySelectorAll(".mainnav-link").forEach(lien=>{
       lien.addEventListener("click",()=>showSection(lien.dataset.vers))
     });
@@ -11151,7 +11170,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-n";
+    const APP_VERSION = "2026-11-14-o";
     document.getElementById("driverAppVersion").textContent=APP_VERSION;
     document.querySelectorAll(".app-version").forEach(el=>{el.textContent=APP_VERSION});
 
