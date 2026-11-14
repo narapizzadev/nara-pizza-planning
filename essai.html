@@ -309,6 +309,95 @@
       .setup-step{grid-template-columns:34px minmax(0,1fr)}
       .setup-step .button{grid-column:2;justify-self:start}
     }
+    /* ===================================================================
+       ASSISTANT DE MISE EN SERVICE
+       Premier contact d'un nouveau client. Une question à la fois, plein
+       écran, rien d'autre à l'écran : ni menu, ni section, ni tentation
+       d'aller voir ailleurs avant d'avoir répondu.
+       =================================================================== */
+    .wizard{position:fixed;inset:0;z-index:60;overflow-y:auto;
+      background:radial-gradient(1200px 600px at 15% -10%,#fde8d4 0%,transparent 60%),
+                 radial-gradient(900px 500px at 100% 110%,#dce9fb 0%,transparent 55%),
+                 #fffaf5}
+    .wizard.hidden{display:none}
+    .wizard-shell{max-width:760px;margin:0 auto;padding:22px 20px 60px;min-height:100%;
+      display:flex;flex-direction:column}
+    .wizard-head{display:flex;align-items:center;gap:16px;margin-bottom:34px}
+    .wizard-logo{font-weight:800;font-size:19px;letter-spacing:-.4px;color:var(--orange-dark)}
+    /* Les points de progression tiennent sur une seule ligne quelle que
+       soit la largeur : une barre de progression qui revient à la ligne
+       ne dit plus rien du chemin parcouru. */
+    .wizard-dots{display:flex;gap:5px;flex:1;flex-wrap:nowrap;overflow:hidden}
+    .wizard-dot{flex:1 1 8px;max-width:28px;height:5px;border-radius:999px;background:#eadbc9}
+    .wizard-dot.is-done{background:var(--orange)}
+    .wizard-dot.is-now{background:var(--orange-dark);flex-grow:1.6}
+    .wizard-quit{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;
+      cursor:pointer;text-decoration:underline;padding:4px}
+    .wizard-body{flex:1}
+    .wizard-eyebrow{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.08em;
+      text-transform:uppercase;color:var(--orange-dark)}
+    .wizard-question{margin:0 0 12px;font-size:32px;line-height:1.15;letter-spacing:-.6px}
+    .wizard-hint{margin:0 0 26px;color:var(--muted);font-size:16px;line-height:1.55;max-width:60ch}
+    .wizard-answers{display:grid;gap:12px;margin-bottom:26px}
+    .wizard-card{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;
+      width:100%;text-align:left;padding:18px 20px;border:2px solid #efe1d2;border-radius:16px;
+      background:#fff;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+    .wizard-card:hover{border-color:var(--orange)}
+    .wizard-card.is-chosen{border-color:var(--orange-dark);box-shadow:0 0 0 4px rgba(242,140,69,.16)}
+    .wizard-card-icon{font-size:26px;line-height:1}
+    .wizard-card strong{display:block;font-size:17px}
+    .wizard-card small{display:block;margin-top:4px;color:var(--muted);line-height:1.45}
+    .wizard-card-check{justify-self:end;width:26px;height:26px;border-radius:50%;border:2px solid #e3d3c1;
+      display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+    .wizard-card.is-chosen .wizard-card-check{background:var(--orange-dark);border-color:var(--orange-dark)}
+    .wizard-field{display:grid;gap:7px}
+    .wizard-field label{font-weight:600;font-size:14px}
+    .wizard-field input,.wizard-field select{width:100%;padding:16px 16px;border:2px solid #efe1d2;
+      border-radius:14px;background:#fff;color:var(--text);font:inherit;font-size:17px}
+    .wizard-field input:focus,.wizard-field select:focus{outline:0;border-color:var(--orange-dark)}
+    .wizard-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+    .wizard-shortcuts{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}
+    .wizard-chip{border:2px solid #efe1d2;background:#fff;border-radius:999px;padding:9px 16px;
+      font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    .wizard-chip:hover{border-color:var(--orange)}
+    .wizard-day{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;
+      padding:10px 12px;border:2px solid #efe1d2;border-radius:14px;background:#fff}
+    .wizard-day strong{font-size:15px}
+    .wizard-pill{border:2px solid #efe1d2;background:#fff;border-radius:999px;padding:7px 14px;
+      font:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap}
+    .wizard-pill.is-on{background:var(--orange);border-color:var(--orange);color:#fff}
+    .wizard-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+    .wizard-row.has-pill{grid-template-columns:minmax(0,1fr) auto auto}
+    .wizard-row input{padding:13px 14px;border:2px solid #efe1d2;border-radius:12px;font:inherit;width:100%}
+    .wizard-remove{border:0;background:none;color:var(--muted);font:inherit;font-size:20px;
+      cursor:pointer;padding:0 8px;line-height:1}
+    .wizard-add{border:2px dashed #e3d3c1;background:none;border-radius:14px;padding:14px;
+      font:inherit;font-weight:700;color:var(--orange-dark);cursor:pointer;width:100%}
+    .wizard-foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .wizard-cta{border:0;border-radius:14px;padding:17px 34px;font:inherit;font-size:17px;font-weight:700;
+      background:var(--orange-dark);color:#fff;cursor:pointer}
+    .wizard-cta:disabled{background:#e6d5c4;cursor:default}
+    .wizard-back{border:0;background:none;color:var(--muted);font:inherit;font-size:15px;cursor:pointer;
+      text-decoration:underline;padding:8px}
+    .wizard-recap{display:grid;gap:9px;padding:20px;border:2px solid #efe1d2;border-radius:16px;background:#fff}
+    .wizard-recap div{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:12px;
+      padding-bottom:9px;border-bottom:1px solid #f3eae1}
+    .wizard-recap div:last-child{border:0;padding-bottom:0}
+    .wizard-recap span{color:var(--muted);font-size:14px}
+    .wizard-note{padding:16px 18px;border-radius:14px;background:#fff;border:2px solid #dce9fb;
+      color:#1a4f8a;line-height:1.5;margin-bottom:22px}
+    .wizard-count{display:inline-flex;align-items:baseline;gap:10px;margin-bottom:22px}
+    .wizard-count b{font-size:46px;line-height:1;color:var(--orange-dark)}
+    .wizard-people{display:grid;gap:8px;margin-bottom:20px}
+    .wizard-person{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;
+      padding:12px 15px;border:2px solid #efe1d2;border-radius:14px;background:#fff}
+    .wizard-person small{color:var(--muted);display:block}
+    @media(max-width:620px){
+      .wizard-question{font-size:26px}
+      .wizard-day{grid-template-columns:minmax(0,1fr) auto auto}
+      .wizard-recap div{grid-template-columns:minmax(0,1fr)}
+      .wizard-cta{width:100%;text-align:center}
+    }
     .next-service{margin-bottom:22px;border-color:#f0cdaa;background:linear-gradient(180deg,#fffaf5,#fff)}
     .next-service .panel-header{margin-bottom:12px;align-items:flex-start}
     .next-service h3{font-size:21px}
@@ -338,6 +427,20 @@
       .service-right{grid-column:1 / -1;justify-content:flex-start}
     }
     .dashboard-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+    /* La zone d'action : ce qu'il y a a faire maintenant, en haut, avant
+       tout le reste. Un backoffice qui se contente d'aligner des menus
+       laisse a l'utilisateur le soin de deviner son propre ordre du jour. */
+    .action-panel{margin-bottom:22px;border-color:#f0cdaa;
+      background:linear-gradient(180deg,#fff5e9,#fff)}
+    .action-eyebrow{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.09em;
+      text-transform:uppercase;color:var(--orange-dark)}
+    .action-panel h3{margin:0 0 7px;font-size:24px;letter-spacing:-.3px}
+    .action-panel>p.muted{margin:0;line-height:1.55}
+    .action-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+    .dash-group{margin-bottom:8px}
+    .dash-group>h4{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.09em;
+      text-transform:uppercase;color:var(--muted)}
+    .dash-group .dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));margin-bottom:22px}
     .dashboard-button{width:100%;display:flex;align-items:flex-start;gap:14px;text-align:left;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:14px;padding:18px}
     .dashboard-button:hover{border-color:var(--orange);background:#fff8f2}.dashboard-icon{font-size:26px;line-height:1;flex:0 0 auto}
     .dashboard-button span:last-child{display:flex;flex-direction:column;align-items:flex-start;flex:1}.dashboard-button small{margin-top:5px;color:var(--muted);font-weight:normal;line-height:1.35}
@@ -1187,8 +1290,18 @@
             </div>
             <span id="setupCount" class="service-chip"></span>
           </div>
+          <div class="form-actions" style="justify-content:flex-start;margin-bottom:4px">
+            <button id="setupResume" class="button button-ghost hidden" type="button">Me guider pas à pas</button>
+          </div>
           <div class="setup-progress"><span id="setupProgressBar" style="width:0%"></span></div>
           <div id="setupSteps" class="setup-steps"></div>
+        </section>
+
+        <section id="actionPanel" class="panel action-panel hidden">
+          <p id="actionEyebrow" class="action-eyebrow"></p>
+          <h3 id="actionTitle">—</h3>
+          <p id="actionDetail" class="muted"></p>
+          <div id="actionButtons" class="action-buttons"></div>
         </section>
 
         <section id="nextServicePanel" class="panel next-service hidden">
@@ -1206,16 +1319,31 @@
           <div id="nextServiceWarning" class="service-warn hidden"></div>
         </section>
 
-        <div class="dashboard-grid">
-          <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités des livreurs</small></span></button>
-          <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les employés</strong><small>Postes, comptes et notes internes</small></span></button>
-          <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Préparer les heures et le nombre de livreurs</small></span></button>
-          <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Comparer besoins, disponibilités et classement</small></span></button>
-          <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>Afficher et imprimer le planning final de la semaine</small></span></button>
-          <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement livreurs</strong><small>Consulter la version et les acceptations</small></span></button>
-          <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
-          <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
-          <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
+        <div class="dash-group">
+          <h4>La semaine</h4>
+          <div class="dashboard-grid">
+            <button id="openCreateWeek" class="dashboard-button" type="button"><span class="dashboard-icon">📅</span><span><strong>Créer une semaine</strong><small>Ouvrir les disponibilités de votre équipe</small></span></button>
+            <button id="openNeeds" class="dashboard-button" type="button"><span class="dashboard-icon">🕒</span><span><strong>Définir les besoins</strong><small>Les heures et le nombre de personnes par service</small></span></button>
+            <button id="openPlanning" class="dashboard-button" type="button"><span class="dashboard-icon">🧩</span><span><strong>Proposition de planning</strong><small>Générer, ajuster, valider et publier</small></span></button>
+            <button id="openKitchen" class="dashboard-button" type="button"><span class="dashboard-icon">🖨️</span><span><strong>Planning cuisine</strong><small>La feuille à afficher et à imprimer</small></span></button>
+          </div>
+        </div>
+
+        <div class="dash-group">
+          <h4>Mon équipe</h4>
+          <div class="dashboard-grid">
+            <button id="openDrivers" class="dashboard-button" type="button"><span class="dashboard-icon">👥</span><span><strong>Gérer les employés</strong><small>Comptes, postes et notes internes</small></span></button>
+            <button id="openRegulationAdmin" class="dashboard-button" type="button"><span class="dashboard-icon">📘</span><span><strong>Règlement interne</strong><small>La version en vigueur et qui l’a accepté</small></span></button>
+          </div>
+        </div>
+
+        <div class="dash-group">
+          <h4>Réglages</h4>
+          <div class="dashboard-grid">
+            <button id="openEstablishment" class="dashboard-button" type="button"><span class="dashboard-icon">🏪</span><span><strong>Fiche de l’établissement</strong><small id="establishmentButtonHint">Jours d’ouverture, horaires et véhicules</small></span></button>
+            <button id="openGarage" class="dashboard-button" type="button"><span class="dashboard-icon">🔧</span><span><strong>Véhicules indisponibles</strong><small>Pannes, garage, réparations en cours</small></span></button>
+            <button id="openHelp" class="dashboard-button" type="button"><span class="dashboard-icon">💡</span><span><strong>Aide du responsable</strong><small>Toutes les réponses, à relire quand vous voulez</small></span></button>
+          </div>
         </div>
 
         <section class="panel">
@@ -1564,7 +1692,7 @@
           </div>
           <div id="establishmentMethods" class="delivery-methods-grid"></div>
 
-          <div class="panel-header" style="margin-top:22px">
+          <div class="panel-header" id="positionsAnchor" style="margin-top:22px">
             <div>
               <h3>Postes de travail</h3>
               <p class="muted">Les métiers de votre maison : livreur, caissier, cuisine, téléphoniste. Chaque employé en occupe un, et chaque besoin en demande un.</p>
@@ -1576,7 +1704,7 @@
             <button id="addPosition" class="button button-ghost" type="button">Ajouter un poste</button>
           </div>
 
-          <div class="panel-header" style="margin-top:22px">
+          <div class="panel-header" id="fleetAnchor" style="margin-top:22px">
             <div>
               <h3>Parc de véhicules de l’établissement</h3>
               <p class="muted">Vos voitures et scooters, un par ligne. L’application évitera d’attribuer le même véhicule à deux livreurs sur le même service.</p>
@@ -1832,6 +1960,33 @@
         </section>
       </section>
 
+
+  <!-- =================================================================
+       ASSISTANT DE MISE EN SERVICE
+       Volontairement hors de #appView : quand il est affiché, l'application
+       entière est masquée. Pas de menu, pas de section, pas d'autre chemin
+       que de répondre à la question posée.
+       ================================================================= -->
+  <section id="wizard" class="wizard hidden">
+    <div class="wizard-shell">
+      <header class="wizard-head">
+        <span class="wizard-logo">Journia</span>
+        <div id="wizardDots" class="wizard-dots"></div>
+        <button id="wizardQuit" class="wizard-quit" type="button">Plus tard</button>
+      </header>
+      <div class="wizard-body">
+        <p id="wizardPhase" class="wizard-eyebrow"></p>
+        <h1 id="wizardQuestion" class="wizard-question"></h1>
+        <p id="wizardHint" class="wizard-hint"></p>
+        <div id="wizardAnswers" class="wizard-answers"></div>
+        <div id="wizardMessage" class="message"></div>
+        <div class="wizard-foot">
+          <button id="wizardNext" class="wizard-cta" type="button">Continuer</button>
+          <button id="wizardBack" class="wizard-back hidden" type="button">Revenir</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <section id="driverView" class="driver-app-shell dv-shell hidden">
 
@@ -2853,7 +3008,7 @@
 
     function showMessage(el,text,type){el.textContent=text;el.className=`message ${type}`}
     function clearMessage(el){el.textContent="";el.className="message"}
-    function showSection(name){
+    function showSection(name,ancre){
       currentSectionName=name;
       Object.values(sections).forEach(s=>s.classList.remove("active"));
       sections[name].classList.add("active");
@@ -2868,7 +3023,16 @@
       if(name==="establishment")prepareEstablishmentSection();
       if(name==="help")prepareHelpSection();
       if(name==="garage")prepareGarageSection();
-      if(name==="dashboard"){renderSetupGuide();refreshNextService()}
+      if(name==="dashboard"){renderSetupGuide();renderActionPanel();refreshNextService()}
+
+      // Une ancre : la fiche de l'établissement est longue, et arriver tout
+      // en haut quand on venait chercher les postes de travail oblige à
+      // deviner où ils se trouvent.
+      const cible=ancre&&document.getElementById(ancre);
+      if(cible){
+        cible.scrollIntoView({behavior:"smooth",block:"start"});
+        return
+      }
       window.scrollTo({top:0,behavior:"smooth"})
     }
     function showLogin(){loginView.classList.remove("hidden");appView.classList.add("hidden");driverView.classList.add("hidden")}
@@ -2885,11 +3049,10 @@
       // sont charges uniquement a l'ouverture de leur ecran.
       subscribeToWeeks();subscribeToDrivers();subscribeToNeeds();
 
-      // Première utilisation : on reste au tableau de bord, où le guide de
-      // mise en service donne l'ordre des opérations. Déposer quelqu'un dans
-      // un formulaire sans lui dire pourquoi est le meilleur moyen de le
-      // perdre dès la première minute.
-      showSection("dashboard")
+      // Première utilisation : l'assistant de mise en service prend la main,
+      // plein écran. Déposer quelqu'un dans un formulaire sans lui dire
+      // pourquoi est le meilleur moyen de le perdre dès la première minute.
+      if(!wizardPeutEtreOuvrir())showSection("dashboard")
     }
 
     async function loadUserProfile(user){
@@ -3062,11 +3225,26 @@
       }
     }
 
+    /* Création d'une semaine, pour le formulaire comme pour l'assistant. */
+    async function creerSemaine({startDate,endDate,deadlineDate,deadlineTime,
+      message="",deliveryMethods,open=true}){
+      const ref=await addDoc(collection(db,"weeks"),{
+        startDate,endDate,deadlineDate,deadlineTime,message,deliveryMethods,
+        status:open?"open":"draft",
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        createdByName:currentProfile.name||""
+      });
+      return ref.id
+    }
+
     function renderWeeks(snapshot){
       currentWeeks=[];
       snapshot.forEach(docSnap=>currentWeeks.push({id:docSnap.id,...docSnap.data()}));
       populateNeedsWeekSelect();
       renderSetupGuide();
+      renderActionPanel();
+      wizardRafraichir();
 
       if(currentWeeks.length===0){
         weekList.innerHTML='<div class="empty-state">Aucune semaine créée pour le moment.</div>';
@@ -3806,6 +3984,7 @@ ${currentProfile?.name||""}`;
         await loadEstablishmentConfig();
         renderEstablishmentForm();
         renderSetupGuide();
+        renderActionPanel();
         showMessage(messageEl,"La fiche a été enregistrée.","success")
       }catch(error){
         console.error(error);
@@ -3814,6 +3993,29 @@ ${currentProfile?.name||""}`;
         button.disabled=false;
         button.textContent="Enregistrer la fiche"
       }
+    }
+
+    /* Création d'un compte employé. Appelée par l'écran « Gérer les
+       employés » et par l'assistant de mise en service : un compte créé
+       par l'assistant est exactement un compte créé à la main. */
+    async function creerCompteEmploye({name,email,password,phone="",vehicle="",active=true,
+      role="driver",position,inPlanning=true}){
+      const credential=await createUserWithEmailAndPassword(driverCreatorAuth,email,password);
+      const userId=credential.user.uid;
+
+      await setDoc(doc(db,"users",userId),{
+        name,email,phone,vehicle,active,
+        role,
+        position:positionOf(position),
+        inPlanning,
+        mustChangePassword:true,
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        updatedAt:serverTimestamp()
+      });
+
+      await signOut(driverCreatorAuth);
+      return userId
     }
 
     function subscribeToDrivers(){
@@ -3838,6 +4040,8 @@ ${currentProfile?.name||""}`;
           // modification d'un livreur et coutait toute la collection.
           renderDrivers();
           renderSetupGuide();
+          renderActionPanel();
+          wizardRafraichir();
           repaintNextService()
         },
         error=>{
@@ -4210,8 +4414,27 @@ ${currentProfile?.name||""}`;
       }).format(date)
     }
 
+    /* Création d'un besoin, pour le formulaire comme pour l'assistant. */
+    async function creerBesoin({week,date,time,positionId,quantity,notes=""}){
+      const ref=await addDoc(collection(db,"needs"),{
+        weekId:week.id,
+        weekStartDate:week.startDate,
+        date,time,
+        positionId:positionOf(positionId),
+        quantity:Number(quantity),
+        notes,
+        createdAt:serverTimestamp(),
+        createdBy:auth.currentUser.uid,
+        createdByName:currentProfile.name||""
+      });
+      availabilityCache.delete(week.id);
+      return ref.id
+    }
+
     function renderNeeds(){
       renderSetupGuide();
+      renderActionPanel();
+      wizardRafraichir();
       const weekId=needsWeekSelect.value;
 
       if(!weekId){
@@ -6534,7 +6757,8 @@ ${currentProfile?.name||""}`;
           facultatif:true,
           fait:(config.positions||[]).length>0,
           bouton:"Déclarer les postes",
-          vers:"establishment"
+          vers:"establishment",
+          ancre:"positionsAnchor"
         },
         {
           titre:"Votre parc de véhicules",
@@ -6542,7 +6766,8 @@ ${currentProfile?.name||""}`;
           facultatif:true,
           fait:(config.fleet||[]).length>0,
           bouton:"Ajouter les véhicules",
-          vers:"establishment"
+          vers:"establishment",
+          ancre:"fleetAnchor"
         },
         {
           titre:"Votre équipe",
@@ -6594,6 +6819,11 @@ ${currentProfile?.name||""}`;
       document.getElementById("setupProgressBar").style.width=
         `${Math.round(faites/requises.length*100)}%`;
 
+      // Un responsable qui a renvoye l'assistant a plus tard doit pouvoir
+      // le rappeler : le guide reste la porte d'entree.
+      const reprendre=document.getElementById("setupResume");
+      if(reprendre)reprendre.classList.toggle("hidden",!establishmentConfigExists);
+
       // La première étape non faite est mise en avant : c'est la suivante.
       const prochaine=etapes.findIndex(etape=>!etape.fait&&!etape.facultatif);
       const liste=document.getElementById("setupSteps");
@@ -6612,9 +6842,1044 @@ ${currentProfile?.name||""}`;
           </span>
           <button class="button ${index===prochaine?"button-primary":"button-ghost"} setup-go" type="button">${escapeHtml(etape.fait?"Revoir":etape.bouton)}</button>
         `;
-        ligne.querySelector(".setup-go").addEventListener("click",()=>showSection(etape.vers));
+        ligne.querySelector(".setup-go").addEventListener("click",()=>showSection(etape.vers,etape.ancre));
         liste.appendChild(ligne)
       })
+    }
+
+    /* ===================================================================
+       ASSISTANT DE MISE EN SERVICE
+
+       Le premier contact d'un nouveau client avec Journia. Une question à
+       la fois, plein écran, rien d'autre de visible : ni menu, ni autre
+       écran. Les réponses sont proposées quand elles peuvent l'être —
+       personne n'a envie de taper « 11:00 » dans un champ vide.
+
+       L'assistant ne garde aucun état caché : sa position se déduit de ce
+       qui existe déjà — la fiche, l'équipe, les semaines, les besoins. On
+       peut donc le quitter et le reprendre une semaine plus tard, il
+       reprend exactement là où il s'était arrêté.
+       =================================================================== */
+    const WIZARD_PLUS_TARD = "journia.assistant.plusTard";
+
+    let wizardOuvert = false;
+    let wizardEtape = 0;
+    let wizardBrouillon = null;
+    let wizardOccupe = false;
+    let wizardValider = null;   // renvoie un message d'erreur, ou "" si tout va bien
+    let wizardAction = null;    // ce que fait le bouton principal quand il écrit
+
+    function wizardRemis(){
+      try{ return localStorage.getItem(WIZARD_PLUS_TARD)==="1" }catch(error){ return false }
+    }
+    function wizardMarquerRemis(valeur){
+      try{ valeur ? localStorage.setItem(WIZARD_PLUS_TARD,"1") : localStorage.removeItem(WIZARD_PLUS_TARD) }
+      catch(error){ /* navigation privée : l'assistant se reproposera, ce n'est pas grave */ }
+    }
+
+    function wizardMethodesEtablissement(){
+      return (wizardBrouillon?.deliveryMethods||[]).some(id=>id==="company_car"||id==="company_scooter")
+    }
+
+    function wizardNouveauBrouillon(){
+      wizardBrouillon = JSON.parse(JSON.stringify(
+        establishmentConfigExists ? establishmentConfig : DEFAULT_CONFIG
+      ));
+      if(!Array.isArray(wizardBrouillon.positions))wizardBrouillon.positions=[];
+      if(!Array.isArray(wizardBrouillon.fleet))wizardBrouillon.fleet=[];
+      // La fiche part avec les cinq moyens de livraison cochés, ce qui
+      // convient à un repli mais pas à une question : demander « avec quoi
+      // livrez-vous ? » en ayant déjà répondu « avec tout » invite à ne
+      // rien lire. L'assistant part donc d'une page blanche.
+      if(!establishmentConfigExists)wizardBrouillon.deliveryMethods=[];
+      wizardBrouillon.plusieursMetiers=(wizardBrouillon.positions||[]).length>0
+    }
+
+    /* ---------- Les étapes ---------- */
+
+    function wizardEtapes(){
+      const liste=[
+        {id:"intro",kind:"intro",phase:"Bienvenue",
+          question:"Mettons Journia à votre main.",
+          aide:"Une dizaine de questions, et votre premier planning est en route. Tout reste modifiable ensuite : rien de ce que vous répondez ici n'est définitif.",
+          cta:"Commencer"},
+
+        {id:"nom",kind:"texte",phase:"Votre établissement",
+          question:"Comment s’appelle votre établissement ?",
+          aide:"Ce nom apparaîtra sur la feuille de cuisine et dans les messages envoyés à votre équipe.",
+          placeholder:"Nara Pizza",
+          lire:()=>wizardBrouillon.name||"",
+          ecrire:valeur=>{wizardBrouillon.name=valeur.trim()},
+          valide:()=>wizardBrouillon.name?"":"Indiquez le nom de votre établissement."},
+
+        {id:"jours",kind:"jours",phase:"Votre établissement",
+          question:"Quand êtes-vous ouvert ?",
+          aide:"Touchez « Midi » ou « Soir » pour ouvrir ou fermer un service. Un service fermé ne sera jamais proposé, ni à vous, ni à votre équipe.",
+          valide:()=>wizardBrouillon.openingDays.some(jour=>jour.midday||jour.evening)
+            ?"":"Ouvrez au moins un service dans la semaine."},
+
+        {id:"heures",kind:"heures",phase:"Votre établissement",
+          question:"À quelle heure vos livreurs arrivent-ils ?",
+          aide:"La première et la dernière arrivée possible. Entre les deux, chacun choisit son heure — c’est ce qui permet d’échelonner les arrivées plutôt que de faire venir tout le monde en même temps.",
+          valide:()=>{
+            const b=wizardBrouillon;
+            if(minutesOf(b.midday.end)<minutesOf(b.midday.start)
+              ||minutesOf(b.evening.end)<minutesOf(b.evening.start))
+              return "La dernière arrivée doit venir après la première.";
+            if(minutesOf(b.midday.end)>=minutesOf(b.evening.start))
+              return "Le service du soir doit commencer après la fin du service de midi.";
+            return ""
+          }},
+
+        {id:"moyens",kind:"moyens",phase:"Votre établissement",
+          question:"Avec quoi vos livreurs livrent-ils ?",
+          aide:"Cochez tout ce qui existe chez vous. Vous pourrez restreindre semaine par semaine — l’hiver, par exemple, en n’autorisant que les voitures.",
+          valide:()=>(wizardBrouillon.deliveryMethods||[]).length
+            ?"":"Cochez au moins un moyen de livraison."},
+
+        {id:"postes",kind:"postes",phase:"Votre établissement",
+          question:"Votre équipe fait-elle un seul métier ?",
+          aide:"Si tout le monde livre, il n’y a rien à déclarer. Sinon, nommez les métiers de votre maison : chaque employé en occupera un, et chaque besoin en demandera un.",
+          valide:()=>{
+            if(!wizardBrouillon.plusieursMetiers)return "";
+            const liste=wizardBrouillon.positions||[];
+            // Une ligne vide ne disparaît pas en silence : on demande de la
+            // nommer ou de la retirer. Enregistrer sans rien dire laisserait
+            // croire qu'un métier a été créé.
+            if(liste.some(poste=>!(poste.name||"").trim()))
+              return "Nommez ce métier, ou retirez la ligne.";
+            return liste.length>=2
+              ?""
+              :"Nommez au moins deux métiers, ou revenez au choix « tout le monde livre »."
+          }}
+      ];
+
+      if(wizardMethodesEtablissement()){
+        liste.push({id:"vehicules",kind:"vehicules",phase:"Votre établissement",
+          question:"Quels véhicules mettez-vous à disposition ?",
+          aide:"Donnez-leur le nom que votre équipe emploie déjà — souvent les trois derniers chiffres de la plaque : « Voiture 911 ». C’est ce nom, et lui seul, qui s’imprimera sur la feuille de cuisine.",
+          valide:()=>""})
+      }
+
+      liste.push(
+        {id:"recap",kind:"recap",phase:"Votre établissement",
+          question:"Voici votre fiche. Est-ce bien cela ?",
+          aide:"Vous pourrez la reprendre à tout moment depuis le tableau de bord.",
+          cta:"Enregistrer ma fiche"},
+
+        {id:"equipe",kind:"equipe",phase:"Votre équipe",
+          question:"Ajoutons votre équipe.",
+          aide:"Un compte par personne, avec sa propre adresse e-mail. Chacun recevra un mot de passe provisoire et choisira le sien à la première connexion.",
+          cta:"Continuer"},
+
+        {id:"semaine",kind:"semaine",phase:"Votre première semaine",
+          question:"Quelle semaine voulez-vous planifier ?",
+          aide:"Elle s’ouvre aussitôt : votre équipe pourra envoyer ses disponibilités jusqu’à la date limite.",
+          cta:"Ouvrir cette semaine"},
+
+        {id:"besoins",kind:"besoins",phase:"Votre première semaine",
+          question:"Combien de personnes par service ?",
+          aide:"Une estimation suffit pour commencer : vous ajusterez service par service ensuite. L’application cherchera à pourvoir ce nombre.",
+          cta:"Enregistrer mes besoins"},
+
+        {id:"attente",kind:"attente",phase:"Votre premier planning",
+          question:"Votre équipe a la parole.",
+          aide:"Chacun répond depuis son téléphone. Vous n’avez plus rien à faire jusqu’à la date limite — et vous pouvez fermer cette page.",
+          cta:"Ouvrir la proposition de planning"},
+
+        {id:"fin",kind:"fin",phase:"Votre premier planning",
+          question:"C’est en place.",
+          aide:"Votre premier planning est publié, chacun connaît ses horaires et la feuille de cuisine est prête à imprimer. La semaine prochaine, il ne vous restera que trois gestes : ouvrir la semaine, générer, publier.",
+          cta:"Aller au tableau de bord"}
+      );
+
+      return liste
+    }
+
+    /* La position de l'assistant se déduit des données, jamais d'un
+       marqueur : on ne peut donc pas se retrouver renvoyé à une étape
+       déjà faite, ni coincé sur une étape qu'on vient de terminer. */
+    function wizardPositionUtile(){
+      const etapes=wizardEtapes();
+      const vers=id=>Math.max(0,etapes.findIndex(etape=>etape.id===id));
+
+      if(!establishmentConfigExists||!(establishmentConfig.name||"").trim())return 0;
+      if(currentDrivers.length===0)return vers("equipe");
+      if(currentWeeks.length===0)return vers("semaine");
+      if(currentNeeds.length===0)return vers("besoins");
+      if(currentWeeks.some(semaine=>semaine.status==="closed"))return vers("fin");
+      return vers("attente")
+    }
+
+    function wizardTermine(){
+      return currentWeeks.some(semaine=>semaine.status==="closed")
+    }
+
+    /* ---------- L'écran ---------- */
+
+    function wizardOuvrir(depuisLeDebut){
+      wizardNouveauBrouillon();
+      wizardEtape=depuisLeDebut?0:wizardPositionUtile();
+      wizardOuvert=true;
+      wizardMarquerRemis(false);
+      document.getElementById("appView").classList.add("hidden");
+      document.getElementById("wizard").classList.remove("hidden");
+      wizardRendre()
+    }
+
+    function wizardFermer(remisAPlusTard){
+      wizardOuvert=false;
+      document.getElementById("wizard").classList.add("hidden");
+      document.getElementById("appView").classList.remove("hidden");
+      if(remisAPlusTard)wizardMarquerRemis(true);
+      showSection("dashboard")
+    }
+
+    /* Les données arrivent une fraction de seconde après l'écriture : une
+       semaine créée, un compte créé, un besoin enregistré. L'assistant doit
+       alors se redessiner — sinon il affiche encore l'étape d'avant. On
+       s'abstient tant que quelqu'un est en train de taper, et on conserve
+       le message à l'écran : c'est parfois lui qui porte le mot de passe
+       provisoire d'un employé. */
+    function wizardRafraichir(){
+      if(!wizardOuvert)return;
+      const etapes=wizardEtapes();
+      const etape=etapes[Math.min(wizardEtape,etapes.length-1)];
+      if(!etape||!["equipe","semaine","besoins","attente","fin"].includes(etape.kind))return;
+
+      const actif=document.activeElement;
+      const cadre=document.getElementById("wizard");
+      if(actif&&actif.tagName==="INPUT"&&cadre&&cadre.contains(actif))return;
+
+      const zone=document.getElementById("wizardMessage");
+      const texte=zone?zone.textContent:"";
+      const classe=zone?zone.className:"";
+      wizardRendre();
+      const encore=document.getElementById("wizardMessage");
+      if(encore&&texte){encore.textContent=texte;encore.className=classe}
+    }
+
+    function wizardAller(pas){
+      const etapes=wizardEtapes();
+      wizardEtape=Math.min(etapes.length-1,Math.max(0,wizardEtape+pas));
+      wizardRendre()
+    }
+
+    function wizardMessage(texte,type){
+      const zone=document.getElementById("wizardMessage");
+      if(!zone)return;
+      if(!texte){zone.textContent="";zone.className="message";return}
+      zone.textContent=texte;zone.className=`message ${type||"error"}`
+    }
+
+    function wizardCarte({icone,titre,detail,choisi,surClic}){
+      const carte=document.createElement("button");
+      carte.type="button";
+      carte.className=`wizard-card${choisi?" is-chosen":""}`;
+      carte.innerHTML=`
+        ${icone?`<span class="wizard-card-icon">${icone}</span>`:'<span></span>'}
+        <span>
+          <strong>${escapeHtml(titre)}</strong>
+          ${detail?`<small>${escapeHtml(detail)}</small>`:""}
+        </span>
+        <span class="wizard-card-check">${choisi?"✓":""}</span>
+      `;
+      carte.addEventListener("click",surClic);
+      return carte
+    }
+
+    function wizardRendre(){
+      const etapes=wizardEtapes();
+      const etape=etapes[Math.min(wizardEtape,etapes.length-1)];
+      if(!etape)return;
+
+      wizardValider=etape.valide||null;
+      wizardAction=null;
+
+      const points=document.getElementById("wizardDots");
+      points.innerHTML="";
+      etapes.forEach((autre,index)=>{
+        const point=document.createElement("span");
+        point.className="wizard-dot"
+          +(index<wizardEtape?" is-done":"")
+          +(index===wizardEtape?" is-now":"");
+        points.appendChild(point)
+      });
+
+      document.getElementById("wizardPhase").textContent=
+        `${etape.phase} · étape ${wizardEtape+1} sur ${etapes.length}`;
+      document.getElementById("wizardQuestion").textContent=etape.question;
+      document.getElementById("wizardHint").textContent=etape.aide||"";
+      wizardMessage("");
+
+      const zone=document.getElementById("wizardAnswers");
+      zone.innerHTML="";
+      const bouton=document.getElementById("wizardNext");
+      bouton.textContent=etape.cta||"Continuer";
+      bouton.disabled=false;
+      document.getElementById("wizardBack").classList.toggle("hidden",wizardEtape===0);
+
+      const rendus={
+        intro:wizardRendreIntro,texte:wizardRendreTexte,jours:wizardRendreJours,
+        heures:wizardRendreHeures,moyens:wizardRendreMoyens,postes:wizardRendrePostes,
+        vehicules:wizardRendreVehicules,recap:wizardRendreRecap,equipe:wizardRendreEquipe,
+        semaine:wizardRendreSemaine,besoins:wizardRendreBesoins,attente:wizardRendreAttente,
+        fin:wizardRendreFin
+      };
+      (rendus[etape.kind]||(()=>{}))(zone,etape);
+      window.scrollTo({top:0,behavior:"smooth"})
+    }
+
+    function wizardRendreIntro(zone){
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.innerHTML=`
+        Ce que nous allons faire, dans l’ordre : <strong>votre fiche</strong>
+        (jours, horaires, véhicules), puis <strong>votre équipe</strong>,
+        puis <strong>votre première semaine</strong>. Ensuite, ce sont vos
+        employés qui travaillent : ils répondent depuis leur téléphone.
+      `;
+      zone.appendChild(note)
+    }
+
+    function wizardRendreTexte(zone,etape){
+      const champ=document.createElement("div");
+      champ.className="wizard-field";
+      const input=document.createElement("input");
+      input.type="text";
+      input.id="wizardText";
+      input.value=etape.lire();
+      input.placeholder=etape.placeholder||"";
+      input.addEventListener("input",()=>etape.ecrire(input.value));
+      input.addEventListener("keydown",event=>{if(event.key==="Enter")wizardSuivant()});
+      champ.appendChild(input);
+      zone.appendChild(champ);
+      setTimeout(()=>input.focus(),30)
+    }
+
+    function wizardRendreJours(zone){
+      const raccourcis=[
+        {titre:"Ouvert tous les jours",jours:[1,2,3,4,5,6,0],midi:true,soir:true},
+        {titre:"Fermé le lundi",jours:[2,3,4,5,6,0],midi:true,soir:true},
+        {titre:"Le soir seulement",jours:[1,2,3,4,5,6,0],midi:false,soir:true}
+      ];
+      const barre=document.createElement("div");
+      barre.className="wizard-shortcuts";
+      raccourcis.forEach(raccourci=>{
+        const puce=document.createElement("button");
+        puce.type="button";
+        puce.className="wizard-chip";
+        puce.textContent=raccourci.titre;
+        puce.addEventListener("click",()=>{
+          wizardBrouillon.openingDays=[0,1,2,3,4,5,6].map((rien,index)=>({
+            midday:raccourci.jours.includes(index)&&raccourci.midi,
+            evening:raccourci.jours.includes(index)&&raccourci.soir
+          }));
+          wizardRendre()
+        });
+        barre.appendChild(puce)
+      });
+      zone.appendChild(barre);
+
+      [1,2,3,4,5,6,0].forEach(index=>{
+        const jour=wizardBrouillon.openingDays[index]||{midday:false,evening:false};
+        const ligne=document.createElement("div");
+        ligne.className="wizard-day";
+        ligne.innerHTML=`<strong>${WEEKDAY_NAMES[index]}</strong>`;
+        [["midday","Midi"],["evening","Soir"]].forEach(([clef,libelle])=>{
+          const pilule=document.createElement("button");
+          pilule.type="button";
+          pilule.className=`wizard-pill${jour[clef]?" is-on":""}`;
+          pilule.textContent=libelle;
+          pilule.dataset.jour=`${index}-${clef}`;
+          pilule.addEventListener("click",()=>{
+            wizardBrouillon.openingDays[index]={...jour,[clef]:!jour[clef]};
+            wizardRendre()
+          });
+          ligne.appendChild(pilule)
+        });
+        zone.appendChild(ligne)
+      })
+    }
+
+    function wizardRendreHeures(zone){
+      const modeles=[
+        {titre:"Arrivées échelonnées",detail:"Midi de 11:00 à 12:00 · soir de 18:00 à 19:30",
+         midi:{start:"11:00",end:"12:00"},soir:{start:"18:00",end:"19:30"}},
+        {titre:"Tout le monde à la même heure",detail:"Midi à 11:00 · soir à 18:00",
+         midi:{start:"11:00",end:"11:00"},soir:{start:"18:00",end:"18:00"}}
+      ];
+      modeles.forEach(modele=>{
+        const choisi=wizardBrouillon.midday.start===modele.midi.start
+          &&wizardBrouillon.midday.end===modele.midi.end
+          &&wizardBrouillon.evening.start===modele.soir.start
+          &&wizardBrouillon.evening.end===modele.soir.end;
+        zone.appendChild(wizardCarte({icone:"🕒",titre:modele.titre,detail:modele.detail,choisi,
+          surClic:()=>{
+            wizardBrouillon.midday={...wizardBrouillon.midday,...modele.midi};
+            wizardBrouillon.evening={...wizardBrouillon.evening,...modele.soir};
+            wizardRendre()
+          }}))
+      });
+
+      const grille=document.createElement("div");
+      grille.className="wizard-grid";
+      [["Midi — première arrivée","midday","start"],["Midi — dernière arrivée","midday","end"],
+       ["Soir — première arrivée","evening","start"],["Soir — dernière arrivée","evening","end"]]
+        .forEach(([libelle,service,borne])=>{
+          const champ=document.createElement("div");
+          champ.className="wizard-field";
+          const id=`wizard-${service}-${borne}`;
+          champ.innerHTML=`<label for="${id}">${libelle}</label>`;
+          const input=document.createElement("input");
+          input.type="time";input.id=id;input.value=wizardBrouillon[service][borne];
+          input.addEventListener("change",()=>{
+            wizardBrouillon[service]={...wizardBrouillon[service],[borne]:input.value};
+            wizardMessage("")
+          });
+          champ.appendChild(input);
+          grille.appendChild(champ)
+        });
+      zone.appendChild(grille)
+    }
+
+    function wizardRendreMoyens(zone){
+      DELIVERY_METHODS.forEach(methode=>{
+        const choisi=(wizardBrouillon.deliveryMethods||[]).includes(methode.id);
+        zone.appendChild(wizardCarte({icone:methode.icon,titre:methode.label,choisi,
+          surClic:()=>{
+            const liste=new Set(wizardBrouillon.deliveryMethods||[]);
+            liste.has(methode.id)?liste.delete(methode.id):liste.add(methode.id);
+            wizardBrouillon.deliveryMethods=[...liste];
+            wizardRendre()
+          }}))
+      })
+    }
+
+    function wizardRendrePostes(zone){
+      zone.appendChild(wizardCarte({icone:"🛵",titre:"Tout le monde livre",
+        detail:"Un seul métier : inutile de déclarer quoi que ce soit.",
+        choisi:!wizardBrouillon.plusieursMetiers,
+        surClic:()=>{
+          wizardBrouillon.plusieursMetiers=false;
+          wizardBrouillon.positions=[];
+          wizardRendre()
+        }}));
+
+      zone.appendChild(wizardCarte({icone:"👥",titre:"Plusieurs métiers",
+        detail:"Livreur, caissier, cuisine, téléphoniste…",
+        choisi:wizardBrouillon.plusieursMetiers,
+        surClic:()=>{
+          wizardBrouillon.plusieursMetiers=true;
+          if((wizardBrouillon.positions||[]).length===0){
+            wizardBrouillon.positions=[
+              {id:"livreur",name:"Livreur",requiresVehicle:true,active:true},
+              {id:newPositionId(),name:"Cuisine",requiresVehicle:false,active:true}
+            ]
+          }
+          wizardRendre()
+        }}));
+
+      if(!wizardBrouillon.plusieursMetiers)return;
+
+      const liste=document.createElement("div");
+      liste.className="wizard-answers";
+      liste.id="wizardPositions";
+      (wizardBrouillon.positions||[]).forEach((poste,index)=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-row has-pill";
+        const nom=document.createElement("input");
+        nom.type="text";nom.value=poste.name||"";nom.placeholder="Nom du métier";
+        nom.className="wizard-position-name";
+        nom.addEventListener("input",()=>{wizardBrouillon.positions[index].name=nom.value});
+        ligne.appendChild(nom);
+
+        const vehicule=document.createElement("button");
+        vehicule.type="button";
+        vehicule.className=`wizard-pill${poste.requiresVehicle!==false?" is-on":""}`;
+        vehicule.textContent="🚗 véhicule";
+        vehicule.title="Ce métier exige-t-il un véhicule ?";
+        vehicule.addEventListener("click",()=>{
+          wizardBrouillon.positions[index].requiresVehicle=poste.requiresVehicle===false;
+          wizardRendre()
+        });
+        ligne.appendChild(vehicule);
+
+        const retirer=document.createElement("button");
+        retirer.type="button";
+        retirer.className="wizard-remove";
+        retirer.textContent="×";
+        retirer.title="Retirer ce métier";
+        retirer.addEventListener("click",()=>{
+          wizardBrouillon.positions.splice(index,1);
+          wizardRendre()
+        });
+        ligne.appendChild(retirer);
+        liste.appendChild(ligne)
+      });
+
+      const ajouter=document.createElement("button");
+      ajouter.type="button";
+      ajouter.className="wizard-add";
+      ajouter.id="wizardAddPosition";
+      ajouter.textContent="+ Ajouter un métier";
+      ajouter.addEventListener("click",()=>{
+        wizardBrouillon.positions.push({id:newPositionId(),name:"",requiresVehicle:false,active:true});
+        wizardRendre()
+      });
+      liste.appendChild(ajouter);
+      zone.appendChild(liste)
+    }
+
+    function wizardRendreVehicules(zone){
+      const types=DELIVERY_METHODS.filter(methode=>
+        methode.id==="company_car"||methode.id==="company_scooter")
+        .filter(methode=>(wizardBrouillon.deliveryMethods||[]).includes(methode.id));
+
+      (wizardBrouillon.fleet||[]).forEach((unite,index)=>{
+        const ligne=document.createElement("div");
+        ligne.className="wizard-row";
+        const nom=document.createElement("input");
+        nom.type="text";nom.value=unite.name||"";nom.placeholder="Voiture 911";
+        nom.className="wizard-fleet-name";
+        nom.addEventListener("input",()=>{wizardBrouillon.fleet[index].name=nom.value});
+        ligne.appendChild(nom);
+
+        const retirer=document.createElement("button");
+        retirer.type="button";
+        retirer.className="wizard-remove";
+        retirer.textContent="×";
+        retirer.title="Retirer ce véhicule";
+        retirer.addEventListener("click",()=>{
+          wizardBrouillon.fleet.splice(index,1);
+          wizardRendre()
+        });
+        ligne.appendChild(retirer);
+        zone.appendChild(ligne)
+      });
+
+      types.forEach(methode=>{
+        const ajouter=document.createElement("button");
+        ajouter.type="button";
+        ajouter.className="wizard-add";
+        ajouter.dataset.type=methode.id;
+        ajouter.textContent=`+ Ajouter ${methode.id==="company_car"?"une voiture":"un scooter"}`;
+        ajouter.addEventListener("click",()=>{
+          const meme=(wizardBrouillon.fleet||[]).filter(unite=>unite.type===methode.id).length;
+          wizardBrouillon.fleet.push({
+            id:newFleetId(),type:methode.id,
+            name:`${methode.id==="company_car"?"Voiture":"Scooter"} ${meme+1}`,
+            active:true
+          });
+          wizardRendre()
+        });
+        zone.appendChild(ajouter)
+      })
+    }
+
+    function wizardRendreRecap(zone){
+      const b=wizardBrouillon;
+      const ouverts=[1,2,3,4,5,6,0]
+        .filter(index=>b.openingDays[index]&&(b.openingDays[index].midday||b.openingDays[index].evening))
+        .map(index=>WEEKDAY_NAMES[index].slice(0,3));
+      const lignes=[
+        ["Établissement",b.name||"—"],
+        ["Jours ouverts",ouverts.length?ouverts.join(", "):"aucun"],
+        ["Arrivées midi",`${b.midday.start} → ${b.midday.end}`],
+        ["Arrivées soir",`${b.evening.start} → ${b.evening.end}`],
+        ["Moyens de livraison",(b.deliveryMethods||[]).map(deliveryMethodLabel).join(" · ")||"—"],
+        ["Métiers",b.plusieursMetiers
+          ?(b.positions||[]).map(poste=>poste.name).filter(Boolean).join(", ")
+          :"tout le monde livre"],
+        ["Véhicules",(b.fleet||[]).map(unite=>unite.name).filter(Boolean).join(", ")||"aucun"]
+      ];
+      const tableau=document.createElement("div");
+      tableau.className="wizard-recap";
+      tableau.id="wizardRecap";
+      lignes.forEach(([libelle,valeur])=>{
+        const ligne=document.createElement("div");
+        ligne.innerHTML=`<span>${escapeHtml(libelle)}</span><strong>${escapeHtml(valeur)}</strong>`;
+        tableau.appendChild(ligne)
+      });
+      zone.appendChild(tableau);
+
+      wizardAction=async()=>{
+        const aGarder=(wizardBrouillon.positions||[])
+          .filter(poste=>(poste.name||"").trim())
+          .map(poste=>({...poste,name:poste.name.trim()}));
+        const fiche={...wizardBrouillon,positions:wizardBrouillon.plusieursMetiers?aGarder:[]};
+        delete fiche.plusieursMetiers;
+        fiche.fleet=(fiche.fleet||[]).filter(unite=>(unite.name||"").trim());
+
+        // On passe par la fiche et par sa fonction d'enregistrement : un
+        // établissement configuré par l'assistant est exactement un
+        // établissement configuré à la main.
+        establishmentConfig=fiche;
+        renderEstablishmentForm();
+        await saveEstablishmentConfig();
+
+        const retour=document.getElementById("establishmentMessage");
+        if(retour.className.includes("error")){
+          await loadEstablishmentConfig();
+          renderEstablishmentForm();
+          throw new Error(retour.textContent)
+        }
+        wizardAller(1)
+      }
+    }
+
+    function wizardRendreEquipe(zone){
+      if(currentDrivers.length||currentStaff.length>1){
+        const gens=document.createElement("div");
+        gens.className="wizard-people";
+        gens.id="wizardPeople";
+        currentDrivers.forEach(employe=>{
+          const ligne=document.createElement("div");
+          ligne.className="wizard-person";
+          ligne.innerHTML=`
+            <span class="wizard-card-icon">✓</span>
+            <span><strong>${escapeHtml(employe.name||"—")}</strong>
+              <small>${escapeHtml(employe.email||"")}${severalPositions()?" · "+escapeHtml(positionLabel(positionOf(employe.position))):""}</small></span>
+            <span></span>`;
+          gens.appendChild(ligne)
+        });
+        zone.appendChild(gens)
+      }
+
+      const grille=document.createElement("div");
+      grille.className="wizard-grid";
+      grille.innerHTML=`
+        <div class="wizard-field"><label for="wizardPersonName">Prénom et nom</label>
+          <input type="text" id="wizardPersonName" placeholder="Antonio Rossi"></div>
+        <div class="wizard-field"><label for="wizardPersonEmail">Adresse e-mail</label>
+          <input type="email" id="wizardPersonEmail" placeholder="antonio@exemple.ch"></div>`;
+      zone.appendChild(grille);
+
+      if(severalPositions()){
+        const champ=document.createElement("div");
+        champ.className="wizard-field";
+        champ.innerHTML=`<label for="wizardPersonPosition">Son métier</label>`;
+        const select=document.createElement("select");
+        select.id="wizardPersonPosition";
+        positions().forEach(poste=>{
+          const option=document.createElement("option");
+          option.value=poste.id;option.textContent=poste.name;
+          select.appendChild(option)
+        });
+        champ.appendChild(select);
+        zone.appendChild(champ)
+      }
+
+      const ajouter=document.createElement("button");
+      ajouter.type="button";
+      ajouter.className="wizard-add";
+      ajouter.id="wizardAddPerson";
+      ajouter.textContent="+ Créer ce compte";
+      ajouter.addEventListener("click",()=>wizardCreerPersonne(ajouter));
+      zone.appendChild(ajouter);
+
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.style.marginTop="18px";
+      note.textContent="Chaque compte reçoit un mot de passe provisoire, affiché ici après la création. Vous pourrez aussi envoyer à chacun un lien pour choisir son mot de passe lui-même.";
+      zone.appendChild(note);
+
+      document.getElementById("wizardNext").disabled=currentDrivers.length===0
+    }
+
+    async function wizardCreerPersonne(bouton){
+      const nom=document.getElementById("wizardPersonName").value.trim();
+      const courriel=document.getElementById("wizardPersonEmail").value.trim().toLowerCase();
+      const poste=document.getElementById("wizardPersonPosition")?.value;
+
+      if(!nom){wizardMessage("Indiquez le prénom et le nom.");return}
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(courriel)){wizardMessage("Cette adresse e-mail ne semble pas valide.");return}
+      if(currentDrivers.concat(currentStaff).some(gens=>(gens.email||"").toLowerCase()===courriel)){
+        wizardMessage("Un compte existe déjà avec cette adresse.");return
+      }
+
+      wizardMessage("");
+      bouton.disabled=true;
+      bouton.textContent="Création…";
+      const motDePasse=motDePasseProvisoire();
+
+      try{
+        await creerCompteEmploye({
+          name:nom,email:courriel,password:motDePasse,
+          position:positionOf(poste)
+        });
+        wizardMessage(`Compte créé pour ${nom}. Mot de passe provisoire : ${motDePasse}`,"success");
+        document.getElementById("wizardPersonName").value="";
+        document.getElementById("wizardPersonEmail").value="";
+        document.getElementById("wizardNext").disabled=false
+      }catch(error){
+        console.error(error);
+        wizardMessage(`Impossible de créer ce compte : ${error.code||error.message}`)
+      }finally{
+        bouton.disabled=false;
+        bouton.textContent="+ Créer ce compte"
+      }
+    }
+
+    function motDePasseProvisoire(){
+      const lettres="abcdefghijkmnpqrstuvwxyz";
+      const chiffres="23456789";
+      let sortie="";
+      for(let index=0;index<4;index+=1)sortie+=lettres[Math.floor(Math.random()*lettres.length)];
+      for(let index=0;index<4;index+=1)sortie+=chiffres[Math.floor(Math.random()*chiffres.length)];
+      return sortie
+    }
+
+    function wizardLundiProchain(decalage){
+      const aujourdhui=new Date();
+      const jour=aujourdhui.getDay();
+      const versLundi=(8-jour)%7||7;
+      const lundi=new Date(aujourdhui);
+      lundi.setDate(aujourdhui.getDate()+versLundi+7*(decalage||0));
+      return lundi
+    }
+
+    function wizardIso(date){
+      return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`
+    }
+
+    function wizardRendreSemaine(zone){
+      const choix=[0,1].map(decalage=>{
+        const lundi=wizardLundiProchain(decalage);
+        const dimanche=new Date(lundi);
+        dimanche.setDate(lundi.getDate()+6);
+        return {
+          debut:wizardIso(lundi),
+          fin:wizardIso(dimanche),
+          titre:decalage===0?"La semaine prochaine":"Dans deux semaines",
+          detail:`Du ${formatDate(wizardIso(lundi))} au ${formatDate(wizardIso(dimanche))}`
+        }
+      });
+
+      if(!wizardBrouillon.semaineChoisie)wizardBrouillon.semaineChoisie=choix[0];
+
+      choix.forEach(option=>{
+        zone.appendChild(wizardCarte({icone:"📅",titre:option.titre,detail:option.detail,
+          choisi:wizardBrouillon.semaineChoisie.debut===option.debut,
+          surClic:()=>{wizardBrouillon.semaineChoisie=option;wizardRendre()}}))
+      });
+
+      const limite=document.createElement("div");
+      limite.className="wizard-field";
+      limite.innerHTML=`<label for="wizardDeadline">Jusqu’à quand votre équipe peut-elle répondre ?</label>`;
+      const input=document.createElement("input");
+      input.type="date";input.id="wizardDeadline";
+      const parDefaut=new Date(`${wizardBrouillon.semaineChoisie.debut}T12:00:00`);
+      parDefaut.setDate(parDefaut.getDate()-3);
+      input.value=wizardBrouillon.limiteChoisie||wizardIso(parDefaut);
+      input.addEventListener("change",()=>{wizardBrouillon.limiteChoisie=input.value});
+      limite.appendChild(input);
+      zone.appendChild(limite);
+
+      wizardAction=async()=>{
+        const semaine=wizardBrouillon.semaineChoisie;
+        const deja=currentWeeks.find(autre=>autre.startDate===semaine.debut);
+        if(deja){wizardAller(1);return}
+
+        await creerSemaine({
+          startDate:semaine.debut,
+          endDate:semaine.fin,
+          deadlineDate:document.getElementById("wizardDeadline").value,
+          deadlineTime:establishmentConfig.defaultDeadlineTime||"18:00",
+          message:"",
+          deliveryMethods:(establishmentConfig.deliveryMethods||[]).slice(),
+          open:true
+        });
+        wizardAller(1)
+      }
+    }
+
+    function wizardRendreBesoins(zone){
+      const semaine=currentWeeks
+        .slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)))
+        .find(autre=>autre.status!=="closed")||currentWeeks[0];
+
+      if(!semaine){
+        zone.innerHTML='<div class="wizard-note">La semaine vient d’être ouverte, elle arrive…</div>';
+        document.getElementById("wizardNext").disabled=true;
+        return
+      }
+
+      if(!wizardBrouillon.parService)wizardBrouillon.parService=2;
+
+      [1,2,3,4].forEach(nombre=>{
+        zone.appendChild(wizardCarte({
+          icone:"👤",
+          titre:`${nombre} personne${nombre>1?"s":""} par service`,
+          detail:nombre===1?"Un seul renfort à la fois.":"",
+          choisi:wizardBrouillon.parService===nombre,
+          surClic:()=>{wizardBrouillon.parService=nombre;wizardRendre()}
+        }))
+      });
+
+      const services=wizardServicesDeLaSemaine(semaine);
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.id="wizardNeedsNote";
+      note.innerHTML=`Cette semaine compte <strong>${services.length} service${services.length>1?"s":""}</strong>
+        ouverts. Nous allons donc demander
+        <strong>${services.length*wizardBrouillon.parService} présence${services.length*wizardBrouillon.parService>1?"s":""}</strong>
+        au total, que vous pourrez ajuster service par service.`;
+      zone.appendChild(note);
+
+      wizardAction=async()=>{
+        const quantite=wizardBrouillon.parService;
+        const poste=defaultPositionId();
+        for(const service of services){
+          const deja=currentNeeds.find(besoin=>
+            besoin.weekId===semaine.id&&besoin.date===service.date&&besoin.time===service.time);
+          if(deja)continue;
+          await creerBesoin({week:semaine,date:service.date,time:service.time,
+            positionId:poste,quantity:quantite,notes:""})
+        }
+        wizardAller(1)
+      }
+    }
+
+    function wizardServicesDeLaSemaine(semaine){
+      const services=[];
+      const debut=new Date(`${semaine.startDate}T12:00:00`);
+      for(let pas=0;pas<7;pas+=1){
+        const jour=new Date(debut);
+        jour.setDate(debut.getDate()+pas);
+        const iso=wizardIso(jour);
+        if(iso>semaine.endDate)break;
+        const ouverture=establishmentConfig.openingDays[jour.getDay()]||{};
+        if(ouverture.midday)services.push({date:iso,time:establishmentConfig.midday.start});
+        if(ouverture.evening)services.push({date:iso,time:establishmentConfig.evening.start})
+      }
+      return services
+    }
+
+    async function wizardRendreAttente(zone,etape){
+      const semaine=currentWeeks
+        .slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)))
+        .find(autre=>autre.status==="open")||currentWeeks[0];
+
+      const compteur=document.createElement("div");
+      compteur.className="wizard-count";
+      compteur.id="wizardWaitCount";
+      compteur.innerHTML=`<b>…</b><span>réponses sur ${currentDrivers.length}</span>`;
+      zone.appendChild(compteur);
+
+      if(semaine){
+        const rappel=document.createElement("div");
+        rappel.className="wizard-note";
+        rappel.innerHTML=`Date limite : <strong>${escapeHtml(formatDate(semaine.deadlineDate))}
+          à ${escapeHtml(semaine.deadlineTime||"18:00")}</strong>.
+          Passé ce délai, vous générez la proposition et vous publiez.`;
+        zone.appendChild(rappel)
+      }
+
+      const relancer=document.createElement("button");
+      relancer.type="button";
+      relancer.className="wizard-add";
+      relancer.id="wizardRelance";
+      relancer.textContent="✉️ Écrire à toute mon équipe";
+      relancer.addEventListener("click",()=>writeToTeam());
+      zone.appendChild(relancer);
+
+      wizardAction=async()=>{
+        wizardFermer(false);
+        showSection("planning")
+      };
+
+      if(semaine){
+        try{
+          const reponses=await loadAvailabilitiesForWeek(semaine.id);
+          const bloc=document.getElementById("wizardWaitCount");
+          if(bloc)bloc.innerHTML=`<b>${reponses.length}</b><span>réponse${reponses.length>1?"s":""} sur ${currentDrivers.length}</span>`
+        }catch(error){
+          console.error(error)
+        }
+      }
+    }
+
+    function wizardRendreFin(zone){
+      const note=document.createElement("div");
+      note.className="wizard-note";
+      note.id="wizardEndNote";
+      note.innerHTML=`Votre tableau de bord vous dira désormais, à chaque
+        ouverture, ce qu’il y a à faire : les réponses qui manquent, la
+        proposition à générer, le planning à publier. L’assistant, lui,
+        a fini son travail.`;
+      zone.appendChild(note);
+      wizardAction=async()=>{
+        wizardMarquerRemis(true);
+        wizardFermer(false)
+      }
+    }
+
+    async function wizardSuivant(){
+      if(wizardOccupe)return;
+      const message=wizardValider?wizardValider():"";
+      if(message){wizardMessage(message);return}
+
+      if(!wizardAction){wizardAller(1);return}
+
+      const bouton=document.getElementById("wizardNext");
+      const libelle=bouton.textContent;
+      wizardOccupe=true;
+      bouton.disabled=true;
+      bouton.textContent="Un instant…";
+      try{
+        await wizardAction()
+      }catch(error){
+        console.error(error);
+        wizardMessage(error.message||"Quelque chose n’a pas fonctionné.")
+      }finally{
+        wizardOccupe=false;
+        // Si l'action a fait avancer l'assistant, l'étape suivante a déjà
+        // repris la main sur le bouton — y compris pour le désactiver, ce
+        // que fait l'étape de l'équipe tant que personne n'existe. On ne
+        // restaure donc que si l'on est resté sur place.
+        const encore=document.getElementById("wizardNext");
+        if(encore&&encore.textContent==="Un instant…"){
+          encore.disabled=false;
+          encore.textContent=libelle
+        }
+      }
+    }
+
+    /* Appelé à la connexion d'un responsable : l'assistant ne s'impose que
+       si la mise en service n'est pas terminée et qu'on ne l'a pas remis à
+       plus tard. */
+    function wizardPeutEtreOuvrir(){
+      if(wizardTermine())return false;
+      if(wizardRemis())return false;
+      if(!establishmentConfigExists||!(establishmentConfig.name||"").trim()){
+        wizardOuvrir(true);
+        return true
+      }
+      return false
+    }
+
+    /* ===================================================================
+       CE QU'IL Y A A FAIRE MAINTENANT
+
+       Le tableau de bord ne se contente pas d'offrir neuf portes : il dit
+       laquelle pousser. L'etat se deduit des semaines, des besoins et de
+       l'equipe deja charges ; seul le compte des reponses demande une
+       lecture, mise en cache et partagee avec l'ecran de planning.
+       =================================================================== */
+    function semaineEnCours(){
+      const triees=currentWeeks.slice()
+        .sort((a,b)=>String(a.startDate).localeCompare(String(b.startDate)));
+      return triees.find(semaine=>semaine.status==="open")
+        ||triees.filter(semaine=>semaine.status==="draft")[0]
+        ||null
+    }
+
+    function etatDuTableauDeBord(){
+      const etapes=setupSteps();
+      const requises=etapes.filter(etape=>!etape.facultatif);
+      if(requises.some(etape=>!etape.fait))return {id:"miseEnService"};
+
+      const semaine=semaineEnCours();
+
+      if(!semaine){
+        return {
+          id:"ouvrirSemaine",
+          eyebrow:"La suite",
+          titre:"Ouvrez votre prochaine semaine",
+          detail:"Aucune semaine n’attend de réponses. Créez-la et ouvrez-la : votre équipe recevra la demande et répondra depuis son téléphone.",
+          boutons:[{texte:"Créer une semaine",vers:"createWeek",primaire:true}]
+        }
+      }
+
+      const besoins=currentNeeds.filter(besoin=>besoin.weekId===semaine.id);
+      if(besoins.length===0){
+        return {
+          id:"besoins",
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"Il manque vos besoins",
+          detail:"Tant qu’aucun besoin n’est défini, l’application ne sait pas combien de personnes il faut, ni à quelle heure. Rien ne peut être proposé.",
+          boutons:[{texte:"Définir les besoins",vers:"needs",primaire:true}]
+        }
+      }
+
+      if(semaine.status==="draft"){
+        return {
+          id:"ouvrir",
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"Cette semaine est encore en brouillon",
+          detail:"Votre équipe ne la voit pas et ne peut pas répondre. Ouvrez-la pour lancer la collecte des disponibilités.",
+          boutons:[{texte:"Ouvrir la semaine",vers:"createWeek",primaire:true}]
+        }
+      }
+
+      if(isDeadlinePassed(semaine)){
+        return {
+          id:"generer",
+          semaine,
+          eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+          titre:"La date limite est passée",
+          detail:"Vous pouvez générer la proposition, l’ajuster, puis la publier.",
+          boutons:[{texte:"Ouvrir le planning",vers:"planning",primaire:true}]
+        }
+      }
+
+      return {
+        id:"attente",
+        semaine,
+        eyebrow:`Semaine du ${formatDate(semaine.startDate)}`,
+        titre:"Votre équipe répond",
+        detail:`Réponses attendues jusqu’au ${formatDate(semaine.deadlineDate)} à ${semaine.deadlineTime||"18:00"}. Vous n’avez rien à faire d’ici là.`,
+        boutons:[
+          {texte:"Voir les réponses",vers:"planning",primaire:true},
+          {texte:"Écrire à mon équipe",action:writeToTeam}
+        ]
+      }
+    }
+
+    function renderActionPanel(){
+      const panneau=document.getElementById("actionPanel");
+      if(!panneau)return;
+
+      const etat=etatDuTableauDeBord();
+      if(etat.id==="miseEnService"){
+        panneau.classList.add("hidden");
+        return
+      }
+      panneau.classList.remove("hidden");
+
+      document.getElementById("actionEyebrow").textContent=etat.eyebrow||"";
+      document.getElementById("actionTitle").textContent=etat.titre;
+      document.getElementById("actionDetail").textContent=etat.detail||"";
+
+      const zone=document.getElementById("actionButtons");
+      zone.innerHTML="";
+      (etat.boutons||[]).forEach(descriptif=>{
+        const bouton=document.createElement("button");
+        bouton.type="button";
+        bouton.className=`button ${descriptif.primaire?"button-primary":"button-ghost"}`;
+        bouton.textContent=descriptif.texte;
+        bouton.addEventListener("click",()=>{
+          if(descriptif.action)descriptif.action();
+          else showSection(descriptif.vers)
+        });
+        zone.appendChild(bouton)
+      });
+
+      // Le compte des reponses vaut mieux qu'une promesse : il arrive un
+      // instant plus tard, sans retarder l'affichage.
+      if(etat.id==="attente"&&etat.semaine&&currentDrivers.length){
+        loadAvailabilitiesForWeek(etat.semaine.id).then(reponses=>{
+          const detail=document.getElementById("actionDetail");
+          if(!detail||etatDuTableauDeBord().id!=="attente")return;
+          const manquants=Math.max(0,currentDrivers.length-reponses.length);
+          detail.textContent=manquants===0
+            ? `Tout le monde a répondu. Vous pouvez générer la proposition sans attendre la date limite.`
+            : `${reponses.length} réponse${reponses.length>1?"s":""} sur ${currentDrivers.length} · ${manquants} manquante${manquants>1?"s":""} · limite le ${formatDate(etat.semaine.deadlineDate)} à ${etat.semaine.deadlineTime||"18:00"}.`
+        }).catch(error=>console.error(error))
+      }
     }
 
     function renderPlanningRuleNote(){
@@ -8287,6 +9552,11 @@ ${currentProfile?.name||""}`;
 
     document.getElementById("openGarage").addEventListener("click",()=>showSection("garage"));
 
+    document.getElementById("wizardNext").addEventListener("click",()=>wizardSuivant());
+    document.getElementById("wizardBack").addEventListener("click",()=>wizardAller(-1));
+    document.getElementById("wizardQuit").addEventListener("click",()=>wizardFermer(true));
+    document.getElementById("setupResume").addEventListener("click",()=>wizardOuvrir(false));
+
     garageForm.addEventListener("submit",async event=>{
       event.preventDefault();
       clearMessage(garageMessage);
@@ -8808,10 +10078,11 @@ ${currentProfile?.name||""}`;
           throw new Error("Sélectionnez au moins un moyen de livraison autorisé pour cette semaine.")
         }
 
-        await addDoc(collection(db,"weeks"),{
-          startDate:weekStart.value,endDate:weekEnd.value,deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
-          message:weekMessage.value.trim(),deliveryMethods,status:openImmediately.checked?"open":"draft",
-          createdAt:serverTimestamp(),createdBy:auth.currentUser.uid,createdByName:currentProfile.name||""
+        await creerSemaine({
+          startDate:weekStart.value,endDate:weekEnd.value,
+          deadlineDate:deadlineDate.value,deadlineTime:deadlineTime.value,
+          message:weekMessage.value.trim(),deliveryMethods,
+          open:openImmediately.checked
         });
         showMessage(weekFormMessage,"La semaine a été enregistrée avec succès.","success");
         weekForm.reset();
@@ -8884,17 +10155,9 @@ ${currentProfile?.name||""}`;
             : "Un besoin existe déjà pour ce jour et cette heure.")
         }
 
-        await addDoc(collection(db,"needs"),{
-          weekId:week.id,
-          weekStartDate:week.startDate,
-          date:needDate.value,
-          time:needTime.value,
-          positionId,
-          quantity:Number(needQuantity.value),
-          notes:needNotes.value.trim(),
-          createdAt:serverTimestamp(),
-          createdBy:auth.currentUser.uid,
-          createdByName:currentProfile.name||""
+        await creerBesoin({
+          week,date:needDate.value,time:needTime.value,positionId,
+          quantity:Number(needQuantity.value),notes:needNotes.value.trim()
         });
 
         showMessage(needFormMessage,"Le besoin a été ajouté.","success");
@@ -8942,20 +10205,10 @@ ${currentProfile?.name||""}`;
         let userId=existingId;
 
         if(!existingId){
-          const password=document.getElementById("driverPassword").value;
-          const credential=await createUserWithEmailAndPassword(driverCreatorAuth,email,password);
-          userId=credential.user.uid;
-
-          await setDoc(doc(db,"users",userId),{
-            name,email,phone,vehicle,active,
-            role,position,inPlanning,
-            mustChangePassword:true,
-            createdAt:serverTimestamp(),
-            createdBy:auth.currentUser.uid,
-            updatedAt:serverTimestamp()
-          });
-
-          await signOut(driverCreatorAuth)
+          userId=await creerCompteEmploye({
+            name,email,phone,vehicle,active,role,position,inPlanning,
+            password:document.getElementById("driverPassword").value
+          })
         }else{
           const champs={
             name,phone,vehicle,active,position,inPlanning,
@@ -9011,7 +10264,7 @@ ${currentProfile?.name||""}`;
        Le service worker permet l'ajout a l'ecran d'accueil, l'ouverture en
        plein ecran et la consultation du planning sans reseau.
        ------------------------------------------------------------------- */
-    const APP_VERSION = "2026-11-14-a · ESSAI";
+    const APP_VERSION = "2026-11-14-c · ESSAI";
 
     /* Page d'essai : on désinstalle tout service worker laissé par la
        version de production, pour ne jamais lire une page en cache. */
@@ -9113,6 +10366,6 @@ ${currentProfile?.name||""}`;
       }
     });
   </script>
-  <div class="essai-banner">Version d’essai — 2026-11-14-a. La version utilisée par les livreurs est ailleurs.</div>
+  <div class="essai-banner">Version d’essai — 2026-11-14-c. La version utilisée par les livreurs est ailleurs.</div>
 </body>
 </html>
